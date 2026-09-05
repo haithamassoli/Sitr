@@ -1,0 +1,3 @@
+8b4ff7fbca0251b08a7f7922883230e10eb8ae9b502a9e533ab3967d12eeade1  PersonDetector.mlpackage/Data/com.apple.CoreML/model.mlmodel
+359a990c0214052119ecf9499fb3c5c7695813c3c01b1eeebcda0fbd8fa0a749  PersonDetector.mlpackage/Data/com.apple.CoreML/weights/weight.bin
+07d418f7016598c51f0d5dad29a04054c0cb0c6752855c4fe38b68522ebb2306  PersonDetector.mlpackage/Manifest.json

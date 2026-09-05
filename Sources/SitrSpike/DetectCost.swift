@@ -1,7 +1,9 @@
 // M1-T03: Vision detection cost. A synthetic 2560x1664 "web page" frame is composed from the CC0 photos in
 // Bench/data/photos (python3 Bench/download.py --photos), downscaled to 1280 / 1920 / native, and each detector
 // configuration runs N times warm on a BGRA CVPixelBuffer (what SCStream delivers). Prints one summary line per metric.
+// M1-T06b: --detector coreml:<model> times CoreMLPersonDetector instead, once per --units entry (default all,ane).
 import CoreGraphics
+import CoreML
 import CoreVideo
 import Foundation
 import ImageIO
@@ -10,7 +12,9 @@ import SitrDetect
 
 private let detectUsage = """
 usage: sitr-spike detect [--photos <dir>] [--n 100] [--sides 1280,1920,2560] [--dump frame.png]
+                         [--detector coreml:<path.mlmodelc|mlpackage>] [--units all,ane] [--threshold 0.3]
   --dump writes the composite frame (public photos, never screen pixels) and prints every box per configuration.
+  --detector coreml:<path> times the CoreML detector under each of --units (all | ane | gpu | cpu) instead of Vision.
   Numbers taken while other agents build are noisy; the official run is the quiet phase.
 """
 
@@ -21,9 +25,10 @@ func runDetectCost(_ args: [String]) {
     let n = Int(Rig.value(for: "--n", in: args) ?? "") ?? 100
     let sides = (Rig.value(for: "--sides", in: args) ?? "1280,1920,2560").split(separator: ",").compactMap { Int($0) }
     let dump = Rig.value(for: "--dump", in: args).map { URL(fileURLWithPath: $0) }
+    let coreml = Rig.coreMLModel(in: args)
     Task.detached {
         do {
-            try await detectCost(photosDir: photosDir, iterations: n, sides: sides, dump: dump)
+            try await detectCost(photosDir: photosDir, iterations: n, sides: sides, dump: dump, coreml: coreml)
             exit(0)
         } catch {
             print("detect: \(error)")
@@ -33,7 +38,7 @@ func runDetectCost(_ args: [String]) {
     dispatchMain()
 }
 
-private func detectCost(photosDir: URL, iterations: Int, sides: [Int], dump: URL?) async throws {
+private func detectCost(photosDir: URL, iterations: Int, sides: [Int], dump: URL?, coreml: CoreMLOptions?) async throws {
     let photos = try Rig.images(in: photosDir)
     guard !photos.isEmpty else { throw RigError("no photos in \(photosDir.path); run: python3 Bench/download.py --photos") }
     let frame = Rig.compose(photos, width: 2560, height: 1664)
@@ -41,16 +46,24 @@ private func detectCost(photosDir: URL, iterations: Int, sides: [Int], dump: URL
     let full = PersonDetector(upperBodyOnly: false)
     let upper = PersonDetector(upperBodyOnly: true)
     let faces = FaceDetector()
-    print("detect_rig chip=\(Rig.chip) frame=2560x1664 photos=\(photos.count) n=\(iterations) thermal=\(ProcessInfo.processInfo.thermalState.rawValue) note=preliminary/noisy-unless-quiet-phase")
-    print("compute persons: \(full.computeDeviceNote)  (Vision picks; setComputeDevice not called)")
-    print("compute faces:   \(faces.computeDeviceNote)")
+    print("detect_rig chip=\(Rig.chip) frame=2560x1664 photos=\(photos.count) n=\(iterations) detector=\(coreml?.label ?? "vision") thermal=\(ProcessInfo.processInfo.thermalState.rawValue) note=preliminary/noisy-unless-quiet-phase")
 
-    let configs: [(String, (CVPixelBuffer) async throws -> [Detection])] = [
-        ("full", { try await full.detect(in: $0) }),
-        ("upper", { try await upper.detect(in: $0) }),
-        ("faces", { try await faces.detect(in: $0) }),
-        ("full+faces", { let r = try await detectPersonsAndFaces(in: $0, persons: full, faces: faces); return r.persons + r.faces }),
-    ]
+    var configs: [(String, (CVPixelBuffer) async throws -> [Detection])] = []
+    if let coreml {
+        for units in coreml.units {
+            let detector = try await Rig.loadCoreML(coreml, units: units, rig: "detect")
+            configs.append(("coreml/\(units.label)", { try await detector.detect(in: $0) }))
+        }
+    } else {
+        print("compute persons: \(full.computeDeviceNote)  (Vision picks; setComputeDevice not called)")
+        print("compute faces:   \(faces.computeDeviceNote)")
+        configs = [
+            ("full", { try await full.detect(in: $0) }),
+            ("upper", { try await upper.detect(in: $0) }),
+            ("faces", { try await faces.detect(in: $0) }),
+            ("full+faces", { let r = try await detectPersonsAndFaces(in: $0, persons: full, faces: faces); return r.persons + r.faces }),
+        ]
+    }
     var table = ["config      side   p50 ms   p95 ms  found"]
     for side in sides {
         let buffer = Rig.pixelBuffer(Rig.resized(frame, longSide: side))
@@ -64,7 +77,8 @@ private func detectCost(photosDir: URL, iterations: Int, sides: [Int], dump: URL
                 samples.append(Rig.ms(start.duration(to: .now)))
             }
             let p50 = Rig.percentile(samples, 0.5), p95 = Rig.percentile(samples, 0.95)
-            print("detect_ms config=\(name) side=\(side) p50=\(Rig.f1(p50)) p95=\(Rig.f1(p95)) n=\(iterations) found=\(found.count)")
+            // min approximates the uncontended cost when other agents load the machine; p50/p95 are the real numbers.
+            print("detect_ms config=\(name) side=\(side) p50=\(Rig.f1(p50)) p95=\(Rig.f1(p95)) min=\(Rig.f1(samples.min() ?? 0)) n=\(iterations) found=\(found.count)")
             table.append("\(name.padding(toLength: 11, withPad: " ", startingAt: 0)) \(String(side).padding(toLength: 5, withPad: " ", startingAt: 0)) \(Rig.f1(p50).leftPad(8)) \(Rig.f1(p95).leftPad(8))  \(found.count)")
             if dump != nil {
                 for d in found {
@@ -93,6 +107,32 @@ nonisolated extension Rig {
     static func value(for flag: String, in args: [String]) -> String? {
         guard let i = args.firstIndex(of: flag), i + 1 < args.count else { return nil }
         return args[i + 1]
+    }
+
+    /// `--detector coreml:<path>` [`--units all,ane`] [`--threshold 0.3`]; nil when no --detector (Vision baseline).
+    static func coreMLModel(in args: [String]) -> CoreMLOptions? {
+        guard let spec = value(for: "--detector", in: args) else { return nil }
+        guard spec.hasPrefix("coreml:") else { print("unknown --detector \(spec); use coreml:<path.mlmodelc|mlpackage>"); exit(2) }
+        let units = (value(for: "--units", in: args) ?? "all,ane").split(separator: ",").map { name -> (label: String, value: MLComputeUnits) in
+            switch name {
+            case "all": return ("all", .all)
+            case "ane": return ("ane", .cpuAndNeuralEngine)
+            case "gpu": return ("gpu", .cpuAndGPU)
+            case "cpu": return ("cpu", .cpuOnly)
+            default: print("unknown --units \(name); use all|ane|gpu|cpu"); exit(2)
+            }
+        }
+        return CoreMLOptions(url: URL(fileURLWithPath: String(spec.dropFirst("coreml:".count))), units: units,
+                             threshold: Float(value(for: "--threshold", in: args) ?? "") ?? 0.3)
+    }
+
+    /// Loads the detector for `units` (the first --units entry by default) and prints the load time (compile + load).
+    static func loadCoreML(_ options: CoreMLOptions, units: (label: String, value: MLComputeUnits)? = nil, rig: String) async throws -> CoreMLPersonDetector {
+        let units = units ?? options.units[0]
+        let start = ContinuousClock.now
+        let detector = try await CoreMLPersonDetector(contentsOf: options.url, computeUnits: units.value, threshold: options.threshold)
+        print("\(rig)_load_ms detector=\(options.label) units=\(units.label) input=\(Int(detector.inputSize.width))x\(Int(detector.inputSize.height)) threshold=\(options.threshold) ms=\(f1(ms(start.duration(to: .now))))")
+        return detector
     }
 
     static func loadImage(_ url: URL) throws -> CGImage {
@@ -183,4 +223,12 @@ nonisolated extension Rig {
 
 extension String {
     func leftPad(_ n: Int) -> String { String(repeating: " ", count: max(0, n - count)) + self }
+}
+
+/// `--detector coreml:<path>` for the detect and recall rigs.
+struct CoreMLOptions {
+    var url: URL
+    var units: [(label: String, value: MLComputeUnits)]
+    var threshold: Float
+    var label: String { "coreml:\(url.lastPathComponent)" }
 }
