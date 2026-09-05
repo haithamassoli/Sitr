@@ -7,11 +7,14 @@ public struct PersonObservation: Hashable, Sendable {
     public var category: Category
     /// Classifier P(woman) when it ran; carried for the bench and debug counts, not used by the tracker.
     public var pWoman: Double?
+    /// Bundle ID of the app whose window the person was seen in; nil when the owner is unknown (Default Rule applies).
+    public var bundleID: String?
 
-    public init(rect: Rect, category: Category, pWoman: Double? = nil) {
+    public init(rect: Rect, category: Category, pWoman: Double? = nil, bundleID: String? = nil) {
         self.rect = rect
         self.category = category
         self.pWoman = pWoman
+        self.bundleID = bundleID
     }
 }
 
@@ -25,22 +28,26 @@ public struct Track: Hashable, Sendable, Identifiable {
     public var lastSeen: Double
     /// Number of matched observations, including the one that created the track.
     public var hits: Int
+    /// Owner app of the latest attributed observation; sticky through observations without one, like `category`.
+    public var bundleID: String?
     /// Category the recent observations disagree with `category` on, and how many in a row said so.
     var contrary: Category?
     var contraryHits = 0
 
-    public init(id: Int, rect: Rect, category: Category, lastSeen: Double, hits: Int = 1) {
+    public init(id: Int, rect: Rect, category: Category, lastSeen: Double, hits: Int = 1, bundleID: String? = nil) {
         self.id = id
         self.rect = rect
         self.category = category
         self.lastSeen = lastSeen
         self.hits = hits
+        self.bundleID = bundleID
     }
 
     mutating func hit(_ observation: PersonObservation, at now: Double) {
         rect = rect.blended(toward: observation.rect, alpha: Tracker.smoothing)
         lastSeen = now
         hits += 1
+        if let bundleID = observation.bundleID { self.bundleID = bundleID }
         if observation.category == category {
             contrary = nil
             contraryHits = 0
@@ -102,7 +109,10 @@ public struct Tracker: Sendable {
             tracks[pair.track].hit(observations[pair.observation], at: now)
         }
         for (o, observation) in observations.enumerated() where !matchedObservations.contains(o) {
-            tracks.append(Track(id: nextID, rect: observation.rect, category: observation.category, lastSeen: now))
+            tracks.append(
+                Track(
+                    id: nextID, rect: observation.rect, category: observation.category, lastSeen: now,
+                    bundleID: observation.bundleID))
             nextID += 1
         }
         return tracks
