@@ -35,11 +35,6 @@ func runClassifier(_ args: [String]) {
     exit(0)
 }
 
-private struct RigError: Error, CustomStringConvertible {
-    let description: String
-    init(_ d: String) { description = d }
-}
-
 private func option(_ name: String, in args: [String]) -> String? {
     guard let i = args.firstIndex(of: name), i + 1 < args.count else { return nil }
     return args[i + 1]
