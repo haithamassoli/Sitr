@@ -23,6 +23,7 @@ let package = Package(
             dependencies: ["SitrCore", "SitrDetect"],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
+        .testTarget(name: "SitrTests", dependencies: ["Sitr"]),
         .testTarget(name: "SitrCoreTests", dependencies: ["SitrCore"]),
         .testTarget(name: "SitrDetectTests", dependencies: ["SitrDetect"], exclude: ["Fixtures"]),
     ]
