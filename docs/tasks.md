@@ -28,27 +28,30 @@ Goal: real numbers on real hardware before writing product code. Throwaway code 
 Exit: `docs/spike-report.md` with every number below against the PRD targets, plus decisions: detector, classifier, capture long side (1280 vs 1920), detection fps. PRD amended if a target moves.
 No-go triggers: Blur exposure > 250 ms p95 on M3, or person recall < 85 % with every permissive detector, or CPU > 40 % of one P-core during browsing. Any of these stops M2 and reopens the PRD.
 
-- [ ] **M1-T01 Spike app + capture loop** (M)
+- [x] **M1-T01 Spike app + capture loop** (M) — `sitr-spike capture`: 14.9 fps under `--motion`, 0 complete / ~15 idle per s static; `docs/spike/capture.md`
   Do: minimal SwiftUI app; request Screen Recording; one `SCStream` on the main display (BGRA, `minimumFrameInterval` 1/15 s, `queueDepth` 3, `showsCursor` false); log frame status, `dirtyRects` count, callback cadence, capture size.
   Done when: frames flow; `.idle` frames skipped; cadence is 15 fps under motion and 0 on a static screen.
-- [ ] **M1-T02 Overlay + feedback-loop check** (M) deps: M1-T01
+- [x] **M1-T02 Overlay + feedback-loop check** (M) deps: M1-T01 — `excludingApplications:` works (red absent / present without); above own fullscreen window; CGEvent click passes through; Space switch + Safari video manual pending; `docs/spike/overlay.md`
   Do: transparent click-through `NSPanel` (level `.screenSaver` + 1, `canJoinAllSpaces`, `fullScreenAuxiliary`); draw a red rectangle; exclude own process with `SCContentFilter(display:excludingApplications:exceptingWindows:)`; sample captured pixels under the rectangle.
   Done when: red is absent from captured frames; clicks pass through; panel stays above fullscreen Safari video and survives a Space switch.
-- [ ] **M1-T03 Detection cost** (M) deps: M1-T01
+- [x] **M1-T03 Detection cost** (M) deps: M1-T01 — Vision 8–23 ms p50 per frame, flat across 1280/1920/2560 (M1 chip pending); `docs/spike/detect.md`
   Do: `DetectHumanRectanglesRequest` (`upperBodyOnly` false and true) + `DetectFaceRectanglesRequest` on frames downscaled to 1280 and 1920 long side; ms/frame p50/p95 on M3 (and M1 if available); note compute unit.
   Done when: table of ms per configuration per chip.
-- [ ] **M1-T04 Latency rig** (M) deps: M1-T02
+- [x] **M1-T04 Latency rig** (M) deps: M1-T02 — 15 fps: capture 45/72, Blur 48/85, Curtain 54/82 ms p50/p95; 30 fps: 31/47, 45/63, 32/53; 60 fps capture 19/33; preliminary, quiet re-run pending; `docs/spike/latency.md`
   Do: test window flips a region to a person image and records `CACurrentMediaTime()`; pipeline records the time the cover commit is scheduled; second signal: window paints a frame counter in pixels to isolate capture-to-callback latency. 50 trials each.
   Done when: p50/p95 for capture latency, Blur path (capture → detect → commit), Curtain path (capture → commit).
 - [ ] **M1-T05 Gender classifier candidates** (L)
   Do: shortlist permissively licensed face-gender models (Apache/MIT/CC BY: SSR-Net, Human library gender model, FairFace-trained classifier); verify model license and training-data license; convert to CoreML (coremltools, fp16); evaluate on 200 local faces tagged hijab / child / low-light / profile; ms per crop on ANE.
   Done when: accuracy per tag, Unknown rate at threshold 0.80, ms/crop; one model chosen, license recorded. MobileCLIP and any research-only weights rejected.
-- [ ] **M1-T06 Person detector recall** (M) deps: M1-T03
+- [x] **M1-T06 Person detector recall** (M) deps: M1-T03 — 200 COCO images (permissive licenses) + `Bench/ATTRIBUTIONS.md`; Vision full 25.8 %, union 37.8 % → below the 85 % floor; decision: CoreML detector (YOLOX first), evaluated in M1-T06b
   Do: 200 permissively licensed images (Wikimedia Commons CC0/CC BY, Pexels) labeled with body boxes and tags (partial, back-facing, small, drawn); recall for bodies ≥ 40 px at 1280 and 1920; if < 95 %, evaluate a permissive CoreML detector (YOLOX, RF-DETR, NanoDet; all Apache-2.0). Ultralytics excluded (AGPL).
   Done when: recall table; detector decision; labeled set committed with `ATTRIBUTIONS.md`.
-- [ ] **M1-T07 Blur render cost + strength curve** (S) deps: M1-T02
+- [x] **M1-T07 Blur render cost + strength curve** (S) deps: M1-T02 — IOSurface path 1.2–3.7 ms Gaussian, 0.9–1.7 ms Pixellate; curves `radius = f(0.17+0.33s)`, `block = f(0.20+0.30s)`; proxy minima 5 px / 4 px at 60 px face; 3-reviewer check pending; `docs/spike/blur.md`
   Do: `CIGaussianBlur` and `CIPixellate` from captured pixels into a layer; ms per cover; minimum radius and block size that make a 60 px face unrecognizable (5 faces, 3 reviewers).
   Done when: ms per cover; strength → radius and strength → block curves recorded.
+- [ ] **M1-T06b CoreML person detector** (L) deps: M1-T06
+  Do: convert YOLOX (Apache-2.0) tiny/s to CoreML fp16, `CoreMLPersonDetector` in `SitrDetect`, `--detector coreml:` on the recall and detect rigs; recall + ms/frame per model × input size.
+  Done when: recall table next to Vision's; a shipped `Models/dist/PersonDetector.mlpackage` with license, source, checksums; detector decision recorded.
 - [ ] **M1-T08 System cost** (M) deps: M1-T03, M1-T07
   Do: capture + detect + render at 15 fps for 10 min browsing and 10 min 1080p video with people; CPU % of one P-core, GPU/ANE, memory, thermal state; static screen 5 min.
   Done when: numbers against the PRD table, on M1 8 GB or marked pending.
