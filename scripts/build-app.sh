@@ -13,10 +13,10 @@ cp ".build/$CONFIG/Sitr" "$APP/Contents/MacOS/Sitr"
 cp App/Info.plist "$APP/Contents/Info.plist"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 [ -d App/Resources ] && cp -R App/Resources/. "$APP/Contents/Resources/"
-# Classifier model (M2-T07): compile the shipped .mlpackage into the bundle.
-if [ -d Models/dist/GenderClassifier.mlpackage ]; then
-  xcrun coremlcompiler compile Models/dist/GenderClassifier.mlpackage "$APP/Contents/Resources" >/dev/null
-fi
+# Shipped CoreML models (M1-T05 classifier, M1-T06b person detector): compile each .mlpackage into the bundle.
+for m in Models/dist/*.mlpackage; do
+  [ -d "$m" ] && xcrun coremlcompiler compile "$m" "$APP/Contents/Resources" >/dev/null
+done
 
 TS=--timestamp; [ "$SIGN_ID" = "-" ] && TS=--timestamp=none
 codesign --force --sign "$SIGN_ID" --options runtime $TS --entitlements App/Sitr.entitlements "$APP"

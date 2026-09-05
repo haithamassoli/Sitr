@@ -49,7 +49,7 @@ No-go triggers: Blur exposure > 250 ms p95 on M3, or person recall < 85 % with e
 - [x] **M1-T07 Blur render cost + strength curve** (S) deps: M1-T02 — IOSurface path 1.2–3.7 ms Gaussian, 0.9–1.7 ms Pixellate; curves `radius = f(0.17+0.33s)`, `block = f(0.20+0.30s)`; proxy minima 5 px / 4 px at 60 px face; 3-reviewer check pending; `docs/spike/blur.md`
   Do: `CIGaussianBlur` and `CIPixellate` from captured pixels into a layer; ms per cover; minimum radius and block size that make a 60 px face unrecognizable (5 faces, 3 reviewers).
   Done when: ms per cover; strength → radius and strength → block curves recorded.
-- [ ] **M1-T06b CoreML person detector** (L) deps: M1-T06
+- [x] **M1-T06b CoreML person detector** (L) deps: M1-T06 — shipped yolox-s 1280×768 fp16 (18.2 MB, Apache-2.0): all 85.1 / large 93.3 / medium 90.5 / small 78.4 / back 91.8 / partial 83.3 %; m 1280×768 87.1 % (50.8 MB); 95 % gate unreachable on COCO small people; ANE p50 24 ms noisy (floor 12–19 ms); `docs/spike/detect.md`
   Do: convert YOLOX (Apache-2.0) tiny/s to CoreML fp16, `CoreMLPersonDetector` in `SitrDetect`, `--detector coreml:` on the recall and detect rigs; recall + ms/frame per model × input size.
   Done when: recall table next to Vision's; a shipped `Models/dist/PersonDetector.mlpackage` with license, source, checksums; detector decision recorded.
 - [ ] **M1-T08 System cost** (M) deps: M1-T03, M1-T07
@@ -120,7 +120,7 @@ Exit: on 1 and 2 displays, hidden-set persons covered with exposure ≤ 150 ms p
 Goal: Default Rule + per-app overrides, Curtain mode with trusted motion, Recommended preset, fail-closed for Curtain apps.
 Exit: Curtain exposure ≤ 50 ms p95; YouTube without people in Safari-as-Curtain is watchable after ≤ 500 ms; page load and scroll start are pre-covered; revoking permission covers Curtain windows solid; Off apps' pixels never reach detection.
 
-- [ ] **M3-T01 Rules model + store** (M) deps: M2-T09
+- [x] **M3-T01 Rules model + store** (M) deps: M2-T09 — `Rules`/`RuleMode`/`AppRule`/`RulesStore` (schema 1, `.bak` on bad file), Policy resolves per bundle ID; 7 + 3 tests
   Do: `AppRule { bundleID, mode }`, `DefaultRule` (off / blur / curtain, initial off); JSON in Application Support with a schema version; Policy resolves mode per bundle ID; rules for uninstalled apps allowed.
   Done when: resolve tests (override beats default, unknown app → default); persistence round-trip test.
 - [ ] **M3-T02 Window geometry provider** (M) deps: M2-T04
@@ -129,7 +129,7 @@ Exit: Curtain exposure ≤ 50 ms p95; YouTube without people in Safari-as-Curtai
 - [ ] **M3-T03 Filter builder + live updates** (M) deps: M3-T01, M2-T05
   Do: rules → `SCContentFilter` per display: Default off → include only override apps; Default on → exclude Off apps and own process; refresh `SCShareableContent` on app launch/terminate and rules change; `updateContentFilter` without restarting the stream.
   Done when: an Off app showing a marker color never appears in frames (manual XCTest); an app launched after start is included within 1 s.
-- [ ] **M3-T04 Curtain state machine** (L) deps: M3-T01
+- [x] **M3-T04 Curtain state machine** (L) deps: M3-T01 — `SitrCore/Curtain.swift`, 13 scripted tests (page load, scroll, 30 s video → trusted at 500 ms, person mid-video, out-of-order, resize, close)
   Do: pure `Curtain` in `SitrCore`, per app, 64-pt tiles per window: dirty tile → preCovered(seq); verified (seq ≥ dirty seq, no hidden person) → clear; continuously dirty and verified safe ≥ 500 ms → trustedMotion (no pre-cover, Blur behavior); static ≥ 1 s → reset; new window → all tiles preCovered until the first verified frame.
   Done when: scripted tests: page load, scroll start, 30 s video without people (trusted after 500 ms, no pre-cover until a pause), person appears mid-video (cover on detection), out-of-order result (frame N result never clears tiles dirtied by N+1).
 - [ ] **M3-T05 Curtain fast path in pipeline** (L) deps: M3-T04, M3-T02, M2-T12
@@ -138,7 +138,7 @@ Exit: Curtain exposure ≤ 50 ms p95; YouTube without people in Safari-as-Curtai
 - [ ] **M3-T06 Fail-closed for Curtain apps** (M) deps: M3-T02, M2-T16, M3-T04
   Do: health needsPermission or stalled (no frames > 1 s while `WindowTracker` sees Curtain windows change) → Solid cover over each Curtain window rect; lift on first frame; Blur apps stay uncovered; warning icon and one notification.
   Done when: revoke with Safari as Curtain → Safari windows solid within 1 s; re-grant lifts; moving the window moves the cover.
-- [ ] **M3-T07 Recommended preset** (S) deps: M3-T01
+- [x] **M3-T07 Recommended preset** (S) deps: M3-T01 — `RecommendedPreset` (8 bundle IDs incl. App Store Telegram `com.tdesktop.Telegram`; Safari/Chrome/Arc/WhatsApp/Discord verified on this Mac); 5 tests
   Do: preset data → Curtain: Safari `com.apple.Safari`, Chrome `com.google.Chrome`, Arc `company.thebrowser.Browser`, Telegram `ru.keepcoder.Telegram` and `org.telegram.desktop`, WhatsApp `net.whatsapp.WhatsApp`, Discord `com.hnc.Discord` (verify each on a real install); `apply()` upserts overrides and leaves Default Rule untouched.
   Done when: apply test; re-apply idempotent; user edits to preset apps survive until the preset is re-applied.
 - [ ] **M3-T08 Rules UI** (L) deps: M3-T01, M3-T07
