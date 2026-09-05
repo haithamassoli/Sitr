@@ -62,10 +62,10 @@ No-go triggers: Blur exposure > 250 ms p95 on M3, or person recall < 85 % with e
 Goal: Entire Mac Blur mode works: hidden set + Strict Mode, rectangle covers with styles and padding, Reveal Hold, menu bar Pause/Disable, permission flow. Default Rule is hard-coded Blur for this milestone; onboarding sets Off in M4.
 Exit: on 1 and 2 displays, hidden-set persons covered with exposure ≤ 150 ms p95 (rig from M1-T04); CPU within the PRD table on M1; Policy, Tracker, category tests green in CI.
 
-- [ ] **M2-T01 Production scaffold** (M)
+- [x] **M2-T01 Production scaffold** (M) — done as a SwiftPM package (no .xcodeproj; `scripts/build-app.sh` assembles `build/Sitr.app`); `codesign -d --entitlements` shows only `app-sandbox`; `--selftest` confirms sandboxed + screen-capture preflight true
   Do: Xcode project `Sitr`: app target (`LSUIElement`, App Sandbox, Hardened Runtime, no network entitlements); Swift package `SitrCore` (Policy, Detect types, Tracker, geometry; no AppKit); test target; folders per PRD modules: Capture, Detect, Policy, Overlay, Hotkey, UI, Bench; swift-format config.
   Done when: builds; `codesign -d --entitlements` shows no network keys; one placeholder test passes.
-- [ ] **M2-T02 CI** (S) deps: M2-T01
+- [x] **M2-T02 CI** (S) deps: M2-T01 — `.github/workflows/ci.yml` green on `macos-26`; entitlement gate proven red locally with a `network.client` key
   Do: GitHub Actions on a macOS runner with Xcode 26: build, unit tests, `scripts/check-entitlements.sh`.
   Done when: green on main; proven red once with a deliberately added network entitlement.
 - [ ] **M2-T03 Permission manager** (M) deps: M2-T01
