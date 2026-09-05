@@ -1,0 +1,3 @@
+62b2ff9d778f91557b3399741907144686b6e64416efeb30715be87478385ce2  GenderClassifier.mlpackage/Data/com.apple.CoreML/model.mlmodel
+4ddd86913fd3f1bd2ff7e99d333c82aeb2f8f6efc15cd0e7549b24f4fe1f74fa  GenderClassifier.mlpackage/Data/com.apple.CoreML/weights/weight.bin
+bb986c67f29e76fe0084b96f45a27d55c47df96ec3bd70c593db7570cc87ec43  GenderClassifier.mlpackage/Manifest.json
