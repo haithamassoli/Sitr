@@ -11,3 +11,4 @@ Models/venv/
 *.mlpackage/
 *.mlmodelc/
 !Models/dist/*.mlpackage/
+.claude/
