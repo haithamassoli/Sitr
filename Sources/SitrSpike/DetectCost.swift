@@ -76,13 +76,8 @@ private func detectCost(photosDir: URL, iterations: Int, sides: [Int], dump: URL
     print(table.joined(separator: "\n"))
 }
 
-struct RigError: Error, CustomStringConvertible {
-    let description: String
-    init(_ d: String) { description = d }
-}
-
-/// Shared helpers for the detect and recall rigs. ImageIO + CoreGraphics only; no AppKit.
-enum Rig {
+/// Shared helpers for the detect and recall rigs (ImageIO + CoreGraphics). The window/stream half lives in RigSupport.swift.
+nonisolated extension Rig {
     // ponytail: source-tree only (#filePath), fine for a dev rig; pass --photos / --images to override.
     static let benchDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
         .deletingLastPathComponent().appendingPathComponent("Bench")

@@ -16,7 +16,7 @@ let package = Package(
         // Vision + CoreML + CoreImage wrappers. No AppKit.
         .target(name: "SitrDetect", dependencies: ["SitrCore"]),
         // M1 measurement rigs. Kept after the spike; M2/M3 reuse them.
-        .executableTarget(name: "SitrSpike", dependencies: ["SitrCore", "SitrDetect"]),
+        .executableTarget(name: "SitrSpike", dependencies: ["SitrCore", "SitrDetect"], exclude: ["Fixtures"]),
         // The menu bar app. scripts/build-app.sh wraps the binary into build/Sitr.app (Info.plist, entitlements, signing).
         .executableTarget(
             name: "Sitr",
