@@ -3,10 +3,7 @@ import Observation
 import QuartzCore
 import os
 // Scoped: `SitrCore.Observation` (the tracker input) would shadow the Observation module inside the @Observable expansion.
-import enum SitrCore.HiddenSet
-import struct SitrCore.Policy
-import enum SitrCore.RevealState
-import enum SitrCore.SitrCore
+import SitrCore
 
 /// Single source of truth for the menu bar, Settings, and the pipeline (M2-T13/T14). Everything runs on the main
 /// actor. Integration: the pipeline takes `Policy` snapshots from `onPolicyChanged` (or reads `policy`) and passes

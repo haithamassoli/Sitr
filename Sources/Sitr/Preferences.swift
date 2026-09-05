@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import enum SitrCore.HiddenSet
+import SitrCore
 
 /// Settings that survive relaunch, one `UserDefaults` key each. `@Observable` so the menu and Settings follow changes.
 @Observable final class Preferences {

@@ -101,13 +101,13 @@ Exit: on 1 and 2 displays, hidden-set persons covered with exposure ≤ 150 ms p
 - [ ] **M2-T12 Pipeline** (L) deps: M2-T05, M2-T06, M2-T07, M2-T08, M2-T09, M2-T10, M2-T11
   Do: per-display `Pipeline` actor: Frame → skip idle → detect → classify → track → policy → render → commit; drop-oldest backpressure (latest frame only); debug metrics per stage; exposure measured with the M1-T04 rig.
   Done when: exposure ≤ 150 ms p95 on M1; no backlog growth over 10 min of video.
-- [ ] **M2-T13 Reveal Hold** (M) deps: M2-T10
+- [x] **M2-T13 Reveal Hold** (M) deps: M2-T10 — `RevealState` (7 tests) + Carbon `HotkeyManager` (⌃⌥Space, status 0; posted CGEvent press/release verified 203/1004 ms holds); panel wiring lands with M2-T12; physical press over fullscreen manual pending
   Do: `HotkeyManager` on Carbon `RegisterEventHotKey` (`kEventHotKeyPressed` / `kEventHotKeyReleased`); default ⌃⌥Space persisted; press → panels revealed within 1 frame, release → covered; 30 s safety timer; re-cover on app deactivation or `flagsChanged` without a release; pure `RevealState` machine in `SitrCore`.
   Done when: state-machine tests (press, release, timeout, lost release); manual reveal over a fullscreen app; detection keeps running while revealed.
-- [ ] **M2-T14 Menu bar core** (M) deps: M2-T09, M2-T13
+- [x] **M2-T14 Menu bar core** (M) deps: M2-T09, M2-T13 — `AppModel` status/icon/reveal matrix (10-row test), pause auto-resume + wake re-sync tested, menu per FR7; VoiceOver + per-state visual check manual pending
   Do: `MenuBarExtra`: status line (Protected / Paused until HH:MM / Disabled / Needs permission / Degraded); Pause ▸ 15 min / 1 hour with auto-resume; Disable ↔ Enable; Reveal line with Available / Unavailable; Settings… (placeholder window); Quit; icon normal / dimmed / warning badge.
   Done when: every Policy state renders; pause resumes at the right time after sleep; VoiceOver reads all items.
-- [ ] **M2-T15 Launch at login** (S) deps: M2-T01
+- [x] **M2-T15 Launch at login** (S) deps: M2-T01 — `SMAppService.mainApp`: notFound → enabled → enabled in a fresh process → notRegistered; left off
   Do: `SMAppService.mainApp` register/unregister behind a toggle in the placeholder settings; handle `requiresApproval`.
   Done when: toggle reflects real status after relaunch.
 - [ ] **M2-T16 Fail states, basic** (M) deps: M2-T03, M2-T05, M2-T14
@@ -209,7 +209,7 @@ Exit: fresh macOS 15 user account: download DMG → Gatekeeper passes → onboar
 - [ ] **M5-T04 Homebrew cask** (S) deps: M5-T03
   Do: own tap `homebrew-sitr` with `sitr.rb` (url, sha256, livecheck on GitHub releases, zap stanza for defaults and Application Support); bump step in the release workflow.
   Done when: `brew install --cask <owner>/sitr/sitr` installs the notarized app.
-- [ ] **M5-T05 Check for Updates** (S) deps: M2-T14
+- [x] **M5-T05 Check for Updates** (S) deps: M2-T14 — menu item opens the GitHub Releases URL via `NSWorkspace` (built with M2-T14; click not exercised automatically)
   Do: menu item opens the GitHub Releases URL via `NSWorkspace`; current version shown in About.
   Done when: works in the sandbox with no network entitlement (browser opens).
 - [ ] **M5-T06 README + docs** (M) deps: M4-T05

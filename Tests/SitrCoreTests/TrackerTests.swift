@@ -4,8 +4,8 @@ import Testing
 /// One detection frame at 15 fps.
 private let frame = 1.0 / 15.0
 
-private func person(x: Double, y: Double = 0, _ category: Category = .woman) -> Observation {
-    Observation(rect: Rect(x: x, y: y, width: 50, height: 100), category: category)
+private func person(x: Double, y: Double = 0, _ category: Category = .woman) -> PersonObservation {
+    PersonObservation(rect: Rect(x: x, y: y, width: 50, height: 100), category: category)
 }
 
 @Suite struct TrackerTests {
@@ -42,9 +42,9 @@ private func person(x: Double, y: Double = 0, _ category: Category = .woman) -> 
 
     @Test func rectIsSmoothedWithAlphaHalf() {
         var tracker = Tracker()
-        tracker.update([Observation(rect: Rect(x: 0, y: 0, width: 50, height: 100), category: .woman)], at: 0, sequence: 0)
+        tracker.update([PersonObservation(rect: Rect(x: 0, y: 0, width: 50, height: 100), category: .woman)], at: 0, sequence: 0)
         // IoU with the track is 3840 / 6992 ≈ 0.55, so this is a match, not a new track.
-        let tracks = tracker.update([Observation(rect: Rect(x: 10, y: 4, width: 54, height: 108), category: .woman)], at: frame, sequence: 1)
+        let tracks = tracker.update([PersonObservation(rect: Rect(x: 10, y: 4, width: 54, height: 108), category: .woman)], at: frame, sequence: 1)
         #expect(tracks.count == 1)
         #expect(tracks[0].rect == Rect(x: 5, y: 2, width: 52, height: 104))
     }

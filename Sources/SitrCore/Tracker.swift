@@ -2,7 +2,7 @@
 // Goal per PRD FR2: no flicker. Boxes are EMA-smoothed, persist briefly through dropouts, and categories are sticky.
 
 /// One classified person in a frame, in display points.
-public struct Observation: Hashable, Sendable {
+public struct PersonObservation: Hashable, Sendable {
     public var rect: Rect
     public var category: Category
     /// Classifier P(woman) when it ran; carried for the bench and debug counts, not used by the tracker.
@@ -37,7 +37,7 @@ public struct Track: Hashable, Sendable, Identifiable {
         self.hits = hits
     }
 
-    mutating func hit(_ observation: Observation, at now: Double) {
+    mutating func hit(_ observation: PersonObservation, at now: Double) {
         rect = rect.blended(toward: observation.rect, alpha: Tracker.smoothing)
         lastSeen = now
         hits += 1
@@ -81,7 +81,7 @@ public struct Tracker: Sendable {
     // their box width per frame (~4 body widths/s at 15 fps) drops below IoU 0.3 and gets a new id (cover appears
     // anyway, only the layer key changes); upgrade path: constant-velocity prediction of `rect` before matching.
     @discardableResult
-    public mutating func update(_ observations: [Observation], at now: Double, sequence: Int) -> [Track] {
+    public mutating func update(_ observations: [PersonObservation], at now: Double, sequence: Int) -> [Track] {
         guard sequence > lastSequence else { return tracks }
         lastSequence = sequence
         tracks.removeAll { now - $0.lastSeen > Self.persistence }
