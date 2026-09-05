@@ -9,6 +9,8 @@ usage: sitr-spike <rig> [options]
   latency   M1-T04  capture / blur-path / curtain-path latency
   blur      M1-T07  CIGaussianBlur / CIPixellate cost + strength curve
   detect    M1-T03  Vision detection ms/frame at 1280 and 1920
+  recall    M1-T06  person detector recall over a labeled manifest
+  classifier M1-T05 gender classifier ms/crop and accuracy over a face manifest
   system    M1-T08  capture + detect + render system cost
 Each rig prints its numbers to stdout and exits on its own; use --help per rig.
 """
@@ -21,6 +23,8 @@ case "overlay": runOverlay(rest)
 case "latency": runLatency(rest)
 case "blur": runBlur(rest)
 case "detect": runDetectCost(rest)
+case "recall": runRecall(rest)
+case "classifier": runClassifier(rest)
 case "system": runSystem(rest)
 default:
     print(usage)
