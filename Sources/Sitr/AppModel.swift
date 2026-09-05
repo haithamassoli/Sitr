@@ -75,7 +75,9 @@ import SitrCore
 
     init(preferences: Preferences = Preferences()) {
         self.preferences = preferences
-        policy = Policy(hiddenSet: preferences.hiddenSet, strictMode: preferences.strictMode)
+        // ponytail: M2 = Entire Mac Blur; M4-T01 onboarding switches the default to Off and loads RulesStore.
+        policy = Policy(hiddenSet: preferences.hiddenSet, strictMode: preferences.strictMode,
+                        rules: Rules(defaultMode: .blur))
         hotkey = HotkeyManager(combo: preferences.hotkey)
         hotkey.onPress = { [weak self] in self?.hotkeyPressed() }
         hotkey.onRelease = { [weak self] in self?.hotkeyReleased() }
