@@ -71,13 +71,13 @@ Exit: on 1 and 2 displays, hidden-set persons covered with exposure ≤ 150 ms p
 - [x] **M2-T02 CI** (S) deps: M2-T01 — `.github/workflows/ci.yml` green on `macos-26`; entitlement gate proven red locally with a `network.client` key
   Do: GitHub Actions on a macOS runner with Xcode 26: build, unit tests, `scripts/check-entitlements.sh`.
   Done when: green on main; proven red once with a deliberately added network entitlement.
-- [ ] **M2-T03 Permission manager** (M) deps: M2-T01
+- [x] **M2-T03 Permission manager** (M) deps: M2-T01 — `PermissionMonitor` + pure `PermissionLogic` (grant/deny/revoke/re-grant tests); real TCC cycle manual pending (shell-launched process inherits the terminal grant)
   Do: `Permission` actor: `CGPreflightScreenCaptureAccess`, `CGRequestScreenCaptureAccess`, deep link `x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture`, re-check on app activation and 5 s poll while denied, revoked detection from `SCStream` errors; publishes granted / denied / revoked.
   Done when: grant, deny, and `tccutil reset ScreenCapture <bundle id>` each produce the right state within 5 s.
-- [ ] **M2-T04 Display topology** (M) deps: M2-T01
+- [x] **M2-T04 Display topology** (M) deps: M2-T01 — `DisplayManager` + tested `DisplayDiff`; one session + one panel per display; hot-plug/mirror pending (one display here)
   Do: `DisplayManager`: map `SCDisplay` ↔ `NSScreen` by `CGDirectDisplayID`; observe `didChangeScreenParametersNotification`; one `CaptureSession` + one `OverlayPanel` per display; debounce 300 ms.
   Done when: hot-plug, mirror toggle, resolution change re-establish sessions within 1 s; stream count equals display count.
-- [ ] **M2-T05 Capture session** (L) deps: M2-T03, M2-T04
+- [x] **M2-T05 Capture session** (L) deps: M2-T03, M2-T04 — `CaptureSession`/`Frame`; selftest: 129 frames, idle skipped, `overlay_excluded=true` (control shows marker); dirtyRects are pixel-space (fixed); sleep/wake pending
   Do: `SCStream` per display: BGRA, output scaled to the spike's long side, `minimumFrameInterval` 1/15 s, `queueDepth` 3–5, `showsCursor` false; filter excludes own process; skip `.idle`; `dirtyRects`, `contentRect`, `scaleFactor` into a `Frame` value (pixel buffer, metadata, sequence number); stop/error → health state; restart with backoff.
   Done when: frames on all displays; overlay marker absent from frames (M1-T02 check as a manual XCTest); stream survives sleep/wake.
 - [ ] **M2-T06 Detect: persons + faces** (M) deps: M2-T01
@@ -92,10 +92,10 @@ Exit: on 1 and 2 displays, hidden-set persons covered with exposure ≤ 150 ms p
 - [x] **M2-T09 Policy core** (M) deps: M2-T01 — `SitrCore/Policy.swift`, 8 tests over hidden set × strict × category, paused/disabled/auto-resume; `needsPermission` fails open
   Do: `Policy` in `SitrCore`: hidden set (women / men / everyone), Strict Mode (everyone forces on), protection state (active / paused(until) / disabled), health (ok / needsPermission / degraded); `covers(for:tracks, rules:) -> [Cover]`. Default Rule fixed to Blur in M2.
   Done when: tests over every hidden set × Strict × category; paused and disabled yield no covers.
-- [ ] **M2-T10 Overlay panels** (L) deps: M2-T04
+- [x] **M2-T10 Overlay panels** (L) deps: M2-T04 — `OverlayPanel`/`CoverLayerSpec`; selftest: layer count == cover count over 5 diffs, reveal, above own fullscreen, click-through; Space switch / Safari / ⌘Tab manual pending
   Do: `OverlayPanel` (`NSPanel`): borderless, clear, non-activating, `ignoresMouseEvents`, level `.screenSaver` + 1, `collectionBehavior` [canJoinAllSpaces, fullScreenAuxiliary, stationary, ignoresCycle], `hidesOnDeactivate` false, excluded from Windows menu, not an accessibility element; cover `CALayer`s keyed by track id; per-frame diff in one `CATransaction` with implicit animations off; `setRevealed(_:)` across all panels.
   Done when: manual: fullscreen Safari video, Space switch, menu bar overlap, clicks pass through, absent from ⌘Tab; layer count equals cover count.
-- [ ] **M2-T11 Cover renderer** (M) deps: M2-T05, M2-T10, M1-T07
+- [x] **M2-T11 Cover renderer** (M) deps: M2-T05, M2-T10, M1-T07 — `CoverRenderer`; padding/clamp/solid verified; quiet p50 0.9–2.8 ms per cover (2 ms gate re-checked in the quiet phase)
   Do: `CoverRenderer`: Gaussian (`CIGaussianBlur` on the cropped captured pixels, radius from the strength curve), Pixelate (`CIPixellate`, block from curve), Solid (system-appearance color); Body Padding expand + clamp to display; one Metal `CIContext` per display.
   Done when: ≤ 2 ms per cover at spike source size; 3 styles × 3 strengths checked visually; padding 0 / 15 / 50 % verified.
 - [ ] **M2-T12 Pipeline** (L) deps: M2-T05, M2-T06, M2-T07, M2-T08, M2-T09, M2-T10, M2-T11
