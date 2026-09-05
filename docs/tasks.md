@@ -86,10 +86,10 @@ Exit: on 1 and 2 displays, hidden-set persons covered with exposure ≤ 150 ms p
 - [ ] **M2-T07 Detect: gender classifier** (M) deps: M2-T06, M1-T05
   Do: bundle the chosen `.mlpackage` with its LICENSE; checksum test; face crop with 20 % margin, resize, batch predict P(woman); category rule as a pure function: no face / face < 32 px / body < 40 px / max p < 0.80 → Unknown.
   Done when: every category-rule branch tested; checksum test passes; ms/crop ≤ spike number.
-- [ ] **M2-T08 Tracker** (M) deps: M2-T01
+- [x] **M2-T08 Tracker** (M) deps: M2-T01 — `SitrCore/Tracker.swift`, 15 tests (dropout, 300 ms drop, flip after exactly 3, merge, crossing ids)
   Do: `Tracker` in `SitrCore`: IoU ≥ 0.3 matching, EMA α 0.5, persist 300 ms after last hit, category sticky until 3 contrary frames, merge overlapping hidden boxes.
   Done when: scripted tests: no flicker on a 1-frame dropout; category flips after exactly 3 frames; merge on overlap.
-- [ ] **M2-T09 Policy core** (M) deps: M2-T01
+- [x] **M2-T09 Policy core** (M) deps: M2-T01 — `SitrCore/Policy.swift`, 8 tests over hidden set × strict × category, paused/disabled/auto-resume; `needsPermission` fails open
   Do: `Policy` in `SitrCore`: hidden set (women / men / everyone), Strict Mode (everyone forces on), protection state (active / paused(until) / disabled), health (ok / needsPermission / degraded); `covers(for:tracks, rules:) -> [Cover]`. Default Rule fixed to Blur in M2.
   Done when: tests over every hidden set × Strict × category; paused and disabled yield no covers.
 - [ ] **M2-T10 Overlay panels** (L) deps: M2-T04
