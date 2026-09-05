@@ -1,7 +1,8 @@
-// `Sitr --selftest [capture|overlay|render] [options]`: automated checks for M2 track A (capture, overlay, renderer).
-// Each subcommand prints one parseable line per metric, removes every window it created and exits on its own (hard
-// deadline). Plain `--selftest` prints the M2-T01 facts as before. Run from a shell, never via `open` (docs/dev.md).
-// Pixels are sampled as numbers only; no frame is ever written anywhere.
+// `Sitr --selftest [capture|overlay|render|pipeline|failstate|stimulus] [options]`: automated checks for M2 track A
+// (capture, overlay, renderer) and the pipeline / fail-state glue (M2-T12, M2-T16). Each subcommand prints one parseable
+// line per metric, removes every window it created and exits on its own (hard deadline). Plain `--selftest` prints the
+// M2-T01 facts as before. Run from a shell, never via `open` (docs/dev.md). Pixels are sampled as numbers only; no frame is
+// ever written anywhere.
 import AppKit
 import CoreImage
 import Foundation
@@ -20,6 +21,17 @@ enum Selftest {
             Harness.run("overlay", deadline: 60) { try await overlayTest(skipFullscreen: args.contains("--skip-fullscreen")) }
         case "render":
             Harness.run("render", deadline: 180) { try await renderTest(iterations: option(args, "--iterations", default: 100)) }
+        case "pipeline" where args.contains("--motion"):
+            let seconds = option(args, "--seconds", default: 120.0)
+            Harness.run("pipeline_motion", deadline: seconds + 60) { try await motionTest(seconds: seconds) }
+        case "pipeline":
+            let trials = option(args, "--trials", default: 30)
+            Harness.run("pipeline", deadline: Double(trials) * 4 + 60) { try await pipelineTest(trials: trials) }
+        case "failstate":
+            Harness.run("failstate", deadline: 90) { try await failstateTest() }
+        case "stimulus":
+            let seconds = option(args, "--seconds", default: 30.0)
+            Harness.run("stimulus", deadline: seconds + 15) { try await stimulusOnly(seconds: seconds) }
         default:
             let env = ProcessInfo.processInfo.environment
             print("bundle_id=\(Bundle.main.bundleIdentifier ?? "nil")")
@@ -366,6 +378,334 @@ private func renderTest(iterations: Int) async throws -> Bool {
     return ok
 }
 
+// MARK: - pipeline (M2-T12) and fail states (M2-T16)
+
+/// The real app wiring (`Runtime`) on a throwaway preferences suite (Everyone + Strict, FR3 defaults). The production filter
+/// excludes our whole process, which would hide the selftest's own stimulus window from capture, so once the main display's
+/// session runs its filter is swapped for one excluding only the overlay panel(s) — the feedback-loop guard stays.
+@MainActor
+private func bootRuntime() async throws -> (runtime: Runtime, display: ManagedDisplay, pipeline: Pipeline) {
+    let suite = "com.goldentik.Sitr.selftest"
+    let defaults = UserDefaults(suiteName: suite)!
+    defaults.removePersistentDomain(forName: suite)
+    let runtime = Runtime(model: AppModel(preferences: Preferences(defaults: defaults)))
+    Harness.onExit { runtime.displayManager.stop() }
+    runtime.start()
+    print("permission_state=\(runtime.permission.state)")
+    guard let mainID = NSScreen.screens.first?.displayID else { throw SelftestError("no screen") }
+    let deadline = CACurrentMediaTime() + 10
+    while CACurrentMediaTime() < deadline {
+        if let d = runtime.displayManager.displays.first(where: { $0.id == mainID }), d.session.health.isOK,
+           let pipeline = runtime.pipelines[mainID] {
+            let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+            guard let display = content.displays.first(where: { $0.displayID == mainID }) else { throw SelftestError("display not in SCShareableContent") }
+            let panelIDs = Set(runtime.displayManager.displays.map { CGWindowID($0.panel.windowNumber) })
+            let excluded = content.windows.filter { panelIDs.contains($0.windowID) }
+            try await d.session.updateFilter(SCContentFilter(display: display, excludingWindows: excluded))
+            print("pipeline_boot display=\(mainID) displays=\(runtime.displayManager.displays.count) pipelines=\(runtime.pipelines.count) "
+                + "excluded_panel_windows=\(excluded.count)/\(panelIDs.count) health=\(runtime.model.policy.health)")
+            return (runtime, d, pipeline)
+        }
+        try await Task.sleep(for: .milliseconds(100))
+    }
+    throw SelftestError("capture did not start within 10 s (permission=\(runtime.permission.state))")
+}
+
+/// The selftest's own stimulus: a panel just under the overlay level showing the CC0 person photo (`Sources/SitrSpike/Fixtures/
+/// person.jpg`, 500×749, drawn 1:1 so image pixels are display points), a heartbeat block that keeps frames flowing while
+/// covers clear, and — for `--motion` — two copies of the photo moving like video. Dev-only: the fixture is loaded relative to
+/// `#filePath`, so it exists in a source checkout, not in a shipped bundle.
+@MainActor
+private final class Stimulus {
+    static let imageSize = CGSize(width: 500, height: 749)
+    /// Hand-checked body box in the fixture (image pixels, top-left origin): turban top to feet, elbow to elbow.
+    static let body = CGRect(x: 125, y: 120, width: 235, height: 615)
+
+    let panel: NSPanel
+    /// Panel rect in display-local points (origin top-left).
+    let rect: CGRect
+    /// Where the person is on screen (display-local points) in the static layout.
+    let personRect: CGRect
+    private let photo = CALayer(), photo2 = CALayer(), heartbeat = CALayer()
+    private var beat = 0
+
+    init(display: CGSize, motion: Bool) throws {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("SitrSpike/Fixtures/person.jpg")
+        guard let image = NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            throw SelftestError("fixture missing: \(url.path)")
+        }
+        let size = motion ? CGSize(width: 1300, height: 860) : CGSize(width: Self.imageSize.width + 60, height: Self.imageSize.height)
+        rect = CGRect(x: ((display.width - size.width) / 2).rounded(), y: ((display.height - size.height) / 2).rounded(),
+                      width: size.width, height: size.height)
+        personRect = Self.body.offsetBy(dx: rect.minX + 60, dy: rect.minY)
+        panel = NSPanel(contentRect: appKitRect(rect, displayHeight: display.height), styleMask: [.borderless, .nonactivatingPanel],
+                        backing: .buffered, defer: false)
+        panel.isOpaque = true
+        panel.backgroundColor = .white
+        panel.hasShadow = false
+        panel.ignoresMouseEvents = true
+        panel.level = .screenSaver  // the overlay sits one level above
+        panel.hidesOnDeactivate = false
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        let view = NSView(frame: NSRect(origin: .zero, size: size))
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor.white.cgColor
+        panel.contentView = view
+        for (layer, scale) in [(photo, 1.0), (photo2, 0.6)] {
+            layer.contents = image
+            layer.contentsGravity = .resizeAspect
+            layer.frame = CGRect(x: 60, y: 0, width: Self.imageSize.width * scale, height: Self.imageSize.height * scale)
+            layer.isHidden = true
+            view.layer?.addSublayer(layer)
+        }
+        photo2.isHidden = !motion
+        heartbeat.frame = CGRect(x: 10, y: 10, width: 40, height: 40)  // outside the photo column
+        heartbeat.backgroundColor = NSColor.systemBlue.cgColor
+        view.layer?.addSublayer(heartbeat)
+        Harness.track(panel)
+        panel.orderFrontRegardless()
+    }
+
+    /// Shows or hides the photo in one flushed transaction. Returns `CACurrentMediaTime()` after the flush (the M1-T04 clock).
+    @discardableResult
+    func show(_ on: Bool) -> Double {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        photo.isHidden = !on
+        CATransaction.commit()
+        CATransaction.flush()
+        return CACurrentMediaTime()
+    }
+
+    /// Toggles the heartbeat block so the screen keeps changing and SCK keeps delivering frames.
+    func pulse() {
+        beat += 1
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        heartbeat.backgroundColor = beat % 2 == 0 ? NSColor.systemBlue.cgColor : NSColor.systemOrange.cgColor
+        CATransaction.commit()
+        CATransaction.flush()
+    }
+
+    /// Motion: both photos travel along Lissajous paths inside the panel (`t` in seconds).
+    func move(t: Double) {
+        let w = rect.width, h = rect.height
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        photo.frame.origin = CGPoint(x: (w - 500) / 2 + 330 * sin(t * 0.9), y: (h - 749) / 2 + 40 * sin(t * 1.7))
+        photo2.frame.origin = CGPoint(x: (w - 300) / 2 - 380 * sin(t * 0.6 + 1), y: (h - 449) / 2 + 150 * cos(t * 1.1))
+        CATransaction.commit()
+        CATransaction.flush()
+    }
+}
+
+/// Records, per trial, the first commit whose layers cover the person: commit time and the covered share of the person rect.
+@MainActor
+private final class CommitRecorder {
+    struct Hit {
+        var time: Double
+        var overlap: Double
+        var layers: Int
+    }
+    private(set) var hit: Hit?
+    private var armed = false
+    private let person: CGRect
+
+    init(person: CGRect) { self.person = person }
+
+    func arm() {
+        hit = nil
+        armed = true
+    }
+
+    func record(_ specs: [CoverLayerSpec], at time: Double) {
+        guard armed, !specs.isEmpty else { return }
+        let overlap = specs.map { $0.frame.intersection(person).area / person.area }.max() ?? 0
+        guard overlap > 0 else { return }
+        hit = Hit(time: time, overlap: overlap, layers: specs.count)
+        armed = false
+    }
+}
+
+/// Polls `condition` every 20 ms for up to `seconds`.
+@MainActor
+private func waitUntil(_ seconds: Double, _ condition: @escaping @MainActor () -> Bool) async -> Bool {
+    let deadline = CACurrentMediaTime() + seconds
+    while CACurrentMediaTime() < deadline {
+        if condition() { return true }
+        try? await Task.sleep(for: .milliseconds(20))
+    }
+    return condition()
+}
+
+/// M2-T12 exposure (Blur path, the M1-T04 method through the production pipeline): per trial the photo flips on in a flushed
+/// transaction, and the clock stops when `OverlayPanel.apply` has committed a layer over it. Between trials the region is blank
+/// and the heartbeat runs until the covers are gone, then the screen settles ≥ 600 ms plus a random 100–170 ms so paints are not
+/// phase-locked to the 15 Hz cadence. Control: the cover must cover ≥ 80 % of the hand-checked person rect.
+@MainActor
+private func pipelineTest(trials: Int) async throws -> Bool {
+    let (runtime, d, pipeline) = try await bootRuntime()
+    let stim = try Stimulus(display: d.frame.size, motion: false)
+    let recorder = CommitRecorder(person: stim.personRect)
+    let mainID = d.id
+    runtime.onCommit = { id, specs, _, at in if id == mainID { recorder.record(specs, at: at) } }
+    print("pipeline_stimulus panel=\(rectString(stim.rect)) person=\(rectString(stim.personRect)) display_pt=\(Int(d.frame.width))x\(Int(d.frame.height))")
+
+    var exposures: [Double] = [], overlaps: [Double] = [], layers: [Int] = []
+    var missed = 0, notCleared = 0
+    for i in 0...trials {  // trial 0 warms the stream and Vision and is not counted
+        stim.show(false)
+        let clearDeadline = CACurrentMediaTime() + 3
+        while d.panel.layerCount > 0, CACurrentMediaTime() < clearDeadline {
+            stim.pulse()
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        if d.panel.layerCount > 0 { notCleared += 1 }
+        try await Task.sleep(for: .milliseconds(600 + 100 + Int.random(in: 0..<70)))
+        recorder.arm()
+        let tFlip = stim.show(true)
+        _ = await waitUntil(2) { recorder.hit != nil }
+        guard i > 0 else { continue }
+        if let hit = recorder.hit {
+            exposures.append(hit.time - tFlip)
+            overlaps.append(hit.overlap)
+            layers.append(hit.layers)
+        } else {
+            missed += 1
+        }
+    }
+    stim.show(false)
+    let m = await pipeline.metrics
+    let load = loadAverage(), noisy = load > 4
+    let p50 = percentile(exposures, 0.5), p95 = percentile(exposures, 0.95)
+    let controlOK = !overlaps.isEmpty && overlaps.allSatisfy { $0 >= 0.8 }
+    print("exposure_ms p50=\(ms(p50)) p95=\(ms(p95)) n=\(exposures.count) missed=\(missed) target_p95_ms=150 within_target=\(p95 <= 0.150) "
+        + "load1=\(fmt(load)) noisy=\(noisy) path=blur style=\(runtime.appearance.style.rawValue)")
+    print("cover_control overlap_min=\(fmt(overlaps.min() ?? 0)) overlap_p50=\(fmt(percentile(overlaps, 0.5))) layers_max=\(layers.max() ?? 0) "
+        + "covers_cleared_between_trials=\(notCleared == 0) ok=\(controlOK)")
+    print("pipeline_counts in=\(m.framesIn) out=\(m.framesOut) skipped=\(m.skipped) detections=\(m.detections) errors=\(m.errors) applies=\(m.applies) "
+        + "detect_ms=\(PipelineMetrics.p(m.detect)) track_ms=\(PipelineMetrics.p(m.track)) render_ms=\(PipelineMetrics.p(m.render)) "
+        + "commit_ms=\(PipelineMetrics.p(m.commit)) e2e_ms=\(PipelineMetrics.p(m.e2e)) health=\(runtime.model.policy.health)")
+    runtime.displayManager.stop()
+    // Correctness always gates; the p95 target only on a quiet machine (other agents' GPU/ANE load stalls Vision and Core Image).
+    return exposures.count >= trials * 9 / 10 && controlOK && notCleared == 0 && (noisy || p95 <= 0.150)
+}
+
+/// M2-T12 backlog check: the photo moves like video for `seconds`; every 10 s a line with frames in, detections, skipped
+/// frames, tracker and layer counts and resident memory. Skipped-frame ratio and memory must be flat: a growing ratio or RSS
+/// would mean frames queue somewhere. Compares the first and last thirds of the run.
+@MainActor
+private func motionTest(seconds: Double) async throws -> Bool {
+    let (runtime, d, pipeline) = try await bootRuntime()
+    let stim = try Stimulus(display: d.frame.size, motion: true)
+    stim.show(true)
+    let mover = Task { @MainActor in
+        var t = 0.0
+        while !Task.isCancelled {
+            stim.move(t: t)
+            t += 1.0 / 30
+            try? await Task.sleep(for: .milliseconds(33))
+        }
+    }
+    var samples: [(skip: Double, rss: Double)] = []
+    var lastIn = 0, lastSkipped = 0, layersSeen = 0
+    let start = CACurrentMediaTime()
+    var next = 10.0
+    while next <= seconds + 0.5 {
+        let wait = start + next - CACurrentMediaTime()
+        if wait > 0 { try await Task.sleep(for: .seconds(wait)) }
+        let m = await pipeline.metrics
+        let dIn = m.framesIn - lastIn, dSkip = m.skipped - lastSkipped
+        let ratio = dIn + dSkip > 0 ? Double(dSkip) / Double(dIn + dSkip) : 0
+        let rss = residentMemoryMB()
+        samples.append((ratio, rss))
+        layersSeen = max(layersSeen, m.layers)
+        print("motion t=\(Int(next)) frames_in=\(m.framesIn) detections=\(m.detections) skipped=\(m.skipped) window_skip_ratio=\(fmt(ratio)) "
+            + "tracks=\(m.tracks) layers=\(m.layers) rss_mb=\(Int(rss)) detect_ms=\(PipelineMetrics.p(m.detect)) e2e_ms=\(PipelineMetrics.p(m.e2e)) "
+            + "errors=\(m.errors) load1=\(fmt(loadAverage()))")
+        lastIn = m.framesIn
+        lastSkipped = m.skipped
+        next += 10
+    }
+    mover.cancel()
+    stim.show(false)
+    let k = max(1, samples.count / 3)
+    func mean(_ v: some Collection<Double>) -> Double { v.isEmpty ? 0 : v.reduce(0, +) / Double(v.count) }
+    let rssFirst = mean(samples.prefix(k).map(\.rss)), rssLast = mean(samples.suffix(k).map(\.rss))
+    let skipFirst = mean(samples.prefix(k).map(\.skip)), skipLast = mean(samples.suffix(k).map(\.skip))
+    let growth = rssLast - rssFirst > max(30, 0.25 * rssFirst) || skipLast - skipFirst > 0.2
+    let m = await pipeline.metrics
+    print("backlog_growth=\(growth) rss_mb_first=\(Int(rssFirst)) rss_mb_last=\(Int(rssLast)) skip_ratio_first=\(fmt(skipFirst)) skip_ratio_last=\(fmt(skipLast)) "
+        + "frames_in=\(m.framesIn) skipped_total=\(m.skipped) skip_ratio_total=\(fmt(m.skipRatio)) layers_max=\(layersSeen) seconds=\(Int(seconds)) load1=\(fmt(loadAverage()))")
+    runtime.displayManager.stop()
+    return !growth && layersSeen > 0 && m.framesIn > 0
+}
+
+/// M2-T16: with `Notifier.dryRun`, stop the capture session (a stream error lands in the same `.stopped` health) and report a
+/// revocation; health must flip within 5 s with exactly one notification and the covers gone. Then `start()` again: `.ok` on the
+/// first frame within 5 s, one "restored" notification, covers back.
+@MainActor
+private func failstateTest() async throws -> Bool {
+    Notifier.dryRun = true
+    let (runtime, d, _) = try await bootRuntime()
+    let model = runtime.model
+    let stim = try Stimulus(display: d.frame.size, motion: false)
+    stim.show(true)
+    let covered = await waitUntil(10) { d.panel.layerCount > 0 }
+    runtime.checkHealth()
+    print("failstate_baseline health=\(model.policy.health) covered=\(covered) layers=\(d.panel.layerCount) notifications=\(runtime.notifier.posted) icon=\(model.iconState)")
+    var ok = covered && model.policy.health == .ok && runtime.notifier.posted == 0
+
+    let t0 = CACurrentMediaTime()
+    d.session.stop()
+    runtime.permission.markRevoked()
+    let flipped = await waitUntil(5) { model.policy.health == .needsPermission }
+    let flipMs = (CACurrentMediaTime() - t0) * 1000
+    let dropped = await waitUntil(2) { d.panel.layerCount == 0 }
+    print("failstate_stop health=\(model.policy.health) flipped=\(flipped) within_ms=\(Int(flipMs)) covers_dropped=\(dropped) layers=\(d.panel.layerCount) "
+        + "notifications=\(runtime.notifier.posted) icon=\(model.iconState) reveal_available=\(model.revealAvailable) permission=\(runtime.permission.state)")
+    ok = ok && flipped && dropped && runtime.notifier.posted == 1 && model.iconState == .warning
+    try await Task.sleep(for: .seconds(2))  // a second poll must not notify again
+    runtime.checkHealth()
+    print("failstate_hold notifications=\(runtime.notifier.posted) health=\(model.policy.health)")
+    ok = ok && runtime.notifier.posted == 1
+
+    let t1 = CACurrentMediaTime()
+    d.session.start()
+    let recovered = await waitUntil(5) {
+        stim.pulse()
+        return model.policy.health == .ok
+    }
+    let recoverMs = (CACurrentMediaTime() - t1) * 1000
+    let coveredAgain = await waitUntil(5) { d.panel.layerCount > 0 }
+    print("failstate_restart health=\(model.policy.health) recovered=\(recovered) within_ms=\(Int(recoverMs)) covers_back=\(coveredAgain) layers=\(d.panel.layerCount) "
+        + "notifications=\(runtime.notifier.posted) icon=\(model.iconState) session_ok=\(d.session.health.isOK)")
+    ok = ok && recovered && coveredAgain && runtime.notifier.posted == 2 && model.iconState == .normal
+    print("failstate_revoke_real manual pending: markRevoked() keeps `granted` while CGPreflightScreenCaptureAccess is true "
+        + "(a shell-launched process inherits the terminal's grant); use tccutil reset ScreenCapture com.goldentik.Sitr on a Finder-launched build")
+    stim.show(false)
+    runtime.displayManager.stop()
+    return ok
+}
+
+/// Dev stimulus for a manual run of the real app from another shell: the person photo drifting for `seconds` (frames keep flowing),
+/// then exit. No pipeline here — the app under test is the other process, which is why its own-process exclusion does not hide it.
+@MainActor
+private func stimulusOnly(seconds: Double) async throws -> Bool {
+    guard let screen = NSScreen.screens.first else { throw SelftestError("no screen") }
+    let stim = try Stimulus(display: screen.frame.size, motion: true)
+    stim.show(true)
+    print("stimulus panel=\(rectString(stim.rect)) seconds=\(Int(seconds))")
+    let start = CACurrentMediaTime()
+    while CACurrentMediaTime() - start < seconds {
+        stim.move(t: (CACurrentMediaTime() - start) * 0.25)  // slow drift: a few points per frame
+        try await Task.sleep(for: .milliseconds(66))
+    }
+    stim.show(false)
+    return true
+}
+
 // MARK: - harness (lifted from the spike's Rig)
 
 /// NSApplication bootstrap, window tracking, cleanup hooks and a hard deadline. `run` never returns.
@@ -512,6 +852,11 @@ nonisolated func rectString(_ r: CGRect) -> String {
     r.isNull ? "null" : "(\(Int(r.minX.rounded())),\(Int(r.minY.rounded())),\(Int(r.width.rounded())),\(Int(r.height.rounded())))"
 }
 nonisolated func rgbString(_ c: RGB?) -> String { c.map { "(\($0.r),\($0.g),\($0.b))" } ?? "n/a" }
+
+nonisolated extension CGRect {
+    /// Width × height; 0 for null or empty rects.
+    var area: CGFloat { isNull || isEmpty ? 0 : width * height }
+}
 
 /// 1-minute load average, so a noisy render run (other agents building) is visible in the output.
 nonisolated func loadAverage() -> Double {
