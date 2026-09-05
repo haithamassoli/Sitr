@@ -161,4 +161,17 @@ private func person(x: Double, y: Double = 0, _ category: Category = .woman) -> 
         #expect(merged[1].rect == d.rect)
         #expect(Tracker.merged([]).isEmpty)
     }
+
+    @Test func bundleIDFollowsAttributedObservationsAndSticksThroughUnattributedOnes() {
+        var tracker = Tracker()
+        var observation = person(x: 0)
+        observation.bundleID = "com.apple.Safari"
+        #expect(tracker.update([observation], at: 0, sequence: 0)[0].bundleID == "com.apple.Safari")
+        // Owner unknown this frame: keep the last known one.
+        #expect(tracker.update([person(x: 0)], at: frame, sequence: 1)[0].bundleID == "com.apple.Safari")
+        observation.bundleID = "com.google.Chrome"  // moved to another app's window
+        #expect(tracker.update([observation], at: 2 * frame, sequence: 2)[0].bundleID == "com.google.Chrome")
+        let tracks = tracker.update([observation, person(x: 300)], at: 3 * frame, sequence: 3)
+        #expect(tracks.count == 2 && tracks[1].bundleID == nil)  // a new unattributed track takes the Default Rule
+    }
 }
