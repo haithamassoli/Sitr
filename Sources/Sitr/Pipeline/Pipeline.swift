@@ -1,7 +1,10 @@
-// M2-T12: one Pipeline per display. Frame → detect persons + faces → assign faces → classify (≤ 3 faces) → categorize → track →
-// policy → render → commit. Backpressure is the capture stream's `.bufferingNewest(1)`: while one detection is in flight,
-// newer frames replace the single buffered frame, so intermediate frames are skipped and nothing ever queues. Metrics are
-// timings and counts only (`SITR_METRICS=1` prints them every 5 s); no pixel leaves memory.
+// M2-T12: one Pipeline per display. Frame → Curtain fast path (M3-T05: dirty rects ∩ Curtain windows → pre-covers on screen before
+// detection) → detect persons + faces → assign faces → classify (≤ 3 faces) → categorize → attribute to the topmost window →
+// track → policy → render → verify Curtain tiles → commit. Backpressure is the capture stream's `.bufferingNewest(1)`: while one
+// detection is in flight, newer frames replace the single buffered frame, so intermediate frames are skipped and nothing ever
+// queues. The pipeline is the panel's only writer: person covers, pre-covers and the Runtime's fail-closed covers (M3-T06) are
+// merged here in one apply. Metrics are timings and counts only (`SITR_METRICS=1` prints them every 5 s); no pixel leaves memory.
+import CoreGraphics
 import CoreVideo
 import Foundation
 import QuartzCore
@@ -98,6 +101,35 @@ nonisolated func classificationOrder(classifiable: [Bool], sticky: [Category?], 
     return Array((rotated(urgent) + rotated(rest)).prefix(limit))
 }
 
+/// Overlay layer ids. Track ids are ≥ 1 (`Tracker.nextID` starts at 1), so everything else lives below zero: pre-covers just under
+/// it, fail-closed covers far below (a window id is 32 bits, a piece index 8), and no range ever meets another. Unit-tested.
+nonisolated enum CoverID {
+    /// Pre-cover `n` of a frame (0-based): -1, -2, …
+    static func preCover(_ n: Int) -> Int { -1 - n }
+    static let failClosedBase = -(1 << 40)
+    /// Fail-closed Solid cover over `piece` of a Curtain window's visible region.
+    static func failClosed(window: CGWindowID, piece: Int = 0) -> Int { failClosedBase - (Int(window) << 8 | min(piece, 255)) }
+    static func isTrack(_ id: Int) -> Bool { id >= 1 }
+    static func isPreCover(_ id: Int) -> Bool { id < 0 && id > failClosedBase }
+    static func isFailClosed(_ id: Int) -> Bool { id <= failClosedBase }
+}
+
+/// Capture rate for a display: `curtainFPS` while at least one visible Curtain window is on it (the M1-T04 latency numbers:
+/// 15 fps capture alone is 72 ms p95, over the 50 ms Curtain target), else the FR1 default.
+nonisolated func captureFPS(windows: [WindowRect], rules: Rules, displayID: CGDirectDisplayID, curtainFPS: Int, defaultFPS: Int = 15) -> Int {
+    windows.contains { $0.displayID == displayID && rules.mode(for: $0.bundleID) == .curtain } ? curtainFPS : defaultFPS
+}
+
+/// M3-T06 fail-closed covers for one display: one Solid spec per visible piece of every Curtain window (clipped to what is not under
+/// another window, so a Blur or Off window stacked above stays uncovered). Blur apps get nothing (they fail open, PRD FR10).
+nonisolated func failClosedSpecs(windows: [WindowRect], rules: Rules, displayID: CGDirectDisplayID, color: CGColor) -> [CoverLayerSpec] {
+    windows.filter { $0.displayID == displayID && rules.mode(for: $0.bundleID) == .curtain }.flatMap { w in
+        subtract(w.rect, holes: windows.occluders(of: w)).enumerated().map { i, piece in
+            CoverLayerSpec(id: CoverID.failClosed(window: w.windowID, piece: i), frame: piece, contents: nil, color: color)
+        }
+    }
+}
+
 /// Cover look (PRD FR3): style, Blur Strength 0…1 (default 0.7), Body Padding 0…0.5 (default 0.15). `Preferences` persists it.
 nonisolated struct CoverAppearance: Sendable {
     var style: CoverStyle = .gaussian
@@ -111,7 +143,12 @@ nonisolated struct PipelineMetrics: Sendable {
     var framesIn = 0, framesOut = 0, skipped = 0, detections = 0, errors = 0, applies = 0, tracks = 0, layers = 0
     /// Face crops classified since start; current tracks per category.
     var crops = 0, women = 0, men = 0, unknown = 0
+    /// M3-T05: pre-cover applies (frames that put pre-covers up before detection), pre-cover layers on screen now, renders that
+    /// fell back to Solid over the 5 ms budget.
+    var preApplies = 0, preLayers = 0, preSolid = 0
     var detect: [Double] = [], classify: [Double] = [], track: [Double] = [], render: [Double] = [], commit: [Double] = [], e2e: [Double] = []
+    /// Fast path: capture callback → pre-cover commit; pre-cover render time per frame; detection done → pre-cover cleared.
+    var fastPath: [Double] = [], preRender: [Double] = [], curtainClear: [Double] = []
 
     mutating func resetWindow() {
         detect = []
@@ -120,6 +157,9 @@ nonisolated struct PipelineMetrics: Sendable {
         render = []
         commit = []
         e2e = []
+        fastPath = []
+        preRender = []
+        curtainClear = []
     }
 
     /// Skipped ÷ delivered, over the whole run.
@@ -132,7 +172,8 @@ nonisolated struct PipelineMetrics: Sendable {
         "pipeline display=\(display) t=\(Int(elapsed)) in=\(framesIn) out=\(framesOut) skipped=\(skipped) detections=\(detections) "
             + "errors=\(errors) applies=\(applies) detect_ms=\(Self.p(detect)) classify_ms=\(Self.p(classify)) crops=\(crops) "
             + "track_ms=\(Self.p(track)) render_ms=\(Self.p(render)) commit_ms=\(Self.p(commit)) e2e_ms=\(Self.p(e2e)) tracks=\(tracks) "
-            + "categories=w\(women)/m\(men)/u\(unknown) layers=\(layers) rss_mb=\(Int(residentMemoryMB())) load1=\(fmt(loadAverage()))"
+            + "categories=w\(women)/m\(men)/u\(unknown) layers=\(layers) pre_applies=\(preApplies) pre_layers=\(preLayers) pre_solid=\(preSolid) "
+            + "fast_ms=\(Self.p(fastPath)) pre_render_ms=\(Self.p(preRender)) clear_ms=\(Self.p(curtainClear)) rss_mb=\(Int(residentMemoryMB())) load1=\(fmt(loadAverage()))"
     }
 }
 
@@ -149,9 +190,12 @@ nonisolated func residentMemoryMB() -> Double {
     return kr == KERN_SUCCESS ? Double(info.resident_size) / 1_048_576 : .nan
 }
 
-/// The per-display pipeline. Owns the tracker; reads the latest `Policy` / `CoverAppearance` per frame; commits covers to
-/// the display's `OverlayPanel` on the main actor in one pass.
+/// The per-display pipeline. Owns the tracker and the per-app `Curtain` state machines; reads the latest `Policy` /
+/// `CoverAppearance` / window snapshot per frame; commits covers to the display's `OverlayPanel` on the main actor in one pass.
 actor Pipeline {
+    /// Pre-cover render budget per frame; past it the remaining pre-covers of the frame are Solid (M3-T05).
+    static let preCoverBudget = 0.005
+
     nonisolated let displayID: CGDirectDisplayID
     private let frames: AsyncStream<Frame>
     private let panel: OverlayPanel
@@ -165,14 +209,24 @@ actor Pipeline {
         var appearance: CoverAppearance
     }
     private let settings: Mutex<Settings>
+    /// `WindowTracker` snapshot (every display; filtered per use), pushed by the Runtime at ≤ 10 Hz.
+    private let windows = Mutex<[WindowRect]>([])
+    /// M3-T06 fail-closed covers from the Runtime; merged into every apply so the pipeline stays the panel's only writer.
+    private let failClosed = Mutex<[CoverLayerSpec]>([])
     private let commitHook = Mutex<(@MainActor @Sendable ([CoverLayerSpec], Frame, Double) -> Void)?>(nil)
+    private let preCoverHook = Mutex<(@MainActor @Sendable ([CoverLayerSpec], Frame, Double) -> Void)?>(nil)
 
     private var tracker = Tracker()
+    /// One Curtain per Curtain-mode app (keyed by bundle id, "" for windows without one) and the window ids each one knows.
+    private var curtains: [String: Curtain] = [:]
+    private var curtainWindowIDs: [String: Set<Int>] = [:]
+    private var personSpecs: [CoverLayerSpec] = []
+    private var preSpecs: [CoverLayerSpec] = []
+    private var appliedLayers = 0
     private(set) var metrics = PipelineMetrics()
     private var loop: Task<Void, Never>?
     private var printer: Task<Void, Never>?
     private var lastSequence: Int?
-    private var hadLayers = false
     private var round = 0
     private let startedAt = CACurrentMediaTime()
 
@@ -193,6 +247,15 @@ actor Pipeline {
     /// Current tracks (display points); the category selftest reads categories from here.
     var tracks: [Track] { tracker.tracks }
 
+    /// Curtain windows in trusted motion right now, by bundle id (the curtain selftest reads `trusted_after_ms` off this).
+    var trustedCurtainWindows: [String: [Int]] {
+        var out: [String: [Int]] = [:]
+        for (key, curtain) in curtains {
+            out[key] = (curtainWindowIDs[key] ?? []).filter { curtain.isTrusted(window: $0) }.sorted()
+        }
+        return out
+    }
+
     /// Dynamic type names of the plug-ins, for the metrics header and the selftests.
     nonisolated var modelsNote: String {
         "detector=\(String(describing: type(of: detector))) classifier=\(String(describing: type(of: classifier)))"
@@ -209,10 +272,33 @@ actor Pipeline {
         settings.withLock { $0.appearance = appearance }
     }
 
-    /// Runs on the main actor after every processed frame, once its covers are on screen: the specs applied, the frame, and
-    /// `CACurrentMediaTime()` right after the commit. Health recovery and the selftests hang off this.
+    /// Latest `WindowTracker.windows` (all displays). Read at the next frame: attribution, Curtain windows, clipping.
+    nonisolated func update(windows: [WindowRect]) {
+        self.windows.withLock { $0 = windows }
+    }
+
+    /// M3-T06: Solid covers the Runtime wants on screen while capture is down (empty = none). Applied at once when they change,
+    /// then carried along with every frame's covers; the first frame after capture resumes replaces them like any other apply.
+    nonisolated func update(failClosed specs: [CoverLayerSpec]) {
+        let changed = failClosed.withLock { current in
+            guard current.map(\.id) != specs.map(\.id) || current.map(\.frame) != specs.map(\.frame) else { return false }
+            current = specs
+            return true
+        }
+        if changed { Task { await self.applyAll() } }
+    }
+
+    /// Runs on the main actor after every processed frame, once its covers are on screen: every spec applied (person covers,
+    /// pre-covers and fail-closed covers — tell them apart with `CoverID`), the frame, and `CACurrentMediaTime()` right after
+    /// the commit. Health recovery and the selftests hang off this.
     nonisolated func onCommit(_ hook: (@MainActor @Sendable ([CoverLayerSpec], Frame, Double) -> Void)?) {
         commitHook.withLock { $0 = hook }
+    }
+
+    /// Runs on the main actor on every frame arrival, after the Curtain fast path: the frame's pre-cover specs (possibly none)
+    /// and the time they were on screen. The curtain selftest measures exposure with it.
+    nonisolated func onPreCover(_ hook: (@MainActor @Sendable ([CoverLayerSpec], Frame, Double) -> Void)?) {
+        preCoverHook.withLock { $0 = hook }
     }
 
     /// Consumes the display's frames until `stop()`. Idempotent.
@@ -225,18 +311,80 @@ actor Pipeline {
         }
     }
 
-    /// Stops consuming and removes every cover of this display.
+    /// Stops consuming and removes every cover of this display, fail-closed ones included.
     func stop() async {
         loop?.cancel()
         printer?.cancel()
         loop = nil
         printer = nil
+        failClosed.withLock { $0 = [] }
         await clear()
     }
 
+    /// Person covers, pre-covers and Curtain state go; fail-closed covers (if any) stay.
     private func clear() async {
-        hadLayers = false
-        await panel.apply([])
+        personSpecs = []
+        preSpecs = []
+        curtains = [:]
+        curtainWindowIDs = [:]
+        await applyAll()
+    }
+
+    /// The one apply: person covers + pre-covers + fail-closed covers. An empty set is applied once, then the panel is left alone.
+    private func applyAll() async {
+        let specs = personSpecs + preSpecs + failClosed.withLock { $0 }
+        guard !specs.isEmpty || appliedLayers > 0 else { return }
+        await panel.apply(specs)
+        appliedLayers = specs.count
+        metrics.applies += 1
+    }
+
+    /// Feeds the Curtain-mode windows of this display to their app's `Curtain`: new / resized windows are pre-covered until their
+    /// first verified frame, moved ones keep their tiles, gone ones are closed, apps without windows are dropped.
+    private func syncCurtains(_ curtainWindows: [WindowRect], now: Double) {
+        var seen: [String: Set<Int>] = [:]
+        for w in curtainWindows {
+            let key = w.bundleID ?? ""
+            var c = curtains[key] ?? Curtain()
+            c.windowChanged(id: Int(w.windowID), rect: Rect(w.rect), now: now)
+            curtains[key] = c
+            seen[key, default: []].insert(Int(w.windowID))
+        }
+        for key in curtains.keys {
+            guard let ids = seen[key] else {
+                curtains[key] = nil
+                curtainWindowIDs[key] = nil
+                continue
+            }
+            for id in curtainWindowIDs[key] ?? [] where !ids.contains(id) { curtains[key]?.windowClosed(id: id) }
+            curtainWindowIDs[key] = ids
+        }
+    }
+
+    /// Pre-cover layers for the current Curtain state: each `preCovers()` rect clipped to its window's visible region (M3-T09: never
+    /// on a window stacked above it), rendered from this frame in the active style, no padding (tiles already overshoot).
+    // ponytail: once the frame's pre-cover rendering passes `preCoverBudget` the remaining rects are Solid (mixed look for that
+    // frame, bounded latency); upgrade path: a sticky Solid mode for N frames after an overrun, or one union render per window.
+    private func preCoverSpecs(frame: Frame, appearance a: CoverAppearance, windows snapshot: [WindowRect], curtainWindows: [WindowRect]) -> [CoverLayerSpec] {
+        var specs: [CoverLayerSpec] = []
+        let t0 = CACurrentMediaTime()
+        for (key, curtain) in curtains.sorted(by: { $0.key < $1.key }) {
+            let appWindows = curtainWindows.filter { ($0.bundleID ?? "") == key }
+            for rect in curtain.preCovers() {
+                let cg = CGRect(rect)
+                guard let owner = appWindows.max(by: { $0.rect.intersection(cg).area < $1.rect.intersection(cg).area }) else { continue }
+                for piece in subtract(cg, holes: snapshot.occluders(of: owner)) where piece.width >= 1 && piece.height >= 1 {
+                    var style = a.style
+                    if style != .solid, CACurrentMediaTime() - t0 > Self.preCoverBudget {
+                        style = .solid
+                        metrics.preSolid += 1
+                    }
+                    specs.append(renderer.render(id: CoverID.preCover(specs.count), style: style, strength: a.strength, padding: 0, rect: piece, frame: frame))
+                }
+            }
+        }
+        if !specs.isEmpty { metrics.preRender.append(CACurrentMediaTime() - t0) }
+        return specs
     }
 
     private func run() async {
@@ -249,6 +397,30 @@ actor Pipeline {
             metrics.framesIn += 1
             if let last = lastSequence, frame.sequence > last + 1 { metrics.skipped += frame.sequence - last - 1 }
             lastSequence = frame.sequence
+            let current = settings.withLock { $0 }
+            let snapshot = windows.withLock { $0 }
+
+            // 0. Curtain fast path (M3-T05, PRD FR4): dirty rects ∩ this display's Curtain windows → pre-covers, on screen before
+            //    detection starts. Every frame feeds `dirty` (seq bookkeeping); windows in trusted motion add nothing.
+            let rules = current.policy.rules
+            let curtainWindows = current.policy.isProtecting(at: t0)
+                ? snapshot.filter { $0.displayID == displayID && rules.mode(for: $0.bundleID) == .curtain } : []
+            syncCurtains(curtainWindows, now: t0)
+            var pre: [CoverLayerSpec] = []
+            if !curtains.isEmpty {
+                let dirty = frame.dirtyRectsInDisplayPoints.map(Rect.init)
+                for key in curtains.keys { curtains[key]?.dirty(rects: dirty, seq: frame.sequence, now: t0) }
+                pre = preCoverSpecs(frame: frame, appearance: current.appearance, windows: snapshot, curtainWindows: curtainWindows)
+            }
+            if !pre.isEmpty || !preSpecs.isEmpty {
+                preSpecs = pre
+                await applyAll()
+                if !pre.isEmpty {
+                    metrics.preApplies += 1
+                    metrics.fastPath.append(CACurrentMediaTime() - frame.timestamp)
+                }
+            }
+            if let hook = preCoverHook.withLock({ $0 }) { await hook(pre, frame, CACurrentMediaTime()) }
 
             // 1. Persons and faces, concurrently, off this actor and off main (nonisolated async). One frame at a time: the
             //    loop waits here, and the capture stream keeps only the newest frame that arrives meanwhile.
@@ -268,7 +440,8 @@ actor Pipeline {
             metrics.detect.append(t1 - t0)
 
             // 2. Face → person, then at most 3 faces through the classifier: new and unknown tracks first, the rest round-robin;
-            //    a person skipped this frame keeps the category of the track it lands on. Category rule; observations in display points.
+            //    a person skipped this frame keeps the category of the track it lands on. Category rule; observations in display
+            //    points, attributed to the topmost window under the box centre (M3: Policy resolves Blur / Curtain per app).
             let assigned = assignFaces(faceBoxes, to: persons)
             let rects = persons.map { frame.pixelsToDisplayPoints($0.box) }
             let sticky = rects.map { r in tracker.tracks.filter { $0.rect.iou(r) >= Tracker.matchIoU }.max { $0.rect.iou(r) < $1.rect.iou(r) }?.category }
@@ -294,13 +467,13 @@ actor Pipeline {
                 } else {
                     category = usable[i] ? (sticky[i] ?? .unknown) : .unknown  // capped out this frame, or nothing to classify (rule → Unknown)
                 }
-                observations.append(PersonObservation(rect: rects[i], category: category, pWoman: p))
+                let owner = snapshot.topmost(at: CGPoint(x: rects[i].midX, y: rects[i].midY), on: displayID)?.bundleID
+                observations.append(PersonObservation(rect: rects[i], category: category, pWoman: p, bundleID: owner))
             }
 
             // 3. Track, then policy (merges overlapping hidden tracks itself).
             let now = CACurrentMediaTime()
             let tracks = tracker.update(observations, at: now, sequence: frame.sequence)
-            let current = settings.withLock { $0 }
             let covers = current.policy.covers(for: tracks, now: now)
             let t3 = CACurrentMediaTime()
             metrics.track.append(t3 - t2)
@@ -313,12 +486,17 @@ actor Pipeline {
             let t4 = CACurrentMediaTime()
             metrics.render.append(t4 - t3)
 
-            // 5. Commit on the main actor in one pass. An empty set is applied once, then the panel is left alone.
-            if !specs.isEmpty || hadLayers {
-                await panel.apply(specs)
-                metrics.applies += 1
+            // 5. Detection for this frame is in: tiles it pre-covered clear unless a hidden person's cover overlaps them, tiles a
+            //    later frame dirtied stay. Then one commit on the main actor with person covers and the remaining pre-covers.
+            if !curtains.isEmpty {
+                let hidden = specs.map { Rect($0.frame) }
+                for key in curtains.keys { curtains[key]?.verified(seq: frame.sequence, hiddenRects: hidden, now: t4) }
+                let verifiedPre = preCoverSpecs(frame: frame, appearance: a, windows: snapshot, curtainWindows: curtainWindows)
+                if verifiedPre.count < preSpecs.count { metrics.curtainClear.append(CACurrentMediaTime() - t1) }
+                preSpecs = verifiedPre
             }
-            hadLayers = !specs.isEmpty
+            personSpecs = specs
+            await applyAll()
             let t5 = CACurrentMediaTime()
             metrics.commit.append(t5 - t4)
             metrics.e2e.append(t5 - frame.timestamp)
@@ -332,8 +510,9 @@ actor Pipeline {
             metrics.men = tracks.count { $0.category == .man }
             metrics.unknown = tracks.count { $0.category == .unknown }
             metrics.layers = specs.count
+            metrics.preLayers = preSpecs.count
             if printer == nil, metrics.e2e.count >= 512 { metrics.resetWindow() }  // no printer draining the window: cap it
-            if let hook = commitHook.withLock({ $0 }) { await hook(specs, frame, t5) }
+            if let hook = commitHook.withLock({ $0 }) { await hook(personSpecs + preSpecs + failClosed.withLock { $0 }, frame, t5) }
         }
     }
 

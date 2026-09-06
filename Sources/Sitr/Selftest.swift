@@ -32,10 +32,27 @@ enum Selftest {
         case "category":
             Harness.run("category", deadline: 150) { try await categoryTest() }
         case "failstate":
-            Harness.run("failstate", deadline: 90) { try await failstateTest() }
+            Harness.run("failstate", deadline: 120) { try await failstateTest(stimulusApp: stimulusPath(args)) }
+        case "stimulus" where args.contains("--remote"):
+            // M3: the stimulus as its own app (Stimulus.app, another bundle id), driven by distributed notifications.
+            let seconds = option(args, "--seconds", default: 300.0)
+            let channel = option(args, "--channel") ?? NSTemporaryDirectory()
+            Harness.run("stimulus_remote", deadline: seconds + 5) { try await remoteStimulus(seconds: seconds, channel: channel) }
         case "stimulus":
             let seconds = option(args, "--seconds", default: 30.0)
             Harness.run("stimulus", deadline: seconds + 15) { try await stimulusOnly(seconds: seconds) }
+        case "filter":
+            Harness.run("filter", deadline: 120) { try await filterTest(stimulusApp: stimulusPath(args)) }
+        case "curtain" where args.contains("--scroll"):
+            Harness.run("curtain_scroll", deadline: 120) { try await curtainScrollTest(stimulusApp: stimulusPath(args)) }
+        case "curtain" where args.contains("--video"):
+            let seconds = option(args, "--video", default: 30.0)
+            Harness.run("curtain_video", deadline: seconds + 60) { try await curtainVideoTest(seconds: seconds, stimulusApp: stimulusPath(args)) }
+        case "curtain":
+            let trials = option(args, "--trials", default: 30)
+            Harness.run("curtain", deadline: Double(trials) * 8 + 90) { try await curtainExposureTest(trials: trials, stimulusApp: stimulusPath(args)) }
+        case "overlap":
+            Harness.run("overlap", deadline: 150) { try await overlapTest(stimulusApp: stimulusPath(args), stimulus2App: stimulusPath(args, second: true)) }
         default:
             let env = ProcessInfo.processInfo.environment
             print("bundle_id=\(Bundle.main.bundleIdentifier ?? "nil")")
@@ -384,15 +401,24 @@ private func renderTest(iterations: Int) async throws -> Bool {
 
 // MARK: - pipeline (M2-T12) and fail states (M2-T16)
 
-/// The real app wiring (`Runtime`) on a throwaway preferences suite (Everyone + Strict, FR3 defaults). The production filter
-/// excludes our whole process, which would hide the selftest's own stimulus window from capture, so once the main display's
-/// session runs its filter is swapped for one excluding only the overlay panel(s) — the feedback-loop guard stays.
+/// The real app wiring (`Runtime`) on a throwaway preferences suite (Everyone + Strict, FR3 defaults) and a throwaway rules
+/// directory (`rules` saved there first; nil = no file, so the `SITR_DEV_BLUR` seed gives Entire-Mac Blur). The production filter
+/// excludes our whole process, which would hide the selftest's own stimulus windows from capture, so the filter builder runs in
+/// its selftest mode: own process excluded, every own window that is not an overlay panel excepted back in (the feedback-loop
+/// guard stays), refreshed whenever the harness tracks a new window.
 @MainActor
-private func bootRuntime() async throws -> (runtime: Runtime, display: ManagedDisplay, pipeline: Pipeline) {
+private func bootRuntime(rules: Rules? = nil) async throws -> (runtime: Runtime, display: ManagedDisplay, pipeline: Pipeline) {
     let suite = "com.goldentik.Sitr.selftest"
     let defaults = UserDefaults(suiteName: suite)!
     defaults.removePersistentDomain(forName: suite)
-    let runtime = Runtime(model: AppModel(preferences: Preferences(defaults: defaults)))
+    let rulesDir = FileManager.default.temporaryDirectory.appending(path: "sitr-selftest-rules-\(getpid())")
+    try? FileManager.default.removeItem(at: rulesDir)
+    let store = RulesStore(directory: rulesDir)
+    if let rules { try store.save(rules) }
+    Harness.onExit { try? FileManager.default.removeItem(at: rulesDir) }
+    let runtime = Runtime(model: AppModel(preferences: Preferences(defaults: defaults), rulesStore: store))
+    runtime.filters.capturesOwnWindows = true
+    Harness.onTrack = { _ in runtime.filters.schedule() }
     Harness.onExit { runtime.displayManager.stop() }
     runtime.start()
     print("permission_state=\(runtime.permission.state)")
@@ -401,13 +427,10 @@ private func bootRuntime() async throws -> (runtime: Runtime, display: ManagedDi
     while CACurrentMediaTime() < deadline {
         if let d = runtime.displayManager.displays.first(where: { $0.id == mainID }), d.session.health.isOK,
            let pipeline = runtime.pipelines[mainID] {
-            let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
-            guard let display = content.displays.first(where: { $0.displayID == mainID }) else { throw SelftestError("display not in SCShareableContent") }
-            let panelIDs = Set(runtime.displayManager.displays.map { CGWindowID($0.panel.windowNumber) })
-            let excluded = content.windows.filter { panelIDs.contains($0.windowID) }
-            try await d.session.updateFilter(SCContentFilter(display: display, excludingWindows: excluded))
+            _ = await waitUntil(3) { runtime.filters.installs > 0 }
             print("pipeline_boot display=\(mainID) displays=\(runtime.displayManager.displays.count) pipelines=\(runtime.pipelines.count) "
-                + "excluded_panel_windows=\(excluded.count)/\(panelIDs.count) health=\(runtime.model.policy.health) \(runtime.modelsNote)")
+                + "filter_installs=\(runtime.filters.installs) plan=\(runtime.filters.plans[mainID].map { "\($0)" } ?? "none") rules_default=\(runtime.model.policy.rules.defaultMode) "
+                + "overrides=\(runtime.model.policy.rules.overrides.count) health=\(runtime.model.policy.health) \(runtime.modelsNote)")
             return (runtime, d, pipeline)
         }
         try await Task.sleep(for: .milliseconds(100))
@@ -435,8 +458,14 @@ private final class Stimulus {
     private let photo = CALayer(), photo2 = CALayer(), heartbeat = CALayer()
     private var beat = 0
 
-    /// A repo-relative image, e.g. `Tests/SitrDetectTests/Fixtures/woman.jpg` (dev checkout only).
+    /// A repo-relative image, e.g. `Tests/SitrDetectTests/Fixtures/woman.jpg` (dev checkout only), or the same file name from
+    /// `Contents/Resources` (the sandboxed Stimulus.app of the M3 selftests carries person.jpg there and cannot read the checkout).
     static func fixture(_ path: String) throws -> CGImage {
+        let name = URL(fileURLWithPath: path)
+        if let bundled = Bundle.main.url(forResource: name.deletingPathExtension().lastPathComponent, withExtension: name.pathExtension),
+           let image = NSImage(contentsOf: bundled)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            return image
+        }
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent(path)
         guard let image = NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
@@ -758,7 +787,7 @@ private func categoryTest() async throws -> Bool {
 /// revocation; health must flip within 5 s with exactly one notification and the covers gone. Then `start()` again: `.ok` on the
 /// first frame within 5 s, one "restored" notification, covers back.
 @MainActor
-private func failstateTest() async throws -> Bool {
+private func failstateTest(stimulusApp: String) async throws -> Bool {
     Notifier.dryRun = true
     let (runtime, d, _) = try await bootRuntime()
     let model = runtime.model
@@ -796,6 +825,8 @@ private func failstateTest() async throws -> Bool {
     ok = ok && recovered && coveredAgain && runtime.notifier.posted == 2 && model.iconState == .normal
     print("failstate_revoke_real manual pending: markRevoked() keeps `granted` while CGPreflightScreenCaptureAccess is true "
         + "(a shell-launched process inherits the terminal's grant); use tccutil reset ScreenCapture com.goldentik.Sitr on a Finder-launched build")
+    // M3-T06: the same stop / start cycle with a Curtain app on screen (the in-process stimulus stays as the Blur control).
+    if let curtainOK = try await failClosedCheck(runtime: runtime, display: d, stimulusApp: stimulusApp) { ok = ok && curtainOK }
     stim.show(false)
     runtime.displayManager.stop()
     return ok
@@ -825,10 +856,13 @@ private func stimulusOnly(seconds: Double) async throws -> Bool {
 enum Harness {
     private static var windows: [NSWindow] = []
     private static var cleanup: [@MainActor () -> Void] = []
+    /// Called for every tracked window (M3: `bootRuntime` refreshes the capture filter so a new in-process stimulus is captured).
+    static var onTrack: (@MainActor (NSWindow) -> Void)?
 
     static func track(_ w: NSWindow) {
         w.isReleasedWhenClosed = false
         windows.append(w)
+        onTrack?(w)
     }
 
     static func onExit(_ f: @escaping @MainActor () -> Void) { cleanup.append(f) }
@@ -984,4 +1018,966 @@ nonisolated struct SelftestError: Error, CustomStringConvertible {
 nonisolated extension CGColor {
     static let red = CGColor(srgbRed: 1, green: 0, blue: 0, alpha: 1)
     static let blue = CGColor(srgbRed: 0, green: 0, blue: 1, alpha: 1)
+}
+
+// MARK: - M3 (M3-T03 filter, M3-T05 curtain, M3-T06 fail-closed, M3-T09 overlap) — a second process as the stimulus
+
+/// Geometry of the remote stimulus window (`--selftest stimulus --remote`), in window-local points (origin top-left), shared by the
+/// stimulus process and the tests that read its window rect from the `WindowTracker`. The photo is the spike's person.jpg at 0.8.
+nonisolated enum RemoteLayout {
+    static let size = CGSize(width: 600, height: 640)
+    /// Magenta block: the "marker colour" the filter test looks for.
+    static let marker = CGRect(x: 10, y: 10, width: 40, height: 40)
+    /// Scrolling text column (no people).
+    static let text = CGRect(x: 10, y: 60, width: 130, height: 560)
+    static let photoScale: CGFloat = 0.8
+    static let photo = CGRect(x: 150, y: 20, width: 400, height: 599)
+    /// Hand-checked body box (`Stimulus.body` = 125,120,235,615 image px) at `photoScale`, offset by `photo`.
+    static let person = CGRect(x: 250, y: 116, width: 188, height: 492)
+    static let moveBy = CGVector(dx: 200, dy: 100)
+    /// Heartbeat block (toggles colour on `pulse`): keeps frames flowing while covers expire; in tile (0, 0), away from every
+    /// measured region. Pulsed no faster than every 300 ms (> `Curtain.motionGap`) so it never earns trusted motion.
+    static let heartbeat = CGRect(x: 60, y: 10, width: 40, height: 40)
+    /// Every command the stimulus registers for (fixed names; `origin` takes "x,y" in the notification's `object`).
+    static let commands = ["person_on", "person_off", "scroll", "video_on", "video_off", "move", "front", "origin", "pulse", "quit"]
+
+    /// Control channel: the test writes `<dir>/cmd` ("<seq> <command> <argument>"), the stimulus appends to `<dir>/done`
+    /// ("<command> <CACurrentMediaTime()>") after its flushed transaction.
+    // ponytail: two files and a 10 ms poll instead of DistributedNotificationCenter, which holds notifications for a background
+    // accessory app (and is blocked outright under the App Sandbox). Upgrade path: an XPC or Mach service if the rig ever needs
+    // to run against a sandboxed stimulus.
+    static func commandFile(_ dir: String) -> URL { URL(fileURLWithPath: dir).appending(path: "cmd") }
+    static func doneFile(_ dir: String) -> URL { URL(fileURLWithPath: dir).appending(path: "done") }
+}
+
+/// The stimulus as its own app (Stimulus.app = a re-signed copy of the bundle with another `CFBundleIdentifier`): a normal-level
+/// borderless window with a magenta marker, a text column, the person photo (hidden until asked) and a block-motion "video" (no
+/// people). Driven by distributed notifications named `<bundleID>.cmd.<command>` — person_on / person_off / scroll / video_on /
+/// video_off / move / front / origin.<x>.<y> / quit — and answers `<bundleID>.done.<command>.<CACurrentMediaTime()>` after the
+/// flushed transaction (names only: a sandboxed app may not attach userInfo). Prints its window rect; exits after `seconds`.
+@MainActor
+private final class RemoteStimulusWindow {
+    let bundleID: String
+    private let panel: NSPanel
+    private let displayHeight: CGFloat
+    private var origin: CGPoint
+    private let photo = CALayer(), marker = CALayer(), column = CALayer(), text = CATextLayer(), heartbeat = CALayer()
+    private var blocks: [CALayer] = []
+    private var beat = 0
+    private var video: Task<Void, Never>?
+    private var scroll: Task<Void, Never>?
+    private(set) var quit = false
+    private let channel: String
+    private var lastSeq = 0
+    private var poll: Task<Void, Never>?
+
+    init(display: CGSize, scale: CGFloat, image: CGImage, channel: String) {
+        self.channel = channel
+        bundleID = Bundle.main.bundleIdentifier ?? "com.goldentik.SitrStimulus"
+        displayHeight = display.height
+        origin = CGPoint(x: ((display.width - RemoteLayout.size.width) / 2).rounded(), y: ((display.height - RemoteLayout.size.height) / 2).rounded())
+        panel = NSPanel(contentRect: appKitRect(CGRect(origin: origin, size: RemoteLayout.size), displayHeight: display.height),
+                        styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        panel.isOpaque = true
+        panel.backgroundColor = .white
+        panel.hasShadow = false
+        panel.level = .normal  // layer 0: what WindowTracker keeps, like any app window
+        panel.hidesOnDeactivate = false
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        let view = NSView(frame: NSRect(origin: .zero, size: RemoteLayout.size))
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor.white.cgColor
+        panel.contentView = view
+        let h = RemoteLayout.size.height
+        for i in 0..<6 {
+            let l = CALayer()
+            l.backgroundColor = [NSColor.systemTeal, .systemOrange, .systemGreen, .systemIndigo, .systemYellow, .systemBrown][i].cgColor
+            l.frame = CGRect(x: 0, y: 0, width: 120, height: 90)
+            l.isHidden = true
+            view.layer?.addSublayer(l)
+            blocks.append(l)
+        }
+        photo.contents = image
+        photo.contentsGravity = .resizeAspect
+        photo.frame = appKitRect(RemoteLayout.photo, displayHeight: h)
+        photo.isHidden = true
+        view.layer?.addSublayer(photo)
+        marker.backgroundColor = CGColor(srgbRed: 1, green: 0, blue: 1, alpha: 1)
+        marker.frame = appKitRect(RemoteLayout.marker, displayHeight: h)
+        view.layer?.addSublayer(marker)
+        heartbeat.backgroundColor = NSColor.systemBlue.cgColor
+        heartbeat.frame = appKitRect(RemoteLayout.heartbeat, displayHeight: h)
+        view.layer?.addSublayer(heartbeat)
+        column.frame = appKitRect(RemoteLayout.text, displayHeight: h)
+        column.masksToBounds = true
+        column.backgroundColor = NSColor.white.cgColor
+        view.layer?.addSublayer(column)
+        text.string = Array(repeating: "Sitr curtain selftest — scrolling text, nobody here. ", count: 60).joined()
+        text.font = NSFont.systemFont(ofSize: 13)
+        text.fontSize = 13
+        text.foregroundColor = NSColor.black.cgColor
+        text.isWrapped = true
+        text.contentsScale = scale
+        text.frame = CGRect(x: 0, y: -2000, width: RemoteLayout.text.width, height: RemoteLayout.text.height + 2000)
+        column.addSublayer(text)
+        Harness.track(panel)
+        panel.orderFrontRegardless()
+        print("stimulus_remote bundle=\(bundleID) pid=\(getpid()) window=\(rectString(CGRect(origin: origin, size: RemoteLayout.size))) marker=\(rectString(RemoteLayout.marker)) "
+            + "person=\(rectString(RemoteLayout.person)) text=\(rectString(RemoteLayout.text))")
+        fflush(stdout)  // the parent redirects stdout to a file (block-buffered) and terminates us with SIGTERM
+        poll = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                self?.readCommand()
+                try? await Task.sleep(for: .milliseconds(10))
+            }
+        }
+    }
+
+    /// One line "<seq> <command> [argument]"; a seq we have not run yet is executed once.
+    private func readCommand() {
+        guard let line = try? String(contentsOf: RemoteLayout.commandFile(channel), encoding: .utf8) else { return }
+        let parts = line.trimmingCharacters(in: .whitespacesAndNewlines).split(separator: " ", maxSplits: 2).map(String.init)
+        guard parts.count >= 2, let seq = Int(parts[0]), seq > lastSeq else { return }
+        lastSeq = seq
+        handle(parts[1], argument: parts.count > 2 ? parts[2] : nil)
+    }
+
+    private func done(_ command: String, at t: Double) {
+        let line = "\(command) \(String(format: "%.6f", t))\n"
+        let url = RemoteLayout.doneFile(channel)
+        if let handle = try? FileHandle(forWritingTo: url) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: Data(line.utf8))
+        } else {
+            try? Data(line.utf8).write(to: url)
+        }
+    }
+
+    /// One flushed transaction; returns `CACurrentMediaTime()` after the flush (the M1-T04 clock).
+    private func flush(_ body: () -> Void) -> Double {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        body()
+        CATransaction.commit()
+        CATransaction.flush()
+        return CACurrentMediaTime()
+    }
+
+    private func place() {
+        panel.setFrameOrigin(appKitRect(CGRect(origin: origin, size: RemoteLayout.size), displayHeight: displayHeight).origin)
+    }
+
+    private func handle(_ command: String, argument: String?) {
+        switch command {
+        case "person_on": done(command, at: flush { photo.isHidden = false })
+        case "person_off": done(command, at: flush { photo.isHidden = true })
+        case "pulse":
+            beat += 1
+            done(command, at: flush { heartbeat.backgroundColor = beat % 2 == 0 ? NSColor.systemBlue.cgColor : NSColor.systemOrange.cgColor })
+        case "scroll":
+            scroll?.cancel()
+            scroll = Task { @MainActor [weak self] in
+                guard let self else { return }
+                done("scroll_start", at: flush { text.frame.origin.y += 24 })
+                for _ in 0..<9 {
+                    try? await Task.sleep(for: .milliseconds(33))
+                    if Task.isCancelled { return }
+                    _ = flush { text.frame.origin.y += 24 }
+                }
+                if text.frame.origin.y > -400 { _ = flush { text.frame.origin.y = -2000 } }
+                done("scroll", at: CACurrentMediaTime())
+            }
+        case "video_on":
+            video?.cancel()
+            video = Task { @MainActor [weak self] in
+                guard let self else { return }
+                let t0 = CACurrentMediaTime()
+                done("video_on", at: flush { blocks.forEach { $0.isHidden = false } })
+                let h = RemoteLayout.size.height
+                while !Task.isCancelled {
+                    let t = CACurrentMediaTime() - t0
+                    _ = flush {
+                        for (i, b) in blocks.enumerated() {
+                            let k = Double(i)
+                            let x = RemoteLayout.photo.minX + 140 + 130 * sin(t * (0.9 + 0.2 * k) + k)
+                            let y = RemoteLayout.photo.minY + 250 + 220 * cos(t * (0.7 + 0.15 * k) + 2 * k)
+                            b.frame.origin = CGPoint(x: x, y: h - y - 90)
+                        }
+                    }
+                    try? await Task.sleep(for: .milliseconds(33))
+                }
+            }
+        case "video_off":
+            video?.cancel()
+            video = nil
+            done(command, at: flush { blocks.forEach { $0.isHidden = true } })
+        case "move":
+            origin.x += RemoteLayout.moveBy.dx
+            origin.y += RemoteLayout.moveBy.dy
+            place()
+            done(command, at: CACurrentMediaTime())
+        case "front":
+            panel.orderFrontRegardless()
+            done(command, at: CACurrentMediaTime())
+        case "quit":
+            quit = true
+        case "origin":
+            let parts = (argument ?? "").split(separator: ",").compactMap { Double($0) }
+            if parts.count == 2 {
+                origin = CGPoint(x: parts[0], y: parts[1])
+                place()
+            }
+            done(command, at: CACurrentMediaTime())
+        default:
+            break
+        }
+    }
+
+    func finish() {
+        poll?.cancel()
+        video?.cancel()
+        scroll?.cancel()
+    }
+}
+
+@MainActor
+private func remoteStimulus(seconds: Double, channel: String) async throws -> Bool {
+    guard let screen = NSScreen.screens.first else { throw SelftestError("no screen") }
+    let window = RemoteStimulusWindow(display: screen.frame.size, scale: screen.backingScaleFactor,
+                                      image: try Stimulus.fixture("Sources/SitrSpike/Fixtures/person.jpg"), channel: channel)
+    let start = CACurrentMediaTime()
+    while CACurrentMediaTime() - start < seconds, !window.quit {
+        try await Task.sleep(for: .milliseconds(50))
+    }
+    window.finish()
+    return true
+}
+
+/// A remote stimulus process: launches `<app>/Contents/MacOS/Sitr --selftest stimulus --remote`, sends commands, collects the
+/// timestamps it answers with, and terminates it on exit.
+@MainActor
+private final class RemoteApp {
+    let bundleID: String
+    let process = Process()
+    private(set) var replies: [String: Double] = [:]
+    private let channel: URL
+    private var seq = 0
+    private var doneRead = 0
+
+    init(app: String, seconds: Double = 600) throws {
+        let url = URL(fileURLWithPath: app)
+        guard let bid = Bundle(url: url)?.bundleIdentifier else { throw SelftestError("no bundle at \(app); see docs/m3/integration.md for the Stimulus.app recipe") }
+        bundleID = bid
+        channel = FileManager.default.temporaryDirectory.appending(path: "sitr-stimulus-\(getpid())-\(bid)")
+        try? FileManager.default.removeItem(at: channel)
+        try FileManager.default.createDirectory(at: channel, withIntermediateDirectories: true)
+        try Data().write(to: RemoteLayout.doneFile(channel.path))
+        let dir = channel
+        Harness.onExit { try? FileManager.default.removeItem(at: dir) }
+        process.executableURL = url.appending(path: "Contents/MacOS/Sitr")
+        process.arguments = ["--selftest", "stimulus", "--remote", "--seconds", "\(Int(seconds))", "--channel", channel.path]
+        let p = process
+        Harness.onExit { if p.isRunning { p.terminate() } }
+        try process.run()
+    }
+
+    /// Writes `command` to the channel; the stimulus answers with the time of its flushed transaction.
+    func send(_ command: String, argument: String? = nil) {
+        drainReplies()
+        replies[command] = nil
+        seq += 1
+        try? Data("\(seq) \(command) \(argument ?? "")".utf8).write(to: RemoteLayout.commandFile(channel.path), options: .atomic)
+    }
+
+    /// Sends `command` and waits (≤ `timeout`) for its reply time.
+    func ask(_ command: String, argument: String? = nil, timeout: Double = 3) async -> Double? {
+        send(command, argument: argument)
+        return await reply(command, timeout: timeout)
+    }
+
+    /// Reads the lines the stimulus appended since the last look into `replies` (command → flush time).
+    private func drainReplies() {
+        guard let data = try? Data(contentsOf: RemoteLayout.doneFile(channel.path)), data.count > doneRead else { return }
+        let fresh = String(decoding: data[doneRead...], as: UTF8.self)
+        doneRead = data.count
+        for line in fresh.split(separator: "\n") {
+            let parts = line.split(separator: " ")
+            if parts.count == 2, let t = Double(parts[1]) { replies[String(parts[0])] = t }
+        }
+    }
+
+    /// Moves the stimulus window's top-left corner to a display-local point.
+    func place(at p: CGPoint) async { _ = await ask("origin", argument: "\(Int(p.x)),\(Int(p.y))") }
+
+    func reply(_ command: String, timeout: Double) async -> Double? {
+        _ = await waitUntil(timeout) {
+            self.drainReplies()
+            return self.replies[command] != nil
+        }
+        return replies[command]
+    }
+
+    /// Frontmost window of the stimulus on `displayID`, from the tracker (nil until it shows).
+    func window(in tracker: WindowTracker, on displayID: CGDirectDisplayID) -> WindowRect? {
+        tracker.windows(for: bundleID).first { $0.displayID == displayID }
+    }
+
+    func waitForWindow(in tracker: WindowTracker, on displayID: CGDirectDisplayID, timeout: Double = 15) async -> WindowRect? {
+        _ = await waitUntil(timeout) { self.window(in: tracker, on: displayID) != nil }
+        return window(in: tracker, on: displayID)
+    }
+
+    /// Pulses the heartbeat every 300 ms until `condition` holds (≤ `seconds`): frames keep flowing while tracks expire and
+    /// pre-covered tiles clear, without ever earning trusted motion.
+    func pulseUntil(_ seconds: Double, _ condition: @escaping @MainActor () -> Bool) async -> Bool {
+        let deadline = CACurrentMediaTime() + seconds
+        while CACurrentMediaTime() < deadline {
+            if condition() { return true }
+            send("pulse")
+            try? await Task.sleep(for: .milliseconds(300))
+        }
+        return condition()
+    }
+
+    func terminate() {
+        if process.isRunning { process.terminate() }
+        process.waitUntilExit()
+        try? FileManager.default.removeItem(at: channel)
+    }
+}
+
+/// A second, unfiltered stream on the display: the truth about what is on screen, for pixel checks while the runtime's own stream
+/// is stopped (fail-closed) or filtered (Off apps). Keeps the latest frame only.
+@MainActor
+private final class ControlSampler {
+    private let session: CaptureSession
+    private var latest: Frame?
+    private var task: Task<Void, Never>?
+
+    init(displayID: CGDirectDisplayID) async throws {
+        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+        guard let display = content.displays.first(where: { $0.displayID == displayID }) else { throw SelftestError("display not in SCShareableContent") }
+        session = CaptureSession(displayID: displayID, permission: PermissionMonitor())
+        session.fps = 30
+        try await session.updateFilter(SCContentFilter(display: display, excludingWindows: []))
+        let s = session
+        Harness.onExit { s.stop() }
+        session.start()
+        task = Task { @MainActor [weak self] in
+            for await f in s.frames { self?.latest = f }
+        }
+    }
+
+    /// RGB under a display-local point in the newest frame (nil before the first frame).
+    func rgb(at p: CGPoint) -> RGB? {
+        guard let f = latest else { return nil }
+        let px = f.displayPointsToPixels(CGRect(origin: p, size: .zero))
+        return sampleRGB(f.pixelBuffer, x: Int(px.minX), y: Int(px.minY))
+    }
+
+    /// Waits for a frame newer than the current one (the screen changed and the change is in a frame).
+    func nextFrame(timeout: Double = 2) async {
+        let seq = latest?.sequence ?? 0
+        _ = await waitUntil(timeout) { (self.latest?.sequence ?? 0) > seq }
+    }
+
+    func stop() {
+        task?.cancel()
+        session.stop()
+    }
+}
+
+nonisolated extension RGB {
+    var isMagenta: Bool { r > 150 && b > 150 && g < 120 }
+    /// Within ±20 of a solid (gray) cover colour with no hue.
+    func isSolid(_ color: CGColor) -> Bool {
+        guard let c = color.converted(to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .defaultIntent, options: nil)?.components, c.count >= 3 else { return false }
+        let (er, eg, eb) = (Int(c[0] * 255), Int(c[1] * 255), Int(c[2] * 255))
+        return abs(r - er) <= 20 && abs(g - eg) <= 20 && abs(b - eb) <= 20 && abs(r - g) < 14 && abs(g - b) < 14
+    }
+}
+
+/// Share of `region` under the union of `frames`, on a 16×16 grid of sample points (pre-covers are several tile runs, so a single
+/// intersection would under-count).
+nonisolated func coverage(of region: CGRect, by frames: [CGRect]) -> Double {
+    guard region.width > 0, region.height > 0, !frames.isEmpty else { return 0 }
+    var inside = 0
+    for i in 0..<16 {
+        for j in 0..<16 {
+            let p = CGPoint(x: region.minX + region.width * (Double(i) + 0.5) / 16, y: region.minY + region.height * (Double(j) + 0.5) / 16)
+            if frames.contains(where: { $0.contains(p) }) { inside += 1 }
+        }
+    }
+    return Double(inside) / 256
+}
+
+/// Follows every pre-cover apply and every commit for one region: whether pre-covers / track covers are over it right now, when
+/// the first of each landed after `arm()`, how many pre-cover applies hit it, and when the pre-covers last left it.
+@MainActor
+private final class CurtainRecorder {
+    var region: CGRect
+    private(set) var preCovered = false, trackCovered = false
+    private(set) var preHit: Double?, trackHit: Double?
+    private(set) var preHits = 0
+    private(set) var preCleared: Double?
+    private(set) var preApplies = 0, commits = 0
+    /// Diagnostics since `arm()`: applies with any pre-cover layer, the best coverage of `region` one reached, and its rects.
+    private(set) var preLayersSinceArm = 0, bestCoverage = 0.0
+    private(set) var bestRects = ""
+    private var armed = false
+
+    init(region: CGRect) { self.region = region }
+
+    func arm() {
+        preHit = nil
+        trackHit = nil
+        preLayersSinceArm = 0
+        bestCoverage = 0
+        bestRects = ""
+        armed = true
+    }
+
+    private func notePre(_ specs: [CoverLayerSpec], at time: Double) {
+        let pre = specs.filter { CoverID.isPreCover($0.id) }
+        let share = coverage(of: region, by: pre.map(\.frame))
+        if armed, !pre.isEmpty {
+            preLayersSinceArm += pre.count
+            if share > bestCoverage {
+                bestCoverage = share
+                bestRects = pre.prefix(3).map { rectString($0.frame) }.joined(separator: ",")
+            }
+        }
+        let now = share >= 0.5
+        if now { preHits += 1 }
+        if armed, now, preHit == nil { preHit = time }
+        if preCovered, !now { preCleared = time }
+        preCovered = now
+    }
+
+    func recordPreCover(_ specs: [CoverLayerSpec], at time: Double) {
+        preApplies += 1
+        notePre(specs, at: time)
+    }
+
+    func recordCommit(_ specs: [CoverLayerSpec], at time: Double) {
+        commits += 1
+        notePre(specs, at: time)
+        trackCovered = coverage(of: region, by: specs.filter { CoverID.isTrack($0.id) }.map(\.frame)) >= 0.25
+        if armed, trackCovered, trackHit == nil { trackHit = time }
+    }
+}
+
+/// `--stimulus <path>` / `--stimulus2 <path>`, else `SITR_STIMULUS_APP` / `SITR_STIMULUS2_APP`, else `build/Stimulus.app` / `build/Stimulus2.app`.
+nonisolated func stimulusPath(_ args: [String], second: Bool = false) -> String {
+    let env = ProcessInfo.processInfo.environment
+    return option(args, second ? "--stimulus2" : "--stimulus") ?? env[second ? "SITR_STIMULUS2_APP" : "SITR_STIMULUS_APP"]
+        ?? "build/\(second ? "Stimulus2" : "Stimulus").app"
+}
+
+/// Own-process CPU seconds (user + system), for the % of one core over a run.
+nonisolated func processCPUSeconds() -> Double {
+    var usage = rusage()
+    getrusage(RUSAGE_SELF, &usage)
+    return Double(usage.ru_utime.tv_sec) + Double(usage.ru_utime.tv_usec) / 1e6 + Double(usage.ru_stime.tv_sec) + Double(usage.ru_stime.tv_usec) / 1e6
+}
+
+/// Boots the runtime with `rules` and the remote stimulus, waits for its window on the main display, and returns everything the
+/// M3 tests share. `bootFirst`: launch the stimulus before the runtime (steady state) or after (launch-after-start).
+@MainActor
+private func bootWithStimulus(rules: Rules, app: String, launchAfterBoot: Bool = false) async throws
+    -> (runtime: Runtime, display: ManagedDisplay, pipeline: Pipeline, stimulus: RemoteApp, window: WindowRect)
+{
+    var stimulus: RemoteApp?
+    if !launchAfterBoot {
+        // Steady state: the stimulus window exists before capture starts (a throwaway tracker waits for it).
+        let launched = try RemoteApp(app: app)
+        let probe = WindowTracker()
+        _ = await waitUntil(15) {
+            probe.refresh()
+            return !probe.windows(for: launched.bundleID).isEmpty
+        }
+        stimulus = launched
+    }
+    let (runtime, d, pipeline) = try await bootRuntime(rules: rules)
+    if launchAfterBoot { stimulus = try RemoteApp(app: app) }
+    guard let stimulus else { throw SelftestError("no stimulus") }
+    guard let window = await stimulus.waitForWindow(in: runtime.windowTracker, on: d.id) else {
+        throw SelftestError("stimulus window (\(stimulus.bundleID)) never appeared in the WindowTracker")
+    }
+    print("stimulus_window bundle=\(stimulus.bundleID) pid=\(stimulus.process.processIdentifier) rect=\(rectString(window.rect)) z=\(window.zOrder) "
+        + "rule=\(rules.mode(for: stimulus.bundleID)) default=\(rules.defaultMode) fps=\(d.session.fps) curtain_fps=\(Runtime.curtainFPS)")
+    return (runtime, d, pipeline, stimulus, window)
+}
+
+// MARK: filter (M3-T03)
+
+/// The stimulus (its own bundle id) runs with an Off override: its magenta marker must never be in the frames the pipeline sees;
+/// switching it to Blur shows the marker within 1 s; Default Off + a Curtain override (include filter) keeps it; Off again under
+/// Default Off (empty include list) hides it within 1 s; killed and relaunched with a Blur override it is included within 1 s of
+/// its window appearing. Pixels are sampled from the frames the pipeline processes (the `onPreCover` hook fires on every arrival).
+@MainActor
+private func filterTest(stimulusApp: String) async throws -> Bool {
+    let stimulusID = Bundle(url: URL(fileURLWithPath: stimulusApp))?.bundleIdentifier ?? "com.goldentik.SitrStimulus"
+    var rules = Rules(defaultMode: .blur, overrides: [AppRule(bundleID: stimulusID, mode: .off)])
+    let (runtime, d, _, stimulus, window0) = try await bootWithStimulus(rules: rules, app: stimulusApp)
+    let model = runtime.model
+    var markerPoint = CGPoint(x: window0.rect.minX + RemoteLayout.marker.midX, y: window0.rect.minY + RemoteLayout.marker.midY)
+    var frames = 0, markerFrames = 0, framesBeforeFilter = 0, leakBeforeFilter = 0
+    var lastMarkerAt: Double?, firstMarkerAt: Double?
+    var lastRGB: RGB?
+    runtime.onPreCover = { id, _, frame, at in
+        guard id == d.id else { return }
+        frames += 1
+        let px = frame.displayPointsToPixels(CGRect(origin: markerPoint, size: .zero))
+        guard let c = sampleRGB(frame.pixelBuffer, x: Int(px.minX), y: Int(px.minY)) else { return }
+        lastRGB = c
+        if runtime.filters.installs == 0 {
+            framesBeforeFilter += 1
+            if c.isMagenta { leakBeforeFilter += 1 }
+            return
+        }
+        if c.isMagenta {
+            markerFrames += 1
+            lastMarkerAt = at
+            if firstMarkerAt == nil { firstMarkerAt = at }
+        }
+    }
+    func reset() {
+        frames = 0
+        markerFrames = 0
+        firstMarkerAt = nil
+        lastMarkerAt = nil
+    }
+    var ok = true
+
+    // A. Off override under Default Blur (exclude list): once the plan names the stimulus, 3 s of frames without the marker. Frames
+    //    before that (stream up before the first filter, or before the stimulus was in `SCShareableContent`) are counted apart.
+    let stimulusPID = stimulus.process.processIdentifier
+    func planExcludesStimulus() -> Bool { if case .exclude(let pids)? = runtime.filters.plans[d.id] { return pids.contains(stimulusPID) } else { return false } }
+    let planned = await waitUntil(5) { planExcludesStimulus() }
+    // The stream may still carry the pre-plan filter for a moment (docs/m3/integration.md: connect race); wait for the marker to be
+    // gone for 0.5 s of frames, then measure.
+    _ = await waitUntil(5) { frames > 0 && lastMarkerAt.map { CACurrentMediaTime() - $0 > 0.5 } ?? true }
+    let leakDuringBoot = markerFrames, framesDuringBoot = frames
+    reset()
+    try await Task.sleep(for: .seconds(3))
+    let planA = runtime.filters.plans[d.id].map { "\($0)" } ?? "none"
+    print("filter_off_excluded frames=\(frames) marker_frames=\(markerFrames) frames_before_first_filter=\(framesBeforeFilter) leak_before_first_filter=\(leakBeforeFilter) "
+        + "frames_until_plan=\(framesDuringBoot) leak_until_plan=\(leakDuringBoot) installs=\(runtime.filters.installs) plan=\(planA) last_rgb=\(rgbString(lastRGB)) "
+        + "ok=\(planned && frames > 0 && markerFrames == 0) load1=\(fmt(loadAverage()))")
+    ok = ok && planned && frames > 0 && markerFrames == 0
+
+    // B. Override → Blur: the marker shows within 1 s of the rules change.
+    reset()
+    let tB = CACurrentMediaTime()
+    model.updateRules { $0.upsert(AppRule(bundleID: stimulusID, mode: .blur)) }
+    let shown = await waitUntil(3) { firstMarkerAt != nil }
+    let showMs = firstMarkerAt.map { Int(($0 - tB) * 1000) } ?? -1
+    print("filter_blur_visible shown=\(shown) within_ms=\(showMs) marker_frames=\(markerFrames) frames=\(frames) plan=\(runtime.filters.plans[d.id].map { "\($0)" } ?? "none") ok=\(shown && showMs <= 1000)")
+    ok = ok && shown && showMs <= 1000
+
+    // C. Default Off + Curtain override (include list): still captured.
+    reset()
+    rules = Rules(defaultMode: .off, overrides: [AppRule(bundleID: stimulusID, mode: .curtain)])
+    model.updateRules { $0 = rules }
+    try await Task.sleep(for: .milliseconds(1500))
+    let tC = CACurrentMediaTime()
+    reset()
+    _ = await stimulus.ask("person_on")  // a change inside the window, so frames flow
+    let stillVisible = await waitUntil(2) { markerFrames > 0 }
+    _ = await stimulus.ask("person_off")
+    print("filter_include_curtain visible=\(stillVisible) within_ms=\(firstMarkerAt.map { Int(($0 - tC) * 1000) } ?? -1) plan=\(runtime.filters.plans[d.id].map { "\($0)" } ?? "none") ok=\(stillVisible)")
+    ok = ok && stillVisible
+
+    // D. Off under Default Off: the include list is empty, the marker goes within 1 s.
+    reset()
+    let tD = CACurrentMediaTime()
+    model.updateRules { $0.upsert(AppRule(bundleID: stimulusID, mode: .off)) }
+    try await Task.sleep(for: .milliseconds(1200))
+    _ = await stimulus.ask("person_on")
+    _ = await stimulus.ask("person_off")
+    try await Task.sleep(for: .milliseconds(800))
+    let lastSeen = lastMarkerAt.map { Int(($0 - tD) * 1000) } ?? -1
+    let hiddenOK = frames == 0 || lastSeen <= 1000
+    print("filter_off_hidden frames=\(frames) marker_frames=\(markerFrames) last_marker_ms_after_rule=\(lastSeen) plan=\(runtime.filters.plans[d.id].map { "\($0)" } ?? "none") ok=\(hiddenOK)")
+    ok = ok && hiddenOK
+
+    // E. Launched after start: kill the stimulus, give it a Blur override (Default Off), relaunch; included within 1 s of its window.
+    stimulus.terminate()
+    _ = await waitUntil(5) { runtime.windowTracker.windows(for: stimulusID).isEmpty }
+    model.updateRules { $0.upsert(AppRule(bundleID: stimulusID, mode: .blur)) }
+    try await Task.sleep(for: .milliseconds(700))
+    reset()
+    let installsBefore = runtime.filters.installs
+    let relaunched = try RemoteApp(app: stimulusApp)
+    guard let window1 = await relaunched.waitForWindow(in: runtime.windowTracker, on: d.id) else { throw SelftestError("relaunched stimulus window missing") }
+    let tE = CACurrentMediaTime()
+    markerPoint = CGPoint(x: window1.rect.minX + RemoteLayout.marker.midX, y: window1.rect.minY + RemoteLayout.marker.midY)
+    reset()
+    let included = await waitUntil(3) { firstMarkerAt != nil }
+    let includeMs = firstMarkerAt.map { Int(($0 - tE) * 1000) } ?? -1
+    print("filter_launch_included included=\(included) within_ms_of_window=\(includeMs) installs_added=\(runtime.filters.installs - installsBefore) "
+        + "plan=\(runtime.filters.plans[d.id].map { "\($0)" } ?? "none") error=\(runtime.filters.lastError ?? "none") ok=\(included && includeMs <= 1000) load1=\(fmt(loadAverage()))")
+    ok = ok && included && includeMs <= 1000
+    relaunched.terminate()
+    runtime.displayManager.stop()
+    return ok
+}
+
+// MARK: curtain (M3-T05)
+
+/// Per trial the remote stimulus flips its photo on and reports the flush time; the clock stops at the first pre-cover apply that
+/// covers the person region (≥ 50 % of it, before detection). Also records when the person cover (a track) lands. Between trials
+/// the region is blank and the pre-covers over it must be gone; a random 100–170 ms keeps paints off the capture cadence.
+@MainActor
+private func curtainExposureTest(trials: Int, stimulusApp: String) async throws -> Bool {
+    let stimulusID = Bundle(url: URL(fileURLWithPath: stimulusApp))?.bundleIdentifier ?? "com.goldentik.SitrStimulus"
+    let rules = Rules(defaultMode: .off, overrides: [AppRule(bundleID: stimulusID, mode: .curtain)])
+    let (runtime, d, pipeline, stimulus, window) = try await bootWithStimulus(rules: rules, app: stimulusApp)
+    let person = RemoteLayout.person.offsetBy(dx: window.rect.minX, dy: window.rect.minY)
+    let recorder = CurtainRecorder(region: person)
+    runtime.onPreCover = { id, specs, _, at in if id == d.id { recorder.recordPreCover(specs, at: at) } }
+    runtime.onCommit = { id, specs, _, at in if id == d.id { recorder.recordCommit(specs, at: at) } }
+    let cpu0 = processCPUSeconds(), wall0 = CACurrentMediaTime()
+    var exposures: [Double] = [], personCovers: [Double] = []
+    var missed = 0, notCleared = 0, fpsSeen = d.session.fps
+    for i in 0...trials {  // trial 0 warms everything and is not counted
+        let tTrial = CACurrentMediaTime()
+        _ = await stimulus.ask("person_off")
+        let settled = await stimulus.pulseUntil(4) { !recorder.preCovered && !recorder.trackCovered }
+        if !settled { notCleared += 1 }
+        let tSettled = CACurrentMediaTime()
+        try await Task.sleep(for: .milliseconds(600 + 100 + Int.random(in: 0..<70)))
+        recorder.arm()
+        guard let tFlip = await stimulus.ask("person_on") else { missed += 1; continue }
+        _ = await waitUntil(2) { recorder.preHit != nil && recorder.trackHit != nil }
+        fpsSeen = max(fpsSeen, d.session.fps)
+        if i % 5 == 0 || recorder.preHit == nil {  // progress, and every trial that saw no pre-cover (counts, times and rects only)
+            print("curtain_trial i=\(i) settle_ms=\(Int((tSettled - tTrial) * 1000)) settled=\(settled) pre_ms=\(recorder.preHit.map { ms($0 - tFlip) } ?? "-") "
+                + "track_ms=\(recorder.trackHit.map { ms($0 - tFlip) } ?? "-") pre_layers=\(recorder.preLayersSinceArm) best_coverage=\(fmt(recorder.bestCoverage)) "
+                + "pre_rects=[\(recorder.bestRects)] region=\(rectString(recorder.region)) trial_ms=\(Int((CACurrentMediaTime() - tTrial) * 1000)) load1=\(fmt(loadAverage()))")
+        }
+        guard i > 0 else { continue }
+        if let hit = recorder.preHit { exposures.append(hit - tFlip) } else { missed += 1 }
+        if let hit = recorder.trackHit { personCovers.append(hit - tFlip) }
+    }
+    _ = await stimulus.ask("person_off")
+    let cpu = (processCPUSeconds() - cpu0) / (CACurrentMediaTime() - wall0) * 100
+    let m = await pipeline.metrics
+    let load = loadAverage(), noisy = load > 4
+    let p50 = percentile(exposures, 0.5), p95 = percentile(exposures, 0.95)
+    print("curtain_exposure_ms p50=\(ms(p50)) p95=\(ms(p95)) n=\(exposures.count) missed=\(missed) target_p95_ms=50 within_target=\(p95 <= 0.050) "
+        + "fps=\(fpsSeen) curtain_fps=\(Runtime.curtainFPS) cpu_pct=\(fmt(cpu)) style=\(runtime.appearance.style.rawValue) load1=\(fmt(load)) noisy=\(noisy)")
+    print("curtain_person_cover_ms p50=\(ms(percentile(personCovers, 0.5))) p95=\(ms(percentile(personCovers, 0.95))) n=\(personCovers.count) "
+        + "cleared_between_trials=\(notCleared == 0) load1=\(fmt(load))")
+    print("curtain_counts in=\(m.framesIn) out=\(m.framesOut) skipped=\(m.skipped) pre_applies=\(m.preApplies) pre_solid=\(m.preSolid) fast_ms=\(PipelineMetrics.p(m.fastPath)) "
+        + "pre_render_ms=\(PipelineMetrics.p(m.preRender)) clear_ms=\(PipelineMetrics.p(m.curtainClear)) detect_ms=\(PipelineMetrics.p(m.detect)) e2e_ms=\(PipelineMetrics.p(m.e2e)) "
+        + "health=\(runtime.model.policy.health) \(runtime.modelsNote) load1=\(fmt(load))")
+    stimulus.terminate()
+    runtime.displayManager.stop()
+    return exposures.count >= trials * 9 / 10 && notCleared == 0 && fpsSeen == Runtime.curtainFPS && (noisy || p95 <= 0.050)
+}
+
+/// The stimulus scrolls its text column (no people) five times: each burst must be pre-covered, then the pre-cover must clear once
+/// the last dirty frame is verified. `clear_ms` (pipeline: detection done → pre-cover gone) must stay ≤ 100 ms; `linger_ms` is
+/// scroll end → pre-cover gone, the number the user sees.
+@MainActor
+private func curtainScrollTest(stimulusApp: String) async throws -> Bool {
+    let stimulusID = Bundle(url: URL(fileURLWithPath: stimulusApp))?.bundleIdentifier ?? "com.goldentik.SitrStimulus"
+    let rules = Rules(defaultMode: .off, overrides: [AppRule(bundleID: stimulusID, mode: .curtain)])
+    let (runtime, d, pipeline, stimulus, window) = try await bootWithStimulus(rules: rules, app: stimulusApp)
+    let text = RemoteLayout.text.offsetBy(dx: window.rect.minX, dy: window.rect.minY)
+    let recorder = CurtainRecorder(region: text)
+    runtime.onPreCover = { id, specs, _, at in if id == d.id { recorder.recordPreCover(specs, at: at) } }
+    runtime.onCommit = { id, specs, _, at in if id == d.id { recorder.recordCommit(specs, at: at) } }
+    var preMs: [Double] = [], lingerMs: [Double] = []
+    var ok = true
+    for i in 0..<6 {
+        _ = await stimulus.pulseUntil(4) { !recorder.preCovered }
+        try await Task.sleep(for: .milliseconds(1200))
+        recorder.arm()
+        stimulus.send("scroll")
+        guard let tStart = await stimulus.reply("scroll_start", timeout: 3), let tEnd = await stimulus.reply("scroll", timeout: 3) else { ok = false; continue }
+        let covered = await waitUntil(2) { recorder.preHit != nil }
+        let cleared = await waitUntil(3) { !recorder.preCovered }
+        guard i > 0 else { continue }
+        let pre = recorder.preHit.map { $0 - tStart } ?? .nan
+        let linger = recorder.preCleared.map { $0 - tEnd } ?? .nan
+        preMs.append(pre)
+        lingerMs.append(linger)
+        print("curtain_scroll trial=\(i) precovered=\(covered) precover_ms=\(ms(pre)) cleared=\(cleared) linger_ms=\(ms(linger)) load1=\(fmt(loadAverage()))")
+        ok = ok && covered && cleared
+    }
+    let m = await pipeline.metrics
+    let clearP95 = percentile(m.curtainClear, 0.95)
+    print("curtain_scroll_summary precover_ms p50=\(ms(percentile(preMs, 0.5))) p95=\(ms(percentile(preMs, 0.95))) linger_ms p50=\(ms(percentile(lingerMs, 0.5))) "
+        + "p95=\(ms(percentile(lingerMs, 0.95))) clear_ms p50=\(ms(percentile(m.curtainClear, 0.5))) p95=\(ms(clearP95)) n=\(m.curtainClear.count) target_clear_ms=100 "
+        + "within_target=\(clearP95 <= 0.1) pre_applies=\(m.preApplies) pre_solid=\(m.preSolid) fps=\(d.session.fps) load1=\(fmt(loadAverage()))")
+    stimulus.terminate()
+    runtime.displayManager.stop()
+    return ok && clearP95 <= 0.1
+}
+
+/// `seconds` of block motion without people in the Curtain window: trusted motion within ~500 ms (`trusted_after_ms`), no
+/// pre-cover over the video afterwards (`precover_after_trust`), and the person shown halfway through gets a person cover
+/// (`mid_video_cover_ms`). CPU is the process share of one core over the run.
+@MainActor
+private func curtainVideoTest(seconds: Double, stimulusApp: String) async throws -> Bool {
+    let stimulusID = Bundle(url: URL(fileURLWithPath: stimulusApp))?.bundleIdentifier ?? "com.goldentik.SitrStimulus"
+    let rules = Rules(defaultMode: .off, overrides: [AppRule(bundleID: stimulusID, mode: .curtain)])
+    let (runtime, d, pipeline, stimulus, window) = try await bootWithStimulus(rules: rules, app: stimulusApp)
+    let video = RemoteLayout.photo.offsetBy(dx: window.rect.minX, dy: window.rect.minY)
+    let person = RemoteLayout.person.offsetBy(dx: window.rect.minX, dy: window.rect.minY)
+    let recorder = CurtainRecorder(region: video)
+    let personRecorder = CurtainRecorder(region: person)
+    runtime.onPreCover = { id, specs, _, at in
+        guard id == d.id else { return }
+        recorder.recordPreCover(specs, at: at)
+        personRecorder.recordPreCover(specs, at: at)
+    }
+    runtime.onCommit = { id, specs, _, at in
+        guard id == d.id else { return }
+        recorder.recordCommit(specs, at: at)
+        personRecorder.recordCommit(specs, at: at)
+    }
+    _ = await stimulus.pulseUntil(4) { !recorder.preCovered }
+    try await Task.sleep(for: .seconds(1))
+    let cpu0 = processCPUSeconds(), wall0 = CACurrentMediaTime()
+    recorder.arm()
+    guard let t0 = await stimulus.ask("video_on") else { throw SelftestError("stimulus did not start the video") }
+    let wid = Int(window.windowID)
+    var trustedAt: Double?
+    while CACurrentMediaTime() - t0 < 3, trustedAt == nil {
+        if await pipeline.trustedCurtainWindows[stimulusID]?.contains(wid) == true { trustedAt = CACurrentMediaTime() }
+        try await Task.sleep(for: .milliseconds(10))
+    }
+    let trustedMs = trustedAt.map { Int(($0 - t0) * 1000) } ?? -1
+    let preHitsAtTrust = recorder.preHits
+    let firstPre = recorder.preHit.map { Int(($0 - t0) * 1000) } ?? -1
+    print("curtain_video_trust trusted=\(trustedAt != nil) trusted_after_ms=\(trustedMs) first_precover_ms=\(firstPre) precover_applies_before_trust=\(preHitsAtTrust) fps=\(d.session.fps) load1=\(fmt(loadAverage()))")
+    var ok = trustedAt != nil && trustedMs <= 700
+    // Half the run without people, then the person appears inside the moving video.
+    let half = t0 + seconds / 2
+    while CACurrentMediaTime() < half { try await Task.sleep(for: .milliseconds(100)) }
+    let preBeforePerson = recorder.preHits - preHitsAtTrust
+    personRecorder.arm()
+    guard let tPerson = await stimulus.ask("person_on") else { throw SelftestError("stimulus did not show the person") }
+    _ = await waitUntil(3) { personRecorder.trackHit != nil }
+    let midMs = personRecorder.trackHit.map { Int(($0 - tPerson) * 1000) } ?? -1
+    let midPre = personRecorder.preHit.map { Int(($0 - tPerson) * 1000) } ?? -1
+    print("curtain_video_person mid_video_cover_ms=\(midMs) precover_on_person_ms=\(midPre) trusted_still=\(await pipeline.trustedCurtainWindows[stimulusID]?.contains(wid) == true) load1=\(fmt(loadAverage()))")
+    ok = ok && midMs >= 0 && midMs <= 1000
+    while CACurrentMediaTime() - t0 < seconds { try await Task.sleep(for: .milliseconds(100)) }
+    let cpu = (processCPUSeconds() - cpu0) / (CACurrentMediaTime() - wall0) * 100
+    let preAfterTrust = recorder.preHits - preHitsAtTrust
+    _ = await stimulus.ask("video_off")
+    _ = await stimulus.ask("person_off")
+    let m = await pipeline.metrics
+    print("curtain_video_summary seconds=\(Int(seconds)) precover_after_trust=\(preAfterTrust) precover_after_trust_before_person=\(preBeforePerson) frames_in=\(m.framesIn) "
+        + "skipped=\(m.skipped) detections=\(m.detections) pre_applies=\(m.preApplies) tracks=\(m.tracks) cpu_pct=\(fmt(cpu)) fps=\(d.session.fps) curtain_fps=\(Runtime.curtainFPS) "
+        + "detect_ms=\(PipelineMetrics.p(m.detect)) e2e_ms=\(PipelineMetrics.p(m.e2e)) rss_mb=\(Int(residentMemoryMB())) load1=\(fmt(loadAverage()))")
+    ok = ok && preAfterTrust == 0
+    stimulus.terminate()
+    runtime.displayManager.stop()
+    return ok
+}
+
+// MARK: fail-closed for Curtain apps (M3-T06), the Curtain half of `--selftest failstate`
+
+/// With the remote stimulus under a Curtain override: `session.stop()` → its window is Solid-covered within 1 s (fail-closed layer
+/// frames equal the window rect, and the marker pixel on the unfiltered control stream shows the solid colour); a `move` moves the
+/// cover with the window; `start()` lifts it on the first frame. Blur windows stay uncovered (the in-process stimulus panel is
+/// Default-Rule Blur and gets nothing). Returns nil when no Stimulus.app is available (the M2 half still runs).
+@MainActor
+private func failClosedCheck(runtime: Runtime, display d: ManagedDisplay, stimulusApp: String) async throws -> Bool? {
+    guard FileManager.default.fileExists(atPath: stimulusApp) else {
+        print("failstate_curtain skipped: no Stimulus.app at \(stimulusApp) (docs/m3/integration.md)")
+        return nil
+    }
+    let model = runtime.model
+    let stimulus = try RemoteApp(app: stimulusApp)
+    model.updateRules { $0.upsert(AppRule(bundleID: stimulus.bundleID, mode: .curtain)) }
+    guard var window = await stimulus.waitForWindow(in: runtime.windowTracker, on: d.id) else { throw SelftestError("stimulus window missing") }
+    let control = try await ControlSampler(displayID: d.id)
+    func marker(_ w: WindowRect) -> CGPoint { CGPoint(x: w.rect.minX + RemoteLayout.marker.midX, y: w.rect.minY + RemoteLayout.marker.midY) }
+    func failClosedFrames() -> [CGRect] { d.panel.coverFrames.filter { CoverID.isFailClosed($0.key) }.map(\.value) }
+    func covers(_ w: WindowRect) -> Bool { coverage(of: w.rect, by: failClosedFrames()) >= 0.98 }
+    // Baseline: capture up, the pre-cover of the new window has cleared, the marker is visible on screen.
+    _ = await waitUntil(5) { d.panel.coverFrames.keys.allSatisfy { CoverID.isTrack($0) } }
+    _ = await waitUntil(5) { control.rgb(at: marker(window))?.isMagenta == true }
+    let baselineVisible = control.rgb(at: marker(window))?.isMagenta == true
+    let solid = d.renderer.solidColor
+    print("failstate_curtain_baseline health=\(model.policy.health) marker_visible=\(baselineVisible) failclosed_layers=\(failClosedFrames().count) "
+        + "notifications=\(runtime.notifier.posted) window=\(rectString(window.rect))")
+    var ok = baselineVisible && failClosedFrames().isEmpty
+
+    // Stop: solid over the whole window within 1 s.
+    let posted0 = runtime.notifier.posted
+    let t0 = CACurrentMediaTime()
+    d.session.stop()
+    runtime.permission.markRevoked()
+    let coveredLayers = await waitUntil(3) { covers(window) }
+    let layerMs = Int((CACurrentMediaTime() - t0) * 1000)
+    let coveredPixels = await waitUntil(2) { control.rgb(at: marker(window))?.isSolid(solid) == true }
+    let pixelMs = Int((CACurrentMediaTime() - t0) * 1000)
+    let blurUncovered = d.panel.coverFrames.keys.allSatisfy { CoverID.isFailClosed($0) }
+    print("failstate_curtain_stop health=\(model.policy.health) solid_layers=\(coveredLayers) layers_within_ms=\(layerMs) solid_pixels=\(coveredPixels) pixels_within_ms=\(pixelMs) "
+        + "marker_rgb=\(rgbString(control.rgb(at: marker(window)))) failclosed_layers=\(failClosedFrames().count) blur_uncovered=\(blurUncovered) "
+        + "notifications=\(runtime.notifier.posted) icon=\(model.iconState) ok=\(coveredLayers && coveredPixels && layerMs <= 1000)")
+    ok = ok && coveredLayers && coveredPixels && layerMs <= 1000 && blurUncovered && runtime.notifier.posted == posted0 + 1
+
+    // Move: the cover follows the window (tracker at 10 Hz).
+    let oldMarker = marker(window)
+    let t1 = CACurrentMediaTime()
+    _ = await stimulus.ask("move")
+    let moved = await waitUntil(3) {
+        if let w = stimulus.window(in: runtime.windowTracker, on: d.id), w.rect != window.rect { window = w; return covers(w) }
+        return false
+    }
+    let followMs = Int((CACurrentMediaTime() - t1) * 1000)
+    let newSolid = await waitUntil(2) { control.rgb(at: marker(window))?.isSolid(solid) == true }
+    await control.nextFrame()
+    let oldNotSolid = control.rgb(at: oldMarker)?.isSolid(solid) == false
+    print("failstate_curtain_move moved=\(moved) follow_within_ms=\(followMs) window=\(rectString(window.rect)) new_marker_solid=\(newSolid) old_spot_uncovered=\(oldNotSolid) "
+        + "old_rgb=\(rgbString(control.rgb(at: oldMarker))) failclosed_layers=\(failClosedFrames().count) notifications=\(runtime.notifier.posted) ok=\(moved && newSolid)")
+    ok = ok && moved && newSolid && oldNotSolid
+
+    // Restart: the first frame lifts the fail-closed cover; one "restored" notification.
+    let t2 = CACurrentMediaTime()
+    d.session.start()
+    let lifted = await waitUntil(6) {
+        stimulus.send("person_off")  // a screen change, so frames flow
+        return failClosedFrames().isEmpty && model.policy.health == .ok
+    }
+    let liftMs = Int((CACurrentMediaTime() - t2) * 1000)
+    let visibleAgain = await waitUntil(3) { control.rgb(at: marker(window))?.isMagenta == true }
+    print("failstate_curtain_restart health=\(model.policy.health) lifted=\(lifted) within_ms=\(liftMs) marker_visible=\(visibleAgain) failclosed_layers=\(failClosedFrames().count) "
+        + "notifications=\(runtime.notifier.posted) icon=\(model.iconState) ok=\(lifted && visibleAgain && runtime.notifier.posted == posted0 + 2)")
+    ok = ok && lifted && visibleAgain && runtime.notifier.posted == posted0 + 2
+    print("failstate_stall manual pending: a live stream that stops delivering frames cannot be forced from outside CaptureSession; the decision is unit-tested (Runtime.isStalled)")
+    control.stop()
+    stimulus.terminate()
+    return ok
+}
+
+// MARK: overlap and attribution (M3-T09)
+
+/// Two remote stimuli (two bundle ids) stacked in the M3-T09 matrix. Pixels come from an unfiltered control stream; covers from the
+/// panel's layer frames. Records, per scenario, whether a cover lands on the window on top and whether pre-covers stay inside
+/// their Curtain window's visible region.
+@MainActor
+private func overlapTest(stimulusApp: String, stimulus2App: String) async throws -> Bool {
+    let aID = Bundle(url: URL(fileURLWithPath: stimulusApp))?.bundleIdentifier ?? "com.goldentik.SitrStimulus"
+    let bID = Bundle(url: URL(fileURLWithPath: stimulus2App))?.bundleIdentifier ?? "com.goldentik.SitrStimulus2"
+    let rules = Rules(defaultMode: .off, overrides: [AppRule(bundleID: aID, mode: .blur), AppRule(bundleID: bID, mode: .off)])
+    let (runtime, d, _, a, _) = try await bootWithStimulus(rules: rules, app: stimulusApp)
+    let model = runtime.model
+    let b = try RemoteApp(app: stimulus2App)
+    guard await b.waitForWindow(in: runtime.windowTracker, on: d.id) != nil else { throw SelftestError("second stimulus window missing") }
+    let control = try await ControlSampler(displayID: d.id)
+    let tracker = runtime.windowTracker
+    var ok = true
+    var latest: [CoverLayerSpec] = []
+    runtime.onCommit = { id, specs, _, _ in if id == d.id { latest = specs } }
+    runtime.onPreCover = { id, specs, _, _ in if id == d.id, !specs.isEmpty { latest = specs + latest.filter { CoverID.isTrack($0.id) } } }
+    func win(_ app: RemoteApp) -> WindowRect? { app.window(in: tracker, on: d.id) }
+    func marker(_ w: WindowRect) -> CGPoint { CGPoint(x: w.rect.minX + RemoteLayout.marker.midX, y: w.rect.minY + RemoteLayout.marker.midY) }
+    /// Places B so its marker sits at the centre of A's person box, and brings B to the front.
+    func stackBOverAPerson() async {
+        guard let wa = win(a) else { return }
+        let personCentre = CGPoint(x: wa.rect.minX + RemoteLayout.person.midX, y: wa.rect.minY + RemoteLayout.person.midY)
+        await b.place(at: CGPoint(x: personCentre.x - RemoteLayout.marker.midX, y: personCentre.y - RemoteLayout.marker.midY))
+        _ = await b.ask("front")
+        _ = await waitUntil(2) { (win(b)?.zOrder ?? 9) < (win(a)?.zOrder ?? 0) }
+    }
+    func settle(_ seconds: Double) async throws { try await Task.sleep(for: .seconds(seconds)) }
+
+    // 1. Blur window (A, person shown) under an Off window (B): does A's person cover extend over B?
+    await stackBOverAPerson()
+    _ = await a.ask("person_on")
+    try await settle(2.5)
+    let wb1 = win(b), wa1 = win(a)
+    let trackFrames = latest.filter { CoverID.isTrack($0.id) }.map(\.frame)
+    let coverOnB = wb1.map { w in trackFrames.contains { $0.intersects(w.rect) } } ?? false
+    let bMarkerCovered = wb1.map { !(control.rgb(at: marker($0))?.isMagenta ?? true) } ?? false
+    print("overlap_blur_under_off a=\(rectString(wa1?.rect ?? .zero)) z_a=\(wa1?.zOrder ?? -1) b_off=\(rectString(wb1?.rect ?? .zero)) z_b=\(wb1?.zOrder ?? -1) person_covers=\(trackFrames.count) "
+        + "cover_extends_over_off_window=\(coverOnB) off_marker_covered=\(bMarkerCovered) b_marker_rgb=\(rgbString(wb1.flatMap { control.rgb(at: marker($0)) })) "
+        + "note=\(coverOnB ? "PRD-permitted: a hidden person's box from a monitored app extends under the Off window" : "no overlap") load1=\(fmt(loadAverage()))")
+    ok = ok && !trackFrames.isEmpty
+    _ = await a.ask("person_off")
+
+    // 2. Curtain window (B) over a Blur window (A, person shown): pre-covers of B stay inside B; the person in A is still covered.
+    model.updateRules { $0.upsert(AppRule(bundleID: bID, mode: .curtain)) }
+    try await settle(1.5)
+    _ = await a.ask("person_on")
+    try await settle(2)
+    var outsideB = 0, preSeen = 0
+    runtime.onPreCover = { id, specs, _, _ in
+        guard id == d.id, let wb = win(b) else { return }
+        let pre = specs.filter { CoverID.isPreCover($0.id) }
+        preSeen += pre.count
+        outsideB += pre.count { $0.frame.intersection(wb.rect.insetBy(dx: -1, dy: -1)).area < $0.frame.area * 0.99 }
+        latest = specs + latest.filter { CoverID.isTrack($0.id) }
+    }
+    _ = await b.ask("scroll")
+    _ = await b.reply("scroll", timeout: 3)
+    try await settle(1.5)
+    let personCovered2 = coverage(of: RemoteLayout.person.offsetBy(dx: win(a)?.rect.minX ?? 0, dy: win(a)?.rect.minY ?? 0), by: latest.filter { CoverID.isTrack($0.id) }.map(\.frame)) >= 0.25
+    print("overlap_curtain_over_blur precovers_seen=\(preSeen) precovers_outside_curtain_window=\(outsideB) person_in_blur_covered=\(personCovered2) "
+        + "z_b=\(win(b)?.zOrder ?? -1) z_a=\(win(a)?.zOrder ?? -1) ok=\(outsideB == 0 && personCovered2) load1=\(fmt(loadAverage()))")
+    ok = ok && outsideB == 0 && personCovered2
+    _ = await a.ask("person_off")
+
+    // 3. Two Curtain apps side by side: scrolling A pre-covers A only.
+    model.updateRules { $0.upsert(AppRule(bundleID: aID, mode: .curtain)) }
+    guard let wa3 = win(a) else { throw SelftestError("A gone") }
+    await b.place(at: CGPoint(x: wa3.rect.maxX + 20, y: wa3.rect.minY))
+    try await settle(1.5)
+    var onB = 0, onA = 0
+    runtime.onPreCover = { id, specs, _, _ in
+        guard id == d.id, let wa = win(a), let wb = win(b) else { return }
+        for s in specs where CoverID.isPreCover(s.id) {
+            if s.frame.intersection(wb.rect).area > 1 { onB += 1 }
+            if s.frame.intersection(wa.rect).area > 1 { onA += 1 }
+        }
+    }
+    _ = await a.ask("scroll")
+    _ = await a.reply("scroll", timeout: 3)
+    try await settle(1.5)
+    print("overlap_two_curtains a=\(rectString(win(a)?.rect ?? .zero)) b=\(rectString(win(b)?.rect ?? .zero)) precovers_on_a=\(onA) precovers_on_b=\(onB) ok=\(onA > 0 && onB == 0) load1=\(fmt(loadAverage()))")
+    ok = ok && onA > 0 && onB == 0
+
+    // 4. Curtain window (A) under an Off window (B): A scrolls under B → the frame (B excluded) is dirty there, but no pre-cover may
+    //    land on B (clipping to A's visible region).
+    model.updateRules { $0.upsert(AppRule(bundleID: bID, mode: .off)) }
+    await b.place(at: CGPoint(x: wa3.rect.minX - 60, y: wa3.rect.minY + 200))  // B covers the lower part of A's text column
+    _ = await b.ask("front")
+    try await settle(1.5)
+    var onOff = 0, preA = 0
+    var leakPixels = 0, samples = 0
+    let bMarker4 = win(b).map(marker)
+    runtime.onPreCover = { id, specs, _, _ in
+        guard id == d.id, let wb = win(b) else { return }
+        for s in specs where CoverID.isPreCover(s.id) {
+            preA += 1
+            if s.frame.intersection(wb.rect).area > 1 { onOff += 1 }
+        }
+        if let p = bMarker4, let c = control.rgb(at: p) {
+            samples += 1
+            if !c.isMagenta { leakPixels += 1 }
+        }
+    }
+    _ = await a.ask("scroll")
+    _ = await a.reply("scroll", timeout: 3)
+    try await settle(1.5)
+    print("overlap_curtain_under_off z_b=\(win(b)?.zOrder ?? -1) z_a=\(win(a)?.zOrder ?? -1) precovers_on_curtain=\(preA) precovers_on_off_window=\(onOff) "
+        + "off_marker_samples=\(samples) off_marker_covered_samples=\(leakPixels) ok=\(onOff == 0 && leakPixels == 0) load1=\(fmt(loadAverage()))")
+    ok = ok && onOff == 0 && leakPixels == 0
+
+    control.stop()
+    a.terminate()
+    b.terminate()
+    runtime.displayManager.stop()
+    return ok
 }
