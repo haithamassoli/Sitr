@@ -197,13 +197,13 @@ Exit: bench gates (recall ≥ 95 %, misclassification ≤ 2 %); PRD performance 
 Goal: v1.0 anyone can install and verify.
 Exit: fresh macOS 15 user account: download DMG → Gatekeeper passes → onboarding → protection works; `codesign` output matches README; `brew install --cask` works.
 
-- [ ] **M5-T01 Sign + notarize script** (M)
+- [~] **M5-T01 Sign + notarize script** (M) — `scripts/release.sh` dry run from a clean clone builds, verifies, gates entitlements; notarize/staple/spctl pending Developer ID + notarytool credentials (`docs/m5/release.md`)
   Do: `scripts/release.sh`: `xcodebuild archive` → export with Developer ID, Hardened Runtime, entitlements (sandbox, no network) → `notarytool submit --wait` → `stapler staple` → `spctl -a -vv` and entitlement check.
   Done when: the script produces a stapled `.app` from a clean checkout.
-- [ ] **M5-T02 DMG** (S) deps: M5-T01
+- [x] **M5-T02 DMG** (S) deps: M5-T01 — `scripts/make-dmg.sh` (HFS+ UDZO, /Applications link), mount check + `shasum -c` verified
   Do: `hdiutil` DMG with an `/Applications` symlink; SHA-256 into `checksums.txt`.
   Done when: DMG opens, drag-install works, checksum matches.
-- [ ] **M5-T03 Release workflow** (M) deps: M5-T01, M5-T02
+- [~] **M5-T03 Release workflow** (M) deps: M5-T01, M5-T02 — `.github/workflows/release.yml` (tag `v*`, draft release, unsigned fallback without secrets) + `CHANGELOG.md`; actionlint clean; end-to-end run pending a pushed tag
   Do: GitHub Actions on tag `v*`: build, notarize (secrets: Developer ID p12, notarytool API key), attach DMG and checksums, notes from `CHANGELOG.md`.
   Done when: tagging a release candidate publishes a draft release end to end.
 - [ ] **M5-T04 Homebrew cask** (S) deps: M5-T03
@@ -215,7 +215,7 @@ Exit: fresh macOS 15 user account: download DMG → Gatekeeper passes → onboar
 - [ ] **M5-T06 README + docs** (M) deps: M4-T05
   Do: `README.md` and `README.ar.md`: what it does, requirements, install (DMG, brew), permission and monthly re-approval note, privacy verification command with expected output, screen-sharing and screenshot caveats, Recommended preset, default hotkey, build from source (pinned Xcode), model license and checksum, uninstall steps.
   Done when: a new user follows the README on a fresh account without help.
-- [ ] **M5-T07 Licensing + compliance** (S)
+- [x] **M5-T07 Licensing + compliance** (S) — `LICENSE` GPL-3.0, `THIRD_PARTY_NOTICES.md`, `SECURITY.md`, `CONTRIBUTING.md`, issue templates; `ModelChecksumTests` enforces model SHA-256 in CI (proven red)
   Do: `LICENSE` (GPL-3.0 unless the owner changes it), `THIRD_PARTY_NOTICES.md` (model, dataset attributions, SPM deps), CI model-checksum test; `SECURITY.md`, `CONTRIBUTING.md`, issue templates (bug: macOS version, chip, display setup).
   Done when: files present; CI enforces the checksum.
 - [ ] **M5-T08 RC validation** (M) deps: M5-T02, M5-T03, M5-T04, M5-T05, M5-T06, M5-T07
