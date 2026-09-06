@@ -1,3 +1,5 @@
+<img src="App/Icon/icon.png" width="128" alt="Sitr app icon: a pixelated eye">
+
 # Sitr
 
 [العربية](README.ar.md)

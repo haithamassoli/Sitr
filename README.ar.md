@@ -1,5 +1,7 @@
 <div dir="rtl">
 
+<img src="App/Icon/icon.png" width="128" alt="Sitr app icon: a pixelated eye">
+
 # Sitr «ستر»
 
 [English](README.md)

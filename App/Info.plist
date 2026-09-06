@@ -8,6 +8,8 @@
 	<string>Sitr</string>
 	<key>CFBundleExecutable</key>
 	<string>Sitr</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.goldentik.Sitr</string>
 	<key>CFBundleInfoDictionaryVersion</key>

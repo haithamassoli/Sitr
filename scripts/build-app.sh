@@ -18,6 +18,7 @@ if [ -n "${VERSION:-}" ]; then
 fi
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 [ -d App/Resources ] && cp -R App/Resources/. "$APP/Contents/Resources/"
+cp App/Icon/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 # String Catalog (M4-T05): xcstringstool turns the catalog into en.lproj/ar.lproj/Localizable.strings, which is what
 # Text("…") and String(localized:) read from the main bundle; the .xcstrings source itself is not a runtime resource.
 # xcstringstool exits non-zero on a malformed catalog, and set -e turns that into a failed build.
