@@ -98,7 +98,7 @@ Exit: on 1 and 2 displays, hidden-set persons covered with exposure ≤ 150 ms p
 - [x] **M2-T11 Cover renderer** (M) deps: M2-T05, M2-T10, M1-T07 — `CoverRenderer`; padding/clamp/solid verified; quiet p50 0.9–2.8 ms per cover (2 ms gate re-checked in the quiet phase)
   Do: `CoverRenderer`: Gaussian (`CIGaussianBlur` on the cropped captured pixels, radius from the strength curve), Pixelate (`CIPixellate`, block from curve), Solid (system-appearance color); Body Padding expand + clamp to display; one Metal `CIContext` per display.
   Done when: ≤ 2 ms per cover at spike source size; 3 styles × 3 strengths checked visually; padding 0 / 15 / 50 % verified.
-- [ ] **M2-T12 Pipeline** (L) deps: M2-T05, M2-T06, M2-T07, M2-T08, M2-T09, M2-T10, M2-T11
+- [x] **M2-T12 Pipeline** (L) deps: M2-T05, M2-T06, M2-T07, M2-T08, M2-T09, M2-T10, M2-T11 — `Pipeline` actor + `Runtime`; selftest exposure p50 79 / p95 129 ms (Vision detector, load 3), cover overlap 1.0; 120 s motion: skip ratio 0.9 %, RSS flat 62→63 MB; 600 s quiet run + M1 chip pending
   Do: per-display `Pipeline` actor: Frame → skip idle → detect → classify → track → policy → render → commit; drop-oldest backpressure (latest frame only); debug metrics per stage; exposure measured with the M1-T04 rig.
   Done when: exposure ≤ 150 ms p95 on M1; no backlog growth over 10 min of video.
 - [x] **M2-T13 Reveal Hold** (M) deps: M2-T10 — `RevealState` (7 tests) + Carbon `HotkeyManager` (⌃⌥Space, status 0; posted CGEvent press/release verified 203/1004 ms holds); panel wiring lands with M2-T12; physical press over fullscreen manual pending
@@ -110,7 +110,7 @@ Exit: on 1 and 2 displays, hidden-set persons covered with exposure ≤ 150 ms p
 - [x] **M2-T15 Launch at login** (S) deps: M2-T01 — `SMAppService.mainApp`: notFound → enabled → enabled in a fresh process → notRegistered; left off
   Do: `SMAppService.mainApp` register/unregister behind a toggle in the placeholder settings; handle `requiresApproval`.
   Done when: toggle reflects real status after relaunch.
-- [ ] **M2-T16 Fail states, basic** (M) deps: M2-T03, M2-T05, M2-T14
+- [x] **M2-T16 Fail states, basic** (M) deps: M2-T03, M2-T05, M2-T14 — `Notifier` + health poll; failstate selftest: needsPermission within 967 ms, covers dropped, 1 notification; restart → ok in 107 ms, 1 restore notification; real TCC revoke manual pending
   Do: stream stop/error or revoked permission → needsPermission; covers dropped (Blur mode fails open); warning icon; one notification per transition via `UNUserNotificationCenter` (authorization requested on first need); recover when frames resume.
   Done when: revoke → state within 5 s, exactly one notification; re-grant recovers without relaunch.
 
