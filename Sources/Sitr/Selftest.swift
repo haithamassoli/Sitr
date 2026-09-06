@@ -1,5 +1,5 @@
-// `Sitr --selftest [capture|overlay|render|pipeline|failstate|stimulus] [options]`: automated checks for M2 track A
-// (capture, overlay, renderer) and the pipeline / fail-state glue (M2-T12, M2-T16). Each subcommand prints one parseable
+// `Sitr --selftest [capture|overlay|render|pipeline|category|failstate|stimulus] [options]`: automated checks for M2 track A
+// (capture, overlay, renderer), the pipeline / fail-state glue (M2-T12, M2-T16) and the category wiring (M2-T07). Each subcommand prints one parseable
 // line per metric, removes every window it created and exits on its own (hard deadline). Plain `--selftest` prints the
 // M2-T01 facts as before. Run from a shell, never via `open` (docs/dev.md). Pixels are sampled as numbers only; no frame is
 // ever written anywhere.
@@ -27,6 +27,8 @@ enum Selftest {
         case "pipeline":
             let trials = option(args, "--trials", default: 30)
             Harness.run("pipeline", deadline: Double(trials) * 4 + 60) { try await pipelineTest(trials: trials) }
+        case "category":
+            Harness.run("category", deadline: 150) { try await categoryTest() }
         case "failstate":
             Harness.run("failstate", deadline: 90) { try await failstateTest() }
         case "stimulus":
@@ -403,7 +405,7 @@ private func bootRuntime() async throws -> (runtime: Runtime, display: ManagedDi
             let excluded = content.windows.filter { panelIDs.contains($0.windowID) }
             try await d.session.updateFilter(SCContentFilter(display: display, excludingWindows: excluded))
             print("pipeline_boot display=\(mainID) displays=\(runtime.displayManager.displays.count) pipelines=\(runtime.pipelines.count) "
-                + "excluded_panel_windows=\(excluded.count)/\(panelIDs.count) health=\(runtime.model.policy.health)")
+                + "excluded_panel_windows=\(excluded.count)/\(panelIDs.count) health=\(runtime.model.policy.health) \(runtime.modelsNote)")
             return (runtime, d, pipeline)
         }
         try await Task.sleep(for: .milliseconds(100))
@@ -411,34 +413,50 @@ private func bootRuntime() async throws -> (runtime: Runtime, display: ManagedDi
     throw SelftestError("capture did not start within 10 s (permission=\(runtime.permission.state))")
 }
 
-/// The selftest's own stimulus: a panel just under the overlay level showing the CC0 person photo (`Sources/SitrSpike/Fixtures/
+/// The selftest's own stimulus: a panel just under the overlay level showing a CC0 photo (by default `Sources/SitrSpike/Fixtures/
 /// person.jpg`, 500×749, drawn 1:1 so image pixels are display points), a heartbeat block that keeps frames flowing while
-/// covers clear, and — for `--motion` — two copies of the photo moving like video. Dev-only: the fixture is loaded relative to
-/// `#filePath`, so it exists in a source checkout, not in a shipped bundle.
+/// covers clear, and — for `--motion` — two copies of the photo moving like video. Dev-only: fixtures are loaded relative to
+/// `#filePath`, so they exist in a source checkout, not in a shipped bundle.
 @MainActor
 private final class Stimulus {
     static let imageSize = CGSize(width: 500, height: 749)
-    /// Hand-checked body box in the fixture (image pixels, top-left origin): turban top to feet, elbow to elbow.
+    /// Hand-checked body box in the spike fixture (image pixels, top-left origin): turban top to feet, elbow to elbow.
     static let body = CGRect(x: 125, y: 120, width: 235, height: 615)
 
     let panel: NSPanel
     /// Panel rect in display-local points (origin top-left).
     let rect: CGRect
-    /// Where the person is on screen (display-local points) in the static layout.
+    /// Where the person is on screen (display-local points) in the static layout of the spike fixture.
     let personRect: CGRect
+    /// The photo on screen (display-local points) in the static layout.
+    let photoRect: CGRect
     private let photo = CALayer(), photo2 = CALayer(), heartbeat = CALayer()
     private var beat = 0
 
-    init(display: CGSize, motion: Bool) throws {
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("SitrSpike/Fixtures/person.jpg")
+    /// A repo-relative image, e.g. `Tests/SitrDetectTests/Fixtures/woman.jpg` (dev checkout only).
+    static func fixture(_ path: String) throws -> CGImage {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent(path)
         guard let image = NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             throw SelftestError("fixture missing: \(url.path)")
         }
-        let size = motion ? CGSize(width: 1300, height: 860) : CGSize(width: Self.imageSize.width + 60, height: Self.imageSize.height)
+        return image
+    }
+
+    /// The spike's person photo at 1:1; `motion` adds a second, smaller moving copy.
+    convenience init(display: CGSize, motion: Bool) throws {
+        self.init(display: display, image: try Self.fixture("Sources/SitrSpike/Fixtures/person.jpg"), motion: motion)
+    }
+
+    /// `image` drawn at `scale` points per image pixel (the category selftest shows the CC0 portraits of Tests/SitrDetectTests/Fixtures).
+    init(display: CGSize, image: CGImage, scale: CGFloat = 1, motion: Bool = false) {
+        let imageSize = CGSize(width: CGFloat(image.width) * scale, height: CGFloat(image.height) * scale)
+        let size = motion ? CGSize(width: 1300, height: 860) : CGSize(width: imageSize.width + 60, height: imageSize.height)
         rect = CGRect(x: ((display.width - size.width) / 2).rounded(), y: ((display.height - size.height) / 2).rounded(),
                       width: size.width, height: size.height)
-        personRect = Self.body.offsetBy(dx: rect.minX + 60, dy: rect.minY)
+        photoRect = CGRect(x: rect.minX + 60, y: rect.minY, width: imageSize.width, height: imageSize.height)
+        personRect = CGRect(x: photoRect.minX + Self.body.minX * scale, y: photoRect.minY + Self.body.minY * scale,
+                            width: Self.body.width * scale, height: Self.body.height * scale)
         panel = NSPanel(contentRect: appKitRect(rect, displayHeight: display.height), styleMask: [.borderless, .nonactivatingPanel],
                         backing: .buffered, defer: false)
         panel.isOpaque = true
@@ -452,10 +470,10 @@ private final class Stimulus {
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.white.cgColor
         panel.contentView = view
-        for (layer, scale) in [(photo, 1.0), (photo2, 0.6)] {
+        for (layer, k) in [(photo, 1.0), (photo2, 0.6)] {
             layer.contents = image
             layer.contentsGravity = .resizeAspect
-            layer.frame = CGRect(x: 60, y: 0, width: Self.imageSize.width * scale, height: Self.imageSize.height * scale)
+            layer.frame = CGRect(x: 60, y: 0, width: imageSize.width * k, height: imageSize.height * k)
             layer.isHidden = true
             view.layer?.addSublayer(layer)
         }
@@ -500,7 +518,9 @@ private final class Stimulus {
     }
 }
 
-/// Records, per trial, the first commit whose layers cover the person: commit time and the covered share of the person rect.
+/// Records, per trial, the first commit whose layers cover the person (≥ 25 % of the person rect, so a bystander's cover brushing
+/// its edge does not count): commit time and the covered share of the person rect. `personCovered` follows every commit, so the
+/// trial loop can wait for the person's covers to go while other people on the user's screen stay covered.
 @MainActor
 private final class CommitRecorder {
     struct Hit {
@@ -509,6 +529,7 @@ private final class CommitRecorder {
         var layers: Int
     }
     private(set) var hit: Hit?
+    private(set) var personCovered = false
     private var armed = false
     private let person: CGRect
 
@@ -520,9 +541,9 @@ private final class CommitRecorder {
     }
 
     func record(_ specs: [CoverLayerSpec], at time: Double) {
-        guard armed, !specs.isEmpty else { return }
         let overlap = specs.map { $0.frame.intersection(person).area / person.area }.max() ?? 0
-        guard overlap > 0 else { return }
+        personCovered = overlap >= 0.25
+        guard armed, personCovered else { return }
         hit = Hit(time: time, overlap: overlap, layers: specs.count)
         armed = false
     }
@@ -541,8 +562,9 @@ private func waitUntil(_ seconds: Double, _ condition: @escaping @MainActor () -
 
 /// M2-T12 exposure (Blur path, the M1-T04 method through the production pipeline): per trial the photo flips on in a flushed
 /// transaction, and the clock stops when `OverlayPanel.apply` has committed a layer over it. Between trials the region is blank
-/// and the heartbeat runs until the covers are gone, then the screen settles ≥ 600 ms plus a random 100–170 ms so paints are not
-/// phase-locked to the 15 Hz cadence. Control: the cover must cover ≥ 80 % of the hand-checked person rect.
+/// and the heartbeat runs until the person's covers are gone (other people on the user's screen may stay covered), then the screen
+/// settles ≥ 600 ms plus a random 100–170 ms so paints are not phase-locked to the 15 Hz cadence. Control: the cover must cover
+/// ≥ 80 % of the hand-checked person rect.
 @MainActor
 private func pipelineTest(trials: Int) async throws -> Bool {
     let (runtime, d, pipeline) = try await bootRuntime()
@@ -557,11 +579,11 @@ private func pipelineTest(trials: Int) async throws -> Bool {
     for i in 0...trials {  // trial 0 warms the stream and Vision and is not counted
         stim.show(false)
         let clearDeadline = CACurrentMediaTime() + 3
-        while d.panel.layerCount > 0, CACurrentMediaTime() < clearDeadline {
+        while recorder.personCovered, CACurrentMediaTime() < clearDeadline {
             stim.pulse()
             try await Task.sleep(for: .milliseconds(100))
         }
-        if d.panel.layerCount > 0 { notCleared += 1 }
+        if recorder.personCovered { notCleared += 1 }
         try await Task.sleep(for: .milliseconds(600 + 100 + Int.random(in: 0..<70)))
         recorder.arm()
         let tFlip = stim.show(true)
@@ -585,8 +607,9 @@ private func pipelineTest(trials: Int) async throws -> Bool {
     print("cover_control overlap_min=\(fmt(overlaps.min() ?? 0)) overlap_p50=\(fmt(percentile(overlaps, 0.5))) layers_max=\(layers.max() ?? 0) "
         + "covers_cleared_between_trials=\(notCleared == 0) ok=\(controlOK)")
     print("pipeline_counts in=\(m.framesIn) out=\(m.framesOut) skipped=\(m.skipped) detections=\(m.detections) errors=\(m.errors) applies=\(m.applies) "
-        + "detect_ms=\(PipelineMetrics.p(m.detect)) track_ms=\(PipelineMetrics.p(m.track)) render_ms=\(PipelineMetrics.p(m.render)) "
-        + "commit_ms=\(PipelineMetrics.p(m.commit)) e2e_ms=\(PipelineMetrics.p(m.e2e)) health=\(runtime.model.policy.health)")
+        + "detect_ms=\(PipelineMetrics.p(m.detect)) classify_ms=\(PipelineMetrics.p(m.classify)) crops=\(m.crops) track_ms=\(PipelineMetrics.p(m.track)) "
+        + "render_ms=\(PipelineMetrics.p(m.render)) commit_ms=\(PipelineMetrics.p(m.commit)) e2e_ms=\(PipelineMetrics.p(m.e2e)) "
+        + "health=\(runtime.model.policy.health) \(runtime.modelsNote)")
     runtime.displayManager.stop()
     // Correctness always gates; the p95 target only on a quiet machine (other agents' GPU/ANE load stalls Vision and Core Image).
     return exposures.count >= trials * 9 / 10 && controlOK && notCleared == 0 && (noisy || p95 <= 0.150)
@@ -622,8 +645,8 @@ private func motionTest(seconds: Double) async throws -> Bool {
         samples.append((ratio, rss))
         layersSeen = max(layersSeen, m.layers)
         print("motion t=\(Int(next)) frames_in=\(m.framesIn) detections=\(m.detections) skipped=\(m.skipped) window_skip_ratio=\(fmt(ratio)) "
-            + "tracks=\(m.tracks) layers=\(m.layers) rss_mb=\(Int(rss)) detect_ms=\(PipelineMetrics.p(m.detect)) e2e_ms=\(PipelineMetrics.p(m.e2e)) "
-            + "errors=\(m.errors) load1=\(fmt(loadAverage()))")
+            + "tracks=\(m.tracks) layers=\(m.layers) rss_mb=\(Int(rss)) detect_ms=\(PipelineMetrics.p(m.detect)) "
+            + "classify_ms=\(PipelineMetrics.p(m.classify)) crops=\(m.crops) e2e_ms=\(PipelineMetrics.p(m.e2e)) errors=\(m.errors) load1=\(fmt(loadAverage()))")
         lastIn = m.framesIn
         lastSkipped = m.skipped
         next += 10
@@ -637,9 +660,96 @@ private func motionTest(seconds: Double) async throws -> Bool {
     let growth = rssLast - rssFirst > max(30, 0.25 * rssFirst) || skipLast - skipFirst > 0.2
     let m = await pipeline.metrics
     print("backlog_growth=\(growth) rss_mb_first=\(Int(rssFirst)) rss_mb_last=\(Int(rssLast)) skip_ratio_first=\(fmt(skipFirst)) skip_ratio_last=\(fmt(skipLast)) "
-        + "frames_in=\(m.framesIn) skipped_total=\(m.skipped) skip_ratio_total=\(fmt(m.skipRatio)) layers_max=\(layersSeen) seconds=\(Int(seconds)) load1=\(fmt(loadAverage()))")
+        + "frames_in=\(m.framesIn) skipped_total=\(m.skipped) skip_ratio_total=\(fmt(m.skipRatio)) layers_max=\(layersSeen) seconds=\(Int(seconds)) "
+        + "load1=\(fmt(loadAverage())) \(runtime.modelsNote)")
     runtime.displayManager.stop()
     return !growth && layersSeen > 0 && m.framesIn > 0
+}
+
+// MARK: - category (M2-T07)
+
+/// The category rule end to end on the real pipeline (CoreML detector + classifier): per hidden set with Strict off, the CC0 woman
+/// and man portraits of Tests/SitrDetectTests/Fixtures — the hidden one covered within 1 s, the other never over 2 s — then Strict
+/// on with the spike's person shrunk until the face is under 32 px in the capture → covered as Unknown within 2 s. "Covered" means
+/// a committed layer over the photo, so people elsewhere on the screen do not count; the heartbeat keeps frames flowing.
+@MainActor
+private func categoryTest() async throws -> Bool {
+    let (runtime, d, pipeline) = try await bootRuntime()
+    let model = runtime.model
+    let display = d.frame.size
+    let woman = Stimulus(display: display, image: try Stimulus.fixture("Tests/SitrDetectTests/Fixtures/woman.jpg"))
+    let man = Stimulus(display: display, image: try Stimulus.fixture("Tests/SitrDetectTests/Fixtures/man.jpg"))
+    // 500×749 at 0.6: the ~42 px face becomes 25 pt ≈ 22 px in the 1280-wide capture (< 32), the body ~370 pt (≥ 40 px).
+    let small = Stimulus(display: display, image: try Stimulus.fixture("Sources/SitrSpike/Fixtures/person.jpg"), scale: 0.6)
+    var latest: [CGRect] = []  // cover frames of the latest commit on the main display
+    var commits = 0
+    let mainID = d.id
+    runtime.onCommit = { id, specs, _, _ in
+        guard id == mainID else { return }
+        latest = specs.map(\.frame)
+        commits += 1
+    }
+    /// A rect "lands" on the photo when it hides ≥ 25 % of it (a neighbour's padded cover brushing the edge does not count).
+    func lands(_ r: CGRect, on stim: Stimulus) -> Bool { r.intersection(stim.photoRect).area >= 0.25 * stim.photoRect.area }
+    func covers(_ stim: Stimulus) -> Bool { latest.contains { lands($0, on: stim) } }
+    func trackOver(_ stim: Stimulus) async -> Track? { await pipeline.tracks.first { lands(CGRect($0.rect), on: stim) } }
+
+    /// Waits (≤ 3 s, heartbeat running) for two fresh commits with no cover and no track on `stim`'s photo: frames still in
+    /// flight from the previous state, and stale covers from whatever the screen showed before the panels appeared, must not count.
+    func settle(_ stim: Stimulus) async {
+        let start = commits
+        let deadline = CACurrentMediaTime() + 3
+        while CACurrentMediaTime() < deadline {
+            let clear = await trackOver(stim) == nil && !covers(stim)
+            if clear, commits >= start + 2 { break }
+            stim.pulse()
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+    }
+
+    /// Shows `stim` for `seconds` with the heartbeat running; returns whether a cover landed on it, after how long, and the category
+    /// of the track over it. Then hides it and waits until its covers and tracks are gone.
+    func show(_ stim: Stimulus, seconds: Double) async -> (covered: Bool, ms: Int, track: String) {
+        stim.panel.orderFrontRegardless()  // the stimulus panels overlap at the display centre: the one under test goes on top
+        await settle(stim)
+        let t0 = stim.show(true)
+        var first: Double?
+        while CACurrentMediaTime() < t0 + seconds {
+            if first == nil, covers(stim) { first = CACurrentMediaTime() }
+            stim.pulse()
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        let track = await trackOver(stim).map { "\($0.category)" } ?? "none"
+        let all = await pipeline.tracks.map { "\(rectString(CGRect($0.rect))):\($0.category)" }
+        let m = await pipeline.metrics
+        print("category_debug photo=\(rectString(stim.photoRect)) frames_in=\(m.framesIn) detections=\(m.detections) tracks=\(all) latest=\(latest.map(rectString))")
+        stim.show(false)
+        await settle(stim)
+        return (first != nil, first.map { Int(($0 - t0) * 1000) } ?? -1, track)
+    }
+
+    print("category_boot \(runtime.modelsNote) woman=\(rectString(woman.photoRect)) man=\(rectString(man.photoRect)) small=\(rectString(small.photoRect))")
+    var ok = true
+    let cases: [(hidden: HiddenSet, strict: Bool, stim: Stimulus, name: String, cover: Bool, track: String?, withinMs: Int)] = [
+        (.women, false, man, "man", false, nil, 0), (.women, false, woman, "woman", true, "woman", 1000),
+        (.men, false, woman, "woman", false, nil, 0), (.men, false, man, "man", true, "man", 1000),
+        (.men, true, small, "small_person", true, "unknown", 2000),
+    ]
+    for c in cases {
+        model.setHiddenSet(c.hidden)
+        model.setStrict(c.strict)
+        let r = await show(c.stim, seconds: 2)
+        let pass = c.cover ? (r.covered && r.ms <= c.withinMs && r.track == c.track) : !r.covered
+        print("category_check hidden=\(c.hidden) strict=\(c.strict) fixture=\(c.name) expect_cover=\(c.cover) covered=\(r.covered) "
+            + "first_cover_ms=\(r.ms < 0 ? "-" : String(r.ms)) within_ms=\(c.cover ? String(c.withinMs) : "-") track=\(r.track) "
+            + "expected_track=\(c.track ?? "-") ok=\(pass)")
+        ok = ok && pass
+    }
+    let m = await pipeline.metrics
+    print("category_summary ok=\(ok) \(runtime.modelsNote) detect_ms=\(PipelineMetrics.p(m.detect)) classify_ms=\(PipelineMetrics.p(m.classify)) "
+        + "crops=\(m.crops) errors=\(m.errors) load1=\(fmt(loadAverage())) noisy=\(loadAverage() > 4)")
+    runtime.displayManager.stop()
+    return ok
 }
 
 /// M2-T16: with `Notifier.dryRun`, stop the capture session (a stream error lands in the same `.stopped` health) and report a
