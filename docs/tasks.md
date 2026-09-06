@@ -141,7 +141,7 @@ Exit: Curtain exposure ≤ 50 ms p95; YouTube without people in Safari-as-Curtai
 - [x] **M3-T07 Recommended preset** (S) deps: M3-T01 — `RecommendedPreset` (8 bundle IDs incl. App Store Telegram `com.tdesktop.Telegram`; Safari/Chrome/Arc/WhatsApp/Discord verified on this Mac); 5 tests
   Do: preset data → Curtain: Safari `com.apple.Safari`, Chrome `com.google.Chrome`, Arc `company.thebrowser.Browser`, Telegram `ru.keepcoder.Telegram` and `org.telegram.desktop`, WhatsApp `net.whatsapp.WhatsApp`, Discord `com.hnc.Discord` (verify each on a real install); `apply()` upserts overrides and leaves Default Rule untouched.
   Done when: apply test; re-apply idempotent; user edits to preset apps survive until the preset is re-applied.
-- [ ] **M3-T08 Rules UI** (L) deps: M3-T01, M3-T07
+- [x] **M3-T08 Rules UI** (L) deps: M3-T01, M3-T07 — Protection tab: Default Rule picker, overrides table (icons, mode, remove), Add ▸ running apps / .app panel, preset button; edits reach covers + `rules.json` (tested); capture-filter side lands in M3-T03
   Do: Settings › Protection: Default Rule picker; overrides table (icon via `NSWorkspace`, name, mode picker, remove); Add ▸ running-apps picker or `.app` `NSOpenPanel` (bundle ID from `Bundle`); "Use recommended settings" button; uninstalled apps get a generic icon.
   Done when: add, remove, and mode changes reach the capture filter and covers without restart; keyboard-navigable.
 - [ ] **M3-T09 Overlap and attribution check** (S) deps: M3-T05
@@ -157,13 +157,13 @@ Exit: bench gates (recall ≥ 95 %, misclassification ≤ 2 %); PRD performance 
 - [ ] **M4-T01 Onboarding** (L) deps: M2-T03, M2-T09, M3-T07
   Do: first-launch window, 5 steps per FR8; step 2 auto-advances on grant; step 3 requires a hidden-set choice; step 4 preset buttons; step 5 hotkey hint plus Launch at login (on); reopens at Needs permission; Default Rule is Off after onboarding.
   Done when: a fresh user account completes the flow; skipping permission leaves the app in Needs permission with the correct icon.
-- [ ] **M4-T02 Settings › Appearance** (M) deps: M2-T11
+- [x] **M4-T02 Settings › Appearance** (M) deps: M2-T11 — style/strength/padding bound to Preferences (Runtime pushes live); preview = synthetic `SampleScene` through the real `CoverRenderer`; screenshot reviewed
   Do: style picker, strength slider, padding slider, live preview running the real `CoverRenderer` over a bundled synthetic sample image (generated, no third-party rights).
   Done when: changes apply live to overlays; preview matches overlay output.
-- [ ] **M4-T03 Settings › Shortcuts** (M) deps: M2-T13
+- [x] **M4-T03 Settings › Shortcuts** (M) deps: M2-T13 — recorder, validation with reasons, conflict list, reset; `UCKeyTranslate` key names; physical recording manual pending
   Do: hotkey recorder (key + modifiers); static conflict list (⌥Space Siri/ChatGPT, ⌘Space Spotlight, Option-only warning); reset to default.
   Done when: rebind works without relaunch; invalid combos rejected; conflict text shown.
-- [ ] **M4-T04 Settings › General + About** (M) deps: M2-T15
+- [x] **M4-T04 Settings › General + About** (M) deps: M2-T15 — language override + relaunch, Low Power toggle key, About with verify command copy, FR11 caveats, model notices; Arabic relaunch check waits for M4-T05
   Do: launch at login; language System / English / Arabic (`AppleLanguages` override plus relaunch prompt); Low Power behavior toggle; About: version, license, `codesign` verification command with copy button, source link, screen-sharing and screenshot caveats.
   Done when: language switch relaunches into Arabic RTL; About text matches README.
 - [ ] **M4-T05 Localization EN/AR** (L) deps: M4-T01, M4-T02, M4-T03, M4-T04, M2-T14
