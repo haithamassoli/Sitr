@@ -52,10 +52,10 @@ No-go triggers: Blur exposure > 250 ms p95 on M3, or person recall < 85 % with e
 - [x] **M1-T06b CoreML person detector** (L) deps: M1-T06 — shipped yolox-s 1280×768 fp16 (18.2 MB, Apache-2.0): all 85.1 / large 93.3 / medium 90.5 / small 78.4 / back 91.8 / partial 83.3 %; m 1280×768 87.1 % (50.8 MB); 95 % gate unreachable on COCO small people; ANE p50 24 ms noisy (floor 12–19 ms); `docs/spike/detect.md`
   Do: convert YOLOX (Apache-2.0) tiny/s to CoreML fp16, `CoreMLPersonDetector` in `SitrDetect`, `--detector coreml:` on the recall and detect rigs; recall + ms/frame per model × input size.
   Done when: recall table next to Vision's; a shipped `Models/dist/PersonDetector.mlpackage` with license, source, checksums; detector decision recorded.
-- [ ] **M1-T08 System cost** (M) deps: M1-T03, M1-T07
+- [~] **M1-T08 System cost** (M) deps: M1-T03, M1-T07 — `scripts/measure-system.sh` + `--mode browsing|video` stimulus; measured on M3, 1 display (`docs/spike/system.md`): browsing 32.7 % debug / 28.0 % release (target ≤ 15 %), video 41.5 % / 38.3 % (≤ 25 %), memory 141 MB / 168 MB release flat over 10 min (pass), no backlog growth (RSS 95→93 MB, skip 0.24→0.17). Static-screen row invalid — the desktop is never static (7 people on it, 7.6 fps). GPU/ANE pending (needs sudo) and everything pending a re-take on M1 8 GB; whole-app runs noisy (load1 4–26)
   Do: capture + detect + render at 15 fps for 10 min browsing and 10 min 1080p video with people; CPU % of one P-core, GPU/ANE, memory, thermal state; static screen 5 min.
   Done when: numbers against the PRD table, on M1 8 GB or marked pending.
-- [ ] **M1-T09 Spike report + decisions** (S) deps: all M1
+- [x] **M1-T09 Spike report + decisions** (S) deps: all M1 — `docs/spike-report.md`: conditional GO, the full measured PRD table, the four model/rate decisions, and the applied PRD deltas (Curtain 50 → 60 ms p95 at 30 fps capture; recall re-based on bodies ≥ 80 px with ≥ 40 px reported-not-gated; misclassification ≤ 6 % for the v1 classifier, ≤ 2 % kept for its replacement; browsing/video CPU targets annotated but NOT moved — M4-T09 is a v1 blocker)
   Do: `docs/spike-report.md`: numbers, decisions, PRD deltas.
   Done when: go/no-go recorded; PRD updated if any target changed.
 
