@@ -1,8 +1,10 @@
 # Spike notes: detection cost (M1-T03) and person recall (M1-T06)
 
 Machine: Apple M3, 24 GB, macOS 26.6.2, Xcode 26.6, Vision `DetectHumanRectanglesRequest` revision 2. M1 8 GB: pending.
-Numbers below are **preliminary/noisy** (other agents were building in parallel); re-run in the quiet phase with the
-commands in "Reproduce". The rigs print one parseable line per metric (`detect_ms …`, `recall …`, `recall_ms …`).
+Cost numbers were re-taken in the quiet phase (2026-09-06, nothing else of ours running, load1 2.5–2.7) for the Vision rig and
+the shipped CoreML model; the tables below carry the quiet numbers with the preliminary (2026-09-05, other agents building)
+ones kept in one line each. Recall is deterministic and was not re-run. The rigs print one parseable line per metric
+(`detect_ms …`, `recall …`, `recall_ms …`).
 
 ## Reproduce
 ```
@@ -24,20 +26,26 @@ configuration; time covers `ImageRequestHandler` creation + `perform`. `full+fac
 Compute unit: Vision picks (`setComputeDevice` not called; `computeDevice(for: .main)` = nil). Supported devices reported
 for both requests: Neural Engine, GPU, CPU.
 
+Quiet phase (2026-09-06, load1 2.66, `.build/debug/sitr-spike detect`, n=100 per cell):
+
 | config       | 1280 p50 / p95 ms | 1920 p50 / p95 ms | 2560 p50 / p95 ms | found (of ~21 people / 4 clear faces) |
 |--------------|-------------------|-------------------|-------------------|-----------------------|
-| full body    | 14.0 / 24.1       | 11.1 / 15.8       | 15.9 / 26.6       | 1 person              |
-| upperBodyOnly| 12.4 / 20.5       |  8.4 / 10.7       |  9.6 / 10.7       | 6–7 persons           |
-| faces        | 21.6 / 39.1       | 10.0 / 11.1       | 23.3 / 45.3       | 3 faces               |
-| full + faces | 22.7 / 34.3       | 10.9 / 21.7       | 11.7 / 21.8       | 1 + 3                 |
+| full body    |  2.7 / 2.8        |  2.9 / 3.0        |  3.6 / 3.8        | 1 person              |
+| upperBodyOnly|  2.7 / 2.7        |  2.9 / 3.1        |  3.6 / 3.9        | 6–7 persons           |
+| faces        |  4.1 / 4.6        |  4.4 / 4.7        |  5.4 / 6.2        | 3 faces               |
+| full + faces |  4.2 / 4.4        |  4.7 / 5.2        |  5.6 / 6.4        | 1 + 3                 |
+
+Preliminary (2026-09-05, other agents building; superseded): full 14.0 / 24.1, 11.1 / 15.8, 15.9 / 26.6; upper 12.4 / 20.5,
+8.4 / 10.7, 9.6 / 10.7; faces 21.6 / 39.1, 10.0 / 11.1, 23.3 / 45.3; full + faces 22.7 / 34.3, 10.9 / 21.7, 11.7 / 21.8 ms.
 
 M1 (8 GB): pending.
 
 Reading it:
-- Cost is flat in input size (1280 ≈ 1920 ≈ 2560): Vision resizes to its own network input, so the capture long side is
-  not a detection-cost lever. The 1280-vs-1920 differences above are noise (1280 ran first, `thermalState` = fair).
-- One frame of person + face detection costs 11–23 ms p50 on M3, well inside the 66 ms budget of 15 fps. Two requests
-  on one handler cost about as much as the dearer request alone (shared preprocessing).
+- Cost is nearly flat in input size (1280 → 2560 adds ~1 ms, the downscale into Vision's own network input), so the capture
+  long side is not a detection-cost lever.
+- One frame of person + face detection costs 4–6 ms p50 on a quiet M3, far inside the 66 ms budget of 15 fps; the
+  preliminary 11–23 ms were ANE/CPU contention from the other agents' jobs. Two requests on one handler cost about as much as
+  the dearer request alone (shared preprocessing).
 - The `found` column is the real finding: on a realistic page the full-body detector found 1 of ~21 people (the man in
   the Spinoza photo); `upperBodyOnly` found 6–7; faces 3 of 4 clearly visible ones. See M1-T06.
 
@@ -220,10 +228,23 @@ i.e. compile + load (the app ships the compiled `.mlmodelc`, so only the load pa
 
 Vision for reference (same frame, M1-T03): full body 11–16 ms p50, finding 1 person; upper body 8–12 ms, 6–7 persons.
 
+**Quiet phase, shipped model only** (2026-09-06, load1 2.5–2.6, `.build/release/sitr-spike detect --detector
+coreml:Models/dist/PersonDetector.mlpackage --n 200`; the tiny / m rows above stay preliminary):
+
+| model, input | units | process | side 1280 p50 / p95 / min ms | side 2560 p50 / p95 / min ms | found | load ms |
+|---|---|---|---|---|---|---|
+| **s 1280×768** | **ane** | alone (`--units ane`, the app's configuration) | **15.2 / 16.9 / 11.7** | – | 22 | 1056 |
+| s 1280×768 | all | first model in the process | 19.2 / 21.9 / 15.9 | 25.1 / 73.1 / 20.0 | 22 | 1765 |
+| s 1280×768 | ane | second model in the same process (after `all`) | 23.4 / 34.3 / 17.6 | 25.1 / 59.7 / 21.2 | 22 | 3387 |
+
 Reading it:
-- s 1280×768 runs at ~24–32 ms p50 with a 12–19 ms floor on a loaded machine; the 30 ms p95 gate is plausible on a
-  quiet M3 (the floor is well under it) but **not demonstrated here** — p95 40–105 ms is contention. The quiet phase
-  decides; M1 8 GB is pending. m 1280×768 has a 30 ms *floor* (p50 45 ms), so it is out on cost as well as size.
+- s 1280×768 on the Neural Engine alone costs **15.2 / 16.9 ms p50 / p95** per frame (floor 11.7 ms) on a quiet M3: the 30 ms
+  p95 budget holds with margin; the preliminary 24–32 ms p50 / 40–105 ms p95 were contention. M1 8 GB is pending.
+  m 1280×768 has a 30 ms *floor* (p50 45 ms, preliminary), so it stays out on cost as well as size.
+- Two CoreML models loaded in one process share the ANE: the second one measures 1.5× slower (23 ms p50, 34 ms p95) and the
+  side-2560 rows show 60–70 ms p95 tails. The app loads two models (detector + classifier) plus Vision faces, so its own
+  `detect_ms` (docs/spike/system.md: 17–18 ms p50 at 15 fps) is the number that counts for the budget, not the rig's.
+- Vision-style `.all` is not faster here (19 ms vs 15 ms): keep `.cpuAndNeuralEngine`.
 - Before the SPP rewrite the same s 1280×768 measured p50 132–185 ms under load 5–37: two CPU-scheduled ops in the
   middle of the network cost far more than their FLOPs when the CPU is busy. Keep every op on the ANE.
 - The capture side barely matters (1280 vs 2560: same p50 within noise): the Lanczos letterbox on the GPU is cheap

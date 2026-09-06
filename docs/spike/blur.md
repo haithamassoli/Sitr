@@ -15,22 +15,26 @@ Two output paths: **cgimage** = `createCGImage` (GPU render + CPU readback, then
 **iosurface** = `startTask(toRender:…)` into an IOSurface-backed `CVPixelBuffer` + `waitUntilCompleted()` (GPU time included),
 then `layer.contents = IOSurface` (zero-copy). p50 / p95 over 200 warm iterations (10 warm-ups discarded).
 
-Preliminary / noisy (2026-09-05, Apple M3, other agents building in parallel):
+Quiet phase (2026-09-06, Apple M3, macOS 26.6.2, nothing else of ours running, load1 2.75; `.build/debug/sitr-spike blur`):
 
 | Face | Cover (px) | Style | param (px) | cgimage p50 / p95 | iosurface p50 / p95 |
 |---|---|---|---|---|---|
-| 60 | 180×444 | Gaussian | 24.1 | 7.3 / 40.8 ms | **1.2 / 3.0 ms** |
-| 60 | 180×444 | Pixellate | 24.6 | 2.8 / 5.0 ms | **0.9 / 1.5 ms** |
-| 120 | 360×820 | Gaussian | 48.1 | 10.3 / 16.1 ms | **2.1 / 4.1 ms** |
-| 120 | 360×820 | Pixellate | 49.2 | 6.0 / 9.4 ms | **1.1 / 1.5 ms** |
-| 240 | 721×808 | Gaussian | 96.2 | 16.0 / 24.1 ms | 3.7 / 4.9 ms |
-| 240 | 721×808 | Pixellate | 98.4 | 14.7 / 24.1 ms | 1.7 / 55.9 ms (p95 = one stall, noisy) |
+| 60 | 180×444 | Gaussian | 24.1 | 1.0 / 1.3 ms | **0.4 / 0.5 ms** |
+| 60 | 180×444 | Pixellate | 24.6 | 0.8 / 0.8 ms | **0.3 / 0.3 ms** |
+| 120 | 360×820 | Gaussian | 48.1 | 2.1 / 2.3 ms | **0.6 / 0.7 ms** |
+| 120 | 360×820 | Pixellate | 49.2 | 1.7 / 2.1 ms | **0.3 / 0.4 ms** |
+| 240 | 721×808 | Gaussian | 96.2 | 3.8 / 4.3 ms | **1.0 / 1.3 ms** |
+| 240 | 721×808 | Pixellate | 98.4 | 2.9 / 3.0 ms | **0.4 / 0.4 ms** |
 
-Reading: the M2-T11 gate "≤ 2 ms per cover at spike source size" holds on the **IOSurface path** for 60 and 120 px faces
-(0.9–2.1 ms) and for pixellate at any size; a 240 px-face Gaussian (radius 96 px over 721×808) costs 3.7 ms. Gaussian cost grows
-with radius × area, so for big covers cap the radius or blur a 2–4× downsampled crop (visually identical). The
-`createCGImage` path is 3–16 ms per cover and should not be used for live covers. Numbers in an earlier run before the
-GPU wait was added were 0.1 ms for iosurface: `CIContext.render(to:)` returns before the GPU finishes, hence `startTask`.
+Preliminary (2026-09-05, other agents building in parallel; superseded): iosurface Gaussian 1.2 / 3.0, 2.1 / 4.1, 3.7 / 4.9 ms and
+Pixellate 0.9 / 1.5, 1.1 / 1.5, 1.7 / 55.9 ms (one stall) for 60 / 120 / 240 px faces; cgimage 2.8–16.0 ms p50.
+
+Reading: the M2-T11 gate "≤ 2 ms per cover at spike source size" holds on the **IOSurface path** at every size, with margin
+(0.3–1.0 ms p50, 1.3 ms p95 for the 240 px Gaussian); the preliminary numbers were 3× higher because the GPU was shared with
+other agents' jobs. Gaussian cost still grows with radius × area (0.4 → 0.6 → 1.0 ms), so for very big covers cap the radius or
+blur a 2–4× downsampled crop (visually identical). The `createCGImage` path is 1–4 ms per cover (3–16 ms under contention) and
+should not be used for live covers. Numbers in an earlier run before the GPU wait was added were 0.1 ms for iosurface:
+`CIContext.render(to:)` returns before the GPU finishes, hence `startTask`.
 
 ## 2. Strength curve (strength s = 0–100 %, f = face height in capture pixels)
 
@@ -83,6 +87,6 @@ reviewers should confirm or move the 0 % anchors (0.17 f / 0.20 f); the code con
 - https://commons.wikimedia.org/wiki/File:Experience_brings_character._(Unsplash).jpg — Alex Harvey
 
 ## Done when
-- ms per cover: table above (IOSurface path 0.9–2.1 ms for 60/120 px faces, 1.7–3.7 ms at 240 px).
+- ms per cover: table above (quiet phase: IOSurface path 0.3–0.6 ms for 60/120 px faces, 0.4–1.0 ms at 240 px).
 - strength → radius and strength → block curves: recorded above and in code.
 - 5 faces × objective proxy: done; **3 reviewers: pending**.
