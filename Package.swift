@@ -9,6 +9,7 @@ let package = Package(
         .library(name: "SitrDetect", targets: ["SitrDetect"]),
         .executable(name: "sitr-spike", targets: ["SitrSpike"]),
         .executable(name: "Sitr", targets: ["Sitr"]),
+        .executable(name: "sitr-bench", targets: ["SitrBench"]),
     ],
     targets: [
         // Pure Swift, no AppKit/Vision. Policy, Tracker, Curtain, geometry, state machines.
@@ -17,6 +18,8 @@ let package = Package(
         .target(name: "SitrDetect", dependencies: ["SitrCore"]),
         // M1 measurement rigs. Kept after the spike; M2/M3 reuse them.
         .executableTarget(name: "SitrSpike", dependencies: ["SitrCore", "SitrDetect"], exclude: ["Fixtures"]),
+        // Offline bench CLI (M4-T08): recall, misclassification, Unknown rate, ms/frame over a labeled folder.
+        .executableTarget(name: "SitrBench", dependencies: ["SitrCore", "SitrDetect"]),
         // The menu bar app. scripts/build-app.sh wraps the binary into build/Sitr.app (Info.plist, entitlements, signing).
         .executableTarget(
             name: "Sitr",
