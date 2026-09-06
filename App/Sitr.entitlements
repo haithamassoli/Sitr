@@ -5,5 +5,8 @@
 	<!-- Sandboxed, and deliberately NO com.apple.security.network.* keys: the app cannot open a socket. -->
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<!-- Lets the Rules UI read the .app bundle the user picks in NSOpenPanel (bundle id lookup only). -->
+	<key>com.apple.security.files.user-selected.read-only</key>
+	<true/>
 </dict>
 </plist>
