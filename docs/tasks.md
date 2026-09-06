@@ -175,7 +175,7 @@ Exit: bench gates (recall ≥ 95 %, misclassification ≤ 2 %); PRD performance 
 - [ ] **M4-T07 Degraded state** (M) deps: M2-T12, M2-T16
   Do: detection > 250 ms/frame for 3 s → degraded; recover after 5 s under 150 ms; notification dedupe (one per transition, ≥ 5 min between repeats); status texts.
   Done when: a synthetic slowdown toggles the state and sends exactly one notification.
-- [ ] **M4-T08 Bench CLI** (L) deps: M2-T06, M2-T07, M1-T06
+- [~] **M4-T08 Bench CLI** (L) deps: M2-T06, M2-T07, M1-T06 — `sitr-bench` + labels + CI smoke done; results: recall 84.5 % (≥ 80 px 88.5 %, large+medium 91.6 %), misclassification 5.6 % at 0.80/0.85/0.90 (confident errors), Unknown 9.7 %; PRD gates 95 % / 2 % NOT met → PRD amendment or a stronger classifier (see `docs/bench.md`)
   Do: `sitr-bench <folder>` SwiftPM executable over `SitrCore` + Detect; labels JSON (image, boxes, category, tags); outputs recall (≥ 40 px), hidden-category-shown rate, Unknown rate, ms/frame, per-tag breakdown (hijab, child, low-light, back, drawn); dataset from M1-T05 and M1-T06 with `ATTRIBUTIONS.md`; CI runs 20 images as smoke.
   Done when: recall ≥ 95 % and misclassification ≤ 2 % on the full set on M3; report in `docs/bench.md`.
 - [ ] **M4-T09 Performance pass** (L) deps: M2-T12, M3-T05
