@@ -266,6 +266,7 @@ actor Pipeline {
             }
             let t1 = CACurrentMediaTime()
             metrics.detect.append(t1 - t0)
+            DetectionMeter.shared.record(display: displayID, seconds: t1 - t0, at: t1)  // M4-T07 degraded state
 
             // 2. Face → person, then at most 3 faces through the classifier: new and unknown tracks first, the rest round-robin;
             //    a person skipped this frame keeps the category of the track it lands on. Category rule; observations in display points.

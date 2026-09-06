@@ -1,5 +1,6 @@
-// `Sitr --selftest [capture|overlay|render|pipeline|category|failstate|stimulus] [options]`: automated checks for M2 track A
-// (capture, overlay, renderer), the pipeline / fail-state glue (M2-T12, M2-T16) and the category wiring (M2-T07). Each subcommand prints one parseable
+// `Sitr --selftest [capture|overlay|render|pipeline|category|failstate|lowpower|degraded|stimulus] [options]`: automated checks
+// for M2 track A (capture, overlay, renderer), the pipeline / fail-state glue (M2-T12, M2-T16), the category wiring (M2-T07),
+// Low Power Mode (M4-T06) and the degraded state (M4-T07). Each subcommand prints one parseable
 // line per metric, removes every window it created and exits on its own (hard deadline). Plain `--selftest` prints the
 // M2-T01 facts as before. Run from a shell, never via `open` (docs/dev.md). Pixels are sampled as numbers only; no frame is
 // ever written anywhere.
@@ -33,6 +34,10 @@ enum Selftest {
             Harness.run("category", deadline: 150) { try await categoryTest() }
         case "failstate":
             Harness.run("failstate", deadline: 90) { try await failstateTest() }
+        case "lowpower":
+            Harness.run("lowpower", deadline: 120) { try await lowPowerTest() }
+        case "degraded":
+            Harness.run("degraded", deadline: 120) { try await degradedTest() }
         case "stimulus":
             let seconds = option(args, "--seconds", default: 30.0)
             Harness.run("stimulus", deadline: seconds + 15) { try await stimulusOnly(seconds: seconds) }
@@ -397,7 +402,10 @@ private func bootRuntime() async throws -> (runtime: Runtime, display: ManagedDi
     runtime.start()
     print("permission_state=\(runtime.permission.state)")
     guard let mainID = NSScreen.screens.first?.displayID else { throw SelftestError("no screen") }
-    let deadline = CACurrentMediaTime() + 10
+    // 30 s: capture is up in ~1 s, but the pipelines wait for `loadModels`, which compiles Models/dist on the fly in a dev
+    // checkout — seconds on a cold ANE cache, more again on a loaded machine.
+    let t0 = CACurrentMediaTime()
+    let deadline = t0 + 30
     while CACurrentMediaTime() < deadline {
         if let d = runtime.displayManager.displays.first(where: { $0.id == mainID }), d.session.health.isOK,
            let pipeline = runtime.pipelines[mainID] {
@@ -407,12 +415,13 @@ private func bootRuntime() async throws -> (runtime: Runtime, display: ManagedDi
             let excluded = content.windows.filter { panelIDs.contains($0.windowID) }
             try await d.session.updateFilter(SCContentFilter(display: display, excludingWindows: excluded))
             print("pipeline_boot display=\(mainID) displays=\(runtime.displayManager.displays.count) pipelines=\(runtime.pipelines.count) "
-                + "excluded_panel_windows=\(excluded.count)/\(panelIDs.count) health=\(runtime.model.policy.health) \(runtime.modelsNote)")
+                + "boot_ms=\(Int((CACurrentMediaTime() - t0) * 1000)) excluded_panel_windows=\(excluded.count)/\(panelIDs.count) "
+                + "health=\(runtime.model.policy.health) \(runtime.modelsNote)")
             return (runtime, d, pipeline)
         }
         try await Task.sleep(for: .milliseconds(100))
     }
-    throw SelftestError("capture did not start within 10 s (permission=\(runtime.permission.state))")
+    throw SelftestError("capture and pipelines did not come up within 30 s (permission=\(runtime.permission.state))")
 }
 
 /// The selftest's own stimulus: a panel just under the overlay level showing a CC0 photo (by default `Sources/SitrSpike/Fixtures/
@@ -797,6 +806,127 @@ private func failstateTest() async throws -> Bool {
     print("failstate_revoke_real manual pending: markRevoked() keeps `granted` while CGPreflightScreenCaptureAccess is true "
         + "(a shell-launched process inherits the terminal's grant); use tccutil reset ScreenCapture com.goldentik.Sitr on a Finder-launched build")
     stim.show(false)
+    runtime.displayManager.stop()
+    return ok
+}
+
+// MARK: - lowpower (M4-T06)
+
+/// M4-T06: with the power state simulated (Low Power Mode itself is a System Settings switch nobody can flip from here),
+/// `NSProcessInfoPowerStateDidChange` must reach every session inside a second and change the delivered frame rate —
+/// through `SCStream.updateConfiguration`, with the stream never restarting. The General toggle wins over the power state.
+@MainActor
+private func lowPowerTest() async throws -> Bool {
+    let (runtime, d, _) = try await bootRuntime()
+    let stim = try Stimulus(display: d.frame.size, motion: true)
+    stim.show(true)
+    let mover = Task { @MainActor in  // 25 changes/s: the capture rate, not the screen, is what limits frames
+        let t0 = CACurrentMediaTime()
+        while !Task.isCancelled {
+            stim.move(t: (CACurrentMediaTime() - t0) * 0.25)
+            try? await Task.sleep(for: .milliseconds(40))
+        }
+    }
+    Harness.onExit { mover.cancel() }
+    /// Complete frames per second delivered by the sink over `seconds` (`stats` counts in the callback, so the pipeline's
+    /// own speed does not enter into it).
+    func rate(_ seconds: Double) async -> Double {
+        let before = d.session.stats.complete
+        let t0 = CACurrentMediaTime()
+        try? await Task.sleep(for: .seconds(seconds))
+        return Double(d.session.stats.complete - before) / (CACurrentMediaTime() - t0)
+    }
+    /// Flips the simulated power state and posts the real notification; answers how long the new rate took to arrive.
+    func setLowPower(_ on: Bool) async -> Double {
+        let t0 = CACurrentMediaTime()
+        runtime.lowPower.simulatedLowPower = on
+        NotificationCenter.default.post(name: .NSProcessInfoPowerStateDidChange, object: ProcessInfo.processInfo)
+        let want = LowPowerMonitor.fps(lowPower: on, reduce: runtime.model.preferences.lowPowerReducesFrameRate)
+        _ = await waitUntil(2) { d.session.fps == want }
+        return (CACurrentMediaTime() - t0) * 1000
+    }
+
+    let restarts0 = d.session.restarts
+    let normal = await rate(4)
+    print("lowpower_normal fps_setting=\(d.session.fps) measured_fps=\(fmt(normal)) toggle=\(runtime.model.preferences.lowPowerReducesFrameRate) "
+        + "system_low_power=\(ProcessInfo.processInfo.isLowPowerModeEnabled)")
+    var ok = d.session.fps == LowPowerMonitor.standardFPS && normal > 11 && normal < 18
+
+    let onMs = await setLowPower(true)
+    let low = await rate(4)
+    print("lowpower_on fps_setting=\(d.session.fps) applied_ms=\(Int(onMs)) measured_fps=\(fmt(low)) restarts=\(d.session.restarts - restarts0) "
+        + "health=\(runtime.model.policy.health)")
+    ok = ok && d.session.fps == LowPowerMonitor.lowPowerFPS && onMs < 1000 && low > 5.5 && low < 10.5
+
+    // The General toggle (M4-T04) outranks the power state: switching it off restores 15 fps while Low Power stays on.
+    runtime.model.preferences.lowPowerReducesFrameRate = false
+    let respected = await waitUntil(2) { d.session.fps == LowPowerMonitor.standardFPS }
+    print("lowpower_toggle_off fps_setting=\(d.session.fps) restored=\(respected)")
+    ok = ok && respected
+    runtime.model.preferences.lowPowerReducesFrameRate = true
+    _ = await waitUntil(2) { d.session.fps == LowPowerMonitor.lowPowerFPS }
+
+    let offMs = await setLowPower(false)
+    let back = await rate(4)
+    print("lowpower_off fps_setting=\(d.session.fps) applied_ms=\(Int(offMs)) measured_fps=\(fmt(back)) restarts=\(d.session.restarts - restarts0) "
+        + "stream_kept=\(d.session.restarts == restarts0 && d.session.health.isOK) load1=\(fmt(loadAverage())) noisy=\(loadAverage() > 4)")
+    ok = ok && d.session.fps == LowPowerMonitor.standardFPS && offMs < 1000 && back > 11 && back < 18
+    ok = ok && d.session.restarts == restarts0 && d.session.health.isOK  // updateConfiguration, not a restart
+
+    mover.cancel()
+    stim.show(false)
+    runtime.displayManager.stop()
+    return ok
+}
+
+// MARK: - degraded (M4-T07)
+
+/// M4-T07: a synthetic slowdown fed into `DetectionMeter` under a display id no stream uses (the real pipelines are stopped
+/// first, so only these numbers decide). > 250 ms/frame for 3 s must reach `Policy.health` as `.degraded` with exactly one
+/// notification and the FR7 warning icon; < 150 ms/frame for 5 s must bring it back with exactly one more; and repeating
+/// the slowdown inside five minutes must flip the state again while posting nothing.
+@MainActor
+private func degradedTest() async throws -> Bool {
+    Notifier.dryRun = true
+    let (runtime, d, _) = try await bootRuntime()
+    let model = runtime.model
+    for pipeline in runtime.pipelines.values { await pipeline.stop() }
+    DetectionMeter.shared.reset()
+    let synthetic: CGDirectDisplayID = 0x1F17E  // not a display id macOS hands out; the real ones are idle now anyway
+    /// Feeds frames of `ms` for `seconds` of wall clock, at their own pace, exactly as a pipeline would.
+    func feed(ms: Double, seconds: Double) async {
+        let deadline = CACurrentMediaTime() + seconds
+        while CACurrentMediaTime() < deadline {
+            DetectionMeter.shared.record(display: synthetic, seconds: ms / 1000, at: CACurrentMediaTime())
+            try? await Task.sleep(for: .milliseconds(Int(ms)))
+        }
+    }
+
+    print("degraded_baseline health=\(model.policy.health) notifications=\(runtime.notifier.posted) status=\(model.statusText) "
+        + "pipelines_stopped=\(runtime.pipelines.count) sessions_ok=\(d.session.health.isOK)")
+    var ok = model.policy.health == .ok && runtime.notifier.posted == 0
+
+    let t0 = CACurrentMediaTime()
+    await feed(ms: 300, seconds: 3.4)  // 300 ms/frame: over the 250 ms limit for longer than 3 s
+    let entered = await waitUntil(3) { model.policy.health == .degraded }
+    print("degraded_enter health=\(model.policy.health) entered=\(entered) within_ms=\(Int((CACurrentMediaTime() - t0) * 1000)) "
+        + "notifications=\(runtime.notifier.posted) status=\(model.statusText) icon=\(model.iconState) reveal_available=\(model.revealAvailable) "
+        + "displays=\(DetectionMeter.shared.degradedDisplays)")
+    ok = ok && entered && runtime.notifier.posted == 1 && model.iconState == .warning && model.statusText == "Degraded"
+
+    let t1 = CACurrentMediaTime()
+    await feed(ms: 50, seconds: 5.4)  // 50 ms/frame: under the 150 ms limit for longer than 5 s
+    let recovered = await waitUntil(3) { model.policy.health == .ok }
+    print("degraded_recover health=\(model.policy.health) recovered=\(recovered) within_ms=\(Int((CACurrentMediaTime() - t1) * 1000)) "
+        + "notifications=\(runtime.notifier.posted) status=\(model.statusText) icon=\(model.iconState)")
+    ok = ok && recovered && runtime.notifier.posted == 2 && model.iconState == .normal
+
+    await feed(ms: 300, seconds: 3.4)  // the same transition again, well inside the five minutes
+    let again = await waitUntil(3) { model.policy.health == .degraded }
+    print("degraded_repeat health=\(model.policy.health) entered=\(again) notifications=\(runtime.notifier.posted) "
+        + "spacing_s=\(Int(HealthNotificationGate.repeatSpacing)) status=\(model.statusText)")
+    ok = ok && again && runtime.notifier.posted == 2  // state follows the frames; the user is told once per 5 min
+
     runtime.displayManager.stop()
     return ok
 }

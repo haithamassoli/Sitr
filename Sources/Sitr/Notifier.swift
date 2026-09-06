@@ -1,7 +1,9 @@
 // M2-T16: one user notification per health transition through UNUserNotificationCenter. Authorization is requested lazily on
 // the first post. `dryRun` (selftests, unit tests) counts instead of posting, so no authorization dialog ever comes from a test.
+// M4-T07 adds the spacing: the same transition is announced at most once every five minutes (`HealthNotificationGate`).
 import CoreServices
 import Foundation
+import QuartzCore
 import SitrCore
 import UserNotifications
 import os
@@ -12,17 +14,27 @@ import os
     /// Notifications posted (or counted, in dry run) since creation.
     private(set) var posted = 0
     private(set) var lastHealth: Health = .ok
+    /// Clock for the M4-T07 spacing; injected by the unit tests so five minutes need not pass for real.
+    var now: @MainActor () -> Double = { CACurrentMediaTime() }
+    private var gate = HealthNotificationGate()
     private var center: UNUserNotificationCenter?
     private let log = Logger(subsystem: "com.goldentik.Sitr", category: "notifier")
 
     init() {}
 
-    /// Health transition → at most one notification. `.ok` announces a recovery only (never at launch). Texts come from
-    /// the String Catalog (M4-T05).
-    // ponytail: M4-T07 owns the degraded rules and the ≥ 5 min spacing between repeats of the same transition.
+    /// Health transition → at most one notification, and at most one per five minutes for the same transition (M4-T07:
+    /// a detector flapping in and out of degraded must not fill Notification Centre). `.ok` announces a recovery only
+    /// (never at launch). Texts come from the String Catalog (M4-T05).
     func healthChanged(to health: Health) {
-        guard health != lastHealth else { return }
         let previous = lastHealth
+        guard gate.allows(from: previous, to: health, at: now()) else {
+            // A suppressed transition still happened: the next one is judged from the state the app is really in.
+            if health != previous {
+                log.info("\(String(describing: health), privacy: .public) not announced (5 min spacing)")
+            }
+            lastHealth = health
+            return
+        }
         lastHealth = health
         switch health {
         case .needsPermission:
