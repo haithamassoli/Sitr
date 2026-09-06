@@ -144,8 +144,8 @@ nonisolated struct PipelineMetrics: Sendable {
     /// Face crops classified since start; current tracks per category.
     var crops = 0, women = 0, men = 0, unknown = 0
     /// M3-T05: pre-cover applies (frames that put pre-covers up before detection), pre-cover layers on screen now, renders that
-    /// fell back to Solid over the 5 ms budget.
-    var preApplies = 0, preLayers = 0, preSolid = 0
+    /// fell back to Solid over the 5 ms budget, frames whose sequence gap made the whole Curtain window count as dirty.
+    var preApplies = 0, preLayers = 0, preSolid = 0, gapCovers = 0
     var detect: [Double] = [], classify: [Double] = [], track: [Double] = [], render: [Double] = [], commit: [Double] = [], e2e: [Double] = []
     /// Fast path: capture callback → pre-cover commit; pre-cover render time per frame; detection done → pre-cover cleared.
     var fastPath: [Double] = [], preRender: [Double] = [], curtainClear: [Double] = []
@@ -172,7 +172,7 @@ nonisolated struct PipelineMetrics: Sendable {
         "pipeline display=\(display) t=\(Int(elapsed)) in=\(framesIn) out=\(framesOut) skipped=\(skipped) detections=\(detections) "
             + "errors=\(errors) applies=\(applies) detect_ms=\(Self.p(detect)) classify_ms=\(Self.p(classify)) crops=\(crops) "
             + "track_ms=\(Self.p(track)) render_ms=\(Self.p(render)) commit_ms=\(Self.p(commit)) e2e_ms=\(Self.p(e2e)) tracks=\(tracks) "
-            + "categories=w\(women)/m\(men)/u\(unknown) layers=\(layers) pre_applies=\(preApplies) pre_layers=\(preLayers) pre_solid=\(preSolid) "
+            + "categories=w\(women)/m\(men)/u\(unknown) layers=\(layers) pre_applies=\(preApplies) pre_layers=\(preLayers) pre_solid=\(preSolid) gap_covers=\(gapCovers) "
             + "fast_ms=\(Self.p(fastPath)) pre_render_ms=\(Self.p(preRender)) clear_ms=\(Self.p(curtainClear)) rss_mb=\(Int(residentMemoryMB())) load1=\(fmt(loadAverage()))"
     }
 }
@@ -222,6 +222,8 @@ actor Pipeline {
     private var curtainWindowIDs: [String: Set<Int>] = [:]
     private var personSpecs: [CoverLayerSpec] = []
     private var preSpecs: [CoverLayerSpec] = []
+    /// The last pre-cover pass went over `preCoverBudget`: render the next one Solid (see `preCoverSpecs`).
+    private var preCoverOverBudget = false
     private var appliedLayers = 0
     private(set) var metrics = PipelineMetrics()
     private var loop: Task<Void, Never>?
@@ -363,8 +365,9 @@ actor Pipeline {
 
     /// Pre-cover layers for the current Curtain state: each `preCovers()` rect clipped to its window's visible region (M3-T09: never
     /// on a window stacked above it), rendered from this frame in the active style, no padding (tiles already overshoot).
-    // ponytail: once the frame's pre-cover rendering passes `preCoverBudget` the remaining rects are Solid (mixed look for that
-    // frame, bounded latency); upgrade path: a sticky Solid mode for N frames after an overrun, or one union render per window.
+    // ponytail: the budget is enforced across frames — the first overrun is paid once, then pre-covers stay Solid until a frame's
+    // pre-cover pass comes back under it (a within-frame check cannot help when one big rect is the whole cost). Upgrade path:
+    // downsample the blur for large pre-covers (M4-T09) instead of dropping to Solid.
     private func preCoverSpecs(frame: Frame, appearance a: CoverAppearance, windows snapshot: [WindowRect], curtainWindows: [WindowRect]) -> [CoverLayerSpec] {
         var specs: [CoverLayerSpec] = []
         let t0 = CACurrentMediaTime()
@@ -375,7 +378,7 @@ actor Pipeline {
                 guard let owner = appWindows.max(by: { $0.rect.intersection(cg).area < $1.rect.intersection(cg).area }) else { continue }
                 for piece in subtract(cg, holes: snapshot.occluders(of: owner)) where piece.width >= 1 && piece.height >= 1 {
                     var style = a.style
-                    if style != .solid, CACurrentMediaTime() - t0 > Self.preCoverBudget {
+                    if style != .solid, preCoverOverBudget || CACurrentMediaTime() - t0 > Self.preCoverBudget {
                         style = .solid
                         metrics.preSolid += 1
                     }
@@ -383,7 +386,11 @@ actor Pipeline {
                 }
             }
         }
-        if !specs.isEmpty { metrics.preRender.append(CACurrentMediaTime() - t0) }
+        if !specs.isEmpty {
+            let spent = CACurrentMediaTime() - t0
+            metrics.preRender.append(spent)
+            preCoverOverBudget = spent > Self.preCoverBudget
+        }
         return specs
     }
 
@@ -395,7 +402,8 @@ actor Pipeline {
             if Task.isCancelled { return }
             let t0 = CACurrentMediaTime()
             metrics.framesIn += 1
-            if let last = lastSequence, frame.sequence > last + 1 { metrics.skipped += frame.sequence - last - 1 }
+            let gap = lastSequence.map { frame.sequence - $0 - 1 } ?? 0
+            if gap > 0 { metrics.skipped += gap }
             lastSequence = frame.sequence
             let current = settings.withLock { $0 }
             let snapshot = windows.withLock { $0 }
@@ -408,7 +416,17 @@ actor Pipeline {
             syncCurtains(curtainWindows, now: t0)
             var pre: [CoverLayerSpec] = []
             if !curtains.isEmpty {
-                let dirty = frame.dirtyRectsInDisplayPoints.map(Rect.init)
+                // SCK reports `dirtyRects` against the previous frame it *emitted*, and the drop-oldest stream throws frames away
+                // while detection runs: after a sequence gap the changes in between are unknowable, so the whole window counts as
+                // dirty (Curtain covers what might have changed). Trusted motion still suppresses it, which is what keeps video
+                // watchable (FR4.3).
+                // ponytail: a whole-window pre-cover per skipped frame is coarse; upgrade path = accumulate dirty rects in the
+                // capture callback (CaptureSession, another owner's file) and hand the union to the frame the pipeline consumes.
+                var dirty = frame.dirtyRectsInDisplayPoints.map(Rect.init)
+                if gap > 0 {
+                    dirty += curtainWindows.map { Rect($0.rect) }
+                    metrics.gapCovers += 1
+                }
                 for key in curtains.keys { curtains[key]?.dirty(rects: dirty, seq: frame.sequence, now: t0) }
                 pre = preCoverSpecs(frame: frame, appearance: current.appearance, windows: snapshot, curtainWindows: curtainWindows)
             }

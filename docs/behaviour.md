@@ -26,8 +26,8 @@ bundle id. Consequences:
 - A person in a Blur window whose box centre lies under an overlapping Curtain window is attributed to the Curtain app.
   Both modes produce a person cover, so nothing is left uncovered; only the mode label differs.
 - A person in a window of an Off app is never detected: the app is not in the frame at all.
-- A person whose box straddles a monitored window and an Off window gets a cover over the whole box, Off part included
-  (the PRD's permitted case).
+- A person whose box centre lies under an **Off** window is attributed to the Off app and is not covered — measured, and
+  written up under "Known leak" below.
 
 ## The matrix
 
@@ -35,10 +35,23 @@ Filled in from the `overlap_*` lines of `--selftest overlap` (see `docs/m3/integ
 
 | # | Stacking | What happens | Cover on the top window? |
 |---|---|---|---|
-| 1 | Blur window (person shown) **under** an Off window whose marker sits inside the person's box | The Off window is excluded from capture, so the person is seen whole and covered whole; the person cover extends over the Off window. | Yes — a hidden person's box from a monitored app extends under it (permitted). |
-| 2 | Curtain window **over** a Blur window (person shown in the Blur window) | Scrolling the Curtain window pre-covers only its own visible region; the person in the Blur window keeps its person cover; a pre-cover never reaches outside the Curtain window. | Only the Curtain window's own pre-covers, inside it. |
-| 3 | Two Curtain apps side by side | Scrolling one pre-covers that window only; the neighbour is untouched. | n/a |
-| 4 | Curtain window **under** an Off window (the Off window over part of the Curtain window's scrolling text) | The frame is dirty under the Off window (it is not in the frame), the tiles there are pre-covered in the state machine, but the pre-cover is clipped to the Curtain window's visible region: nothing is drawn on the Off window. | No. |
+| 1 | Blur window (person shown) **under** an Off window placed over the person's box centre | The Off window is excluded from capture, so the person is fully visible in the frame and is tracked — but the box centre lands on the Off window, so the detection is **attributed to the Off app** and gets no cover at all (`attributed_to=["…SitrStimulus2"]`, `person_covers=0`). | No cover anywhere — see the leak below. |
+| 2 | Curtain window **over** a Blur window (person shown in the Blur window) | The Curtain window's pre-covers stay inside it (`precovers_outside_curtain_window=0`); the person in the Blur window keeps its person cover. | Only the Curtain window's own pre-covers, inside it. |
+| 3 | Two Curtain apps side by side | Each window's pre-covers stay inside that window (16 on A, 18 on B, `precovers_outside_their_window=0`); one app's motion never pre-covers the neighbour. | n/a |
+| 4 | Curtain window **under** an Off window (the Off window over part of the Curtain window's scrolling text) | The frame *is* dirty under the Off window (the Off window is not in the frame, so the Curtain window's content shows there) and those tiles are marked, but the pre-cover is clipped to the Curtain window's visible region: 34 pre-covers, **0 on the Off window**, and the Off window's marker was never covered in 19 sampled frames. | No. |
+
+### Known leak: a person under an Off window is not covered (scenario 1)
+
+Attribution uses the **centre** of the detection box. When an Off window sits over the middle of a person who is inside a
+monitored window, the whole person resolves to the Off app and stays uncovered — including the head and legs that are still
+visible around the Off window. The Off window itself is excluded from capture, so the person is not hidden by it in the frame;
+only on screen is the middle obscured.
+
+This is a real gap, not a PRD violation (the PRD only constrains what may appear *on* an Off window), and it needs a decision
+outside this task: either attribute by the largest *visible* area per app (split the box against the window stack and take the
+app owning most of it) or attribute a box to the monitored app whenever any visible part of it lies in one. Both live in
+`Pipeline.run` step 2 plus a helper in `WindowTracker.swift`. Filed here rather than fixed because it changes what "the app a
+person belongs to" means, which the Policy owner should settle.
 
 ## Known limits (`// ponytail:` in code)
 
