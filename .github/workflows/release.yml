@@ -2,7 +2,9 @@ name: Release
 # Tag v* (or run manually with a version) -> tests, signed + notarized build, DMG, draft GitHub release.
 # Without the signing/notary secrets (forks, dry runs) the build is ad-hoc signed, notarization is skipped with a
 # log line, and the draft is titled "(unsigned)". Secrets: DEVELOPER_ID_P12 (base64 .p12), DEVELOPER_ID_P12_PASSWORD,
-# NOTARY_KEY_ID, NOTARY_ISSUER, NOTARY_KEY_P8 (App Store Connect API key, .p8 contents). See docs/m5/release.md.
+# NOTARY_KEY_ID, NOTARY_ISSUER, NOTARY_KEY_P8 (App Store Connect API key, .p8 contents). A v* tag also bumps the
+# Homebrew cask in the <owner>/homebrew-sitr tap when HOMEBREW_TAP_TOKEN is set; without it that step only prints the
+# rendered cask. See docs/m5/release.md.
 on:
   push:
     tags: ['v*']
@@ -87,6 +89,16 @@ jobs:
             gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "$TITLE" --notes-file build/notes.md \
               "build/Sitr-$VERSION.dmg" build/checksums.txt
           fi
+      # M5-T04. Tags only: a workflow_dispatch run has no v* ref and should not move the tap. Without
+      # HOMEBREW_TAP_TOKEN the script prints the rendered cask and exits 0, so forks stay green.
+      - name: Bump the Homebrew cask in the tap
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAP_REPO: ${{ github.repository_owner }}/homebrew-sitr
+        run: |
+          scripts/bump-cask.sh
+          echo "::notice::The cask URL resolves only once the draft release v$VERSION is published."
       - name: Remove temporary keychain
         if: always()
         run: security delete-keychain "$RUNNER_TEMP/release.keychain-db" 2>/dev/null || true
