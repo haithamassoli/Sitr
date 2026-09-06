@@ -4,10 +4,20 @@ import SwiftUI
 /// detection is degraded.
 struct MenuBarLabel: View {
     let model: AppModel
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         Image(nsImage: Self.icon(for: model.iconState))
             .accessibilityLabel("Sitr: \(model.statusText)")
+            .onAppear {
+                // Dev smoke runs only (docs/m4/settings.md): SITR_OPEN_SETTINGS=<tab> opens Settings right after launch.
+                guard SettingsView.requestedTab != nil else { return }
+                Task {
+                    try? await Task.sleep(for: .milliseconds(500))
+                    openSettings()
+                    NSApp.activate()
+                }
+            }
     }
 
     /// The status item ignores SwiftUI `.opacity` on the label (checked by screenshot), so dimming is baked into a

@@ -1,40 +1,41 @@
-import SitrCore
 import SwiftUI
 
-/// Placeholder Settings window (M2-T14): General and About. M4-T02..T04 add the remaining tabs and contents.
+/// Settings window (PRD FR9), one file per tab. Strings are literals until the String Catalog lands (M4-T05).
+/// `SITR_OPEN_SETTINGS=<tab>` (dev smoke runs, docs/m4/settings.md) selects the initial tab; `MenuBarLabel` opens the window.
 struct SettingsView: View {
+    nonisolated enum Tab: String, CaseIterable {
+        case general, protection, appearance, shortcuts, about
+    }
+
     let model: AppModel
+    @State private var tab: Tab
+
+    init(model: AppModel) {
+        self.model = model
+        _tab = State(initialValue: Tab(rawValue: Self.requestedTab ?? "") ?? .general)
+    }
+
+    /// Value of `SITR_OPEN_SETTINGS`, when set ("1" opens General).
+    static var requestedTab: String? { ProcessInfo.processInfo.environment["SITR_OPEN_SETTINGS"] }
 
     var body: some View {
-        TabView {
-            Form {
-                LaunchAtLoginToggle()
-                Picker("Hide", selection: Binding(get: { model.policy.hiddenSet }, set: { model.setHiddenSet($0) })) {
-                    Text("Women").tag(HiddenSet.women)
-                    Text("Men").tag(HiddenSet.men)
-                    Text("Everyone").tag(HiddenSet.everyone)
-                }
-                .accessibilityLabel("Hidden set")
-                // PRD: Everyone forces Strict Mode on and disables the toggle.
-                Toggle(
-                    "Blur Unknown (Strict Mode)",
-                    isOn: Binding(get: { model.policy.effectiveStrict }, set: { model.setStrict($0) })
-                )
-                .disabled(model.policy.hiddenSet == .everyone)
-                .accessibilityLabel("Blur Unknown, Strict Mode")
-            }
-            .formStyle(.grouped)
-            .tabItem { Label("General", systemImage: "gear") }
-
-            VStack(spacing: 12) {
-                Text("Sitr \(AppModel.version)").font(.title2)
-                Text("Hides people on screen, entirely on this Mac.").foregroundStyle(.secondary)
-                Button("Check for Updates…") { AppModel.checkForUpdates() }
-                    .accessibilityLabel("Check for Updates")
-            }
-            .padding()
-            .tabItem { Label("About", systemImage: "info.circle") }
+        TabView(selection: $tab) {
+            GeneralTab(model: model)
+                .tabItem { Label("General", systemImage: "gear") }
+                .tag(Tab.general)
+            ProtectionTab(model: model)
+                .tabItem { Label("Protection", systemImage: "eye.slash") }
+                .tag(Tab.protection)
+            AppearanceTab(model: model)
+                .tabItem { Label("Appearance", systemImage: "paintbrush") }
+                .tag(Tab.appearance)
+            ShortcutsTab(model: model)
+                .tabItem { Label("Shortcuts", systemImage: "keyboard") }
+                .tag(Tab.shortcuts)
+            AboutTab()
+                .tabItem { Label("About", systemImage: "info.circle") }
+                .tag(Tab.about)
         }
-        .frame(width: 440, height: 260)
+        .frame(width: 560, height: 600)
     }
 }
