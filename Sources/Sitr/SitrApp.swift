@@ -44,6 +44,8 @@ struct SitrApp: App {
     let permission = PermissionMonitor()
     let displayManager: DisplayManager
     let notifier = Notifier()
+    /// M4-T06: Low Power Mode → 8 fps on every session.
+    let lowPower: LowPowerMonitor
     private(set) var pipelines: [CGDirectDisplayID: Pipeline] = [:]
     /// Selftest hook: every processed frame of every display, on the main actor, with the commit time.
     var onCommit: ((CGDirectDisplayID, [CoverLayerSpec], Frame, Double) -> Void)?
@@ -57,6 +59,7 @@ struct SitrApp: App {
     init(model: AppModel) {
         self.model = model
         displayManager = DisplayManager(permission: permission)
+        lowPower = LowPowerMonitor(reducesFrameRate: { model.preferences.lowPowerReducesFrameRate })
         model.onPolicyChanged = { [weak self] policy in self?.pipelines.values.forEach { $0.update(policy) } }
         model.onRevealChanged = { [weak self] revealed in self?.displayManager.setRevealed(revealed) }
     }
@@ -67,7 +70,10 @@ struct SitrApp: App {
     /// Brings capture, pipelines and health tracking up; follows display and permission changes from then on. The models load
     /// while capture connects (~0.5 s): ~0.1 s when the ANE cache is warm, 3–5 s on the first launch after an update.
     func start() {
+        DetectionMeter.shared.reset()  // M4-T07: a new Runtime starts from a clean detection history
         displayManager.start()
+        lowPower.onChange = { [weak self] fps in self?.applyCaptureRate(fps) }
+        lowPower.start()
         healthTask = Task { [weak self] in
             while !Task.isCancelled {
                 self?.checkHealth()
@@ -84,6 +90,7 @@ struct SitrApp: App {
     /// Selftests: stops pipelines and capture, closes the panels.
     func stop() async {
         healthTask?.cancel()
+        lowPower.stop()
         for p in pipelines.values { await p.stop() }
         pipelines = [:]
         displayManager.stop()
@@ -133,6 +140,7 @@ struct SitrApp: App {
         for id in pipelines.keys where !current.contains(where: { $0.id == id }) {
             let gone = pipelines.removeValue(forKey: id)
             sawOK.remove(id)
+            DetectionMeter.shared.forget(display: id)  // M4-T07: an unplugged display leaves no degraded state behind
             Task { await gone?.stop() }
         }
         for d in current where pipelines[d.id] == nil {
@@ -143,6 +151,12 @@ struct SitrApp: App {
             pipelines[id] = p
             Task { await p.start() }
         }
+        applyCaptureRate(lowPower.fps)  // M4-T06: a display added mid-run captures at the current rate
+    }
+
+    /// M4-T06: pushes the capture rate into every session; each applies it with `SCStream.updateConfiguration`.
+    private func applyCaptureRate(_ fps: Int) {
+        for d in displayManager.displays { d.session.fps = fps }
     }
 
     /// Displays (hot-plug), permission, and appearance preferences. `onChange` fires before the value lands; act next turn.
@@ -153,9 +167,11 @@ struct SitrApp: App {
             _ = model.preferences.coverStyle
             _ = model.preferences.blurStrength
             _ = model.preferences.bodyPadding
+            _ = model.preferences.lowPowerReducesFrameRate
         } onChange: { [weak self] in
             Task { @MainActor in
                 guard let self else { return }
+                self.lowPower.update()  // M4-T06: the General toggle takes effect without waiting for a power state change
                 self.reconcile()
                 self.checkHealth()
                 let a = self.appearance
@@ -168,6 +184,8 @@ struct SitrApp: App {
     /// M2-T16: no grant, or a capture session that stopped or errored → `.needsPermission` (Blur fails open, warning icon,
     /// one notification). Back to `.ok` on the first frame a pipeline commits once every session runs again. A session's
     /// initial `.stopped(nil)` before its first connect is not a failure; `stop()` after it ran is.
+    /// M4-T07: with capture healthy, slow detection is `.degraded` and speeding up again clears it (`DetectionMeter`).
+    /// Needs permission outranks degraded (FR7) and only a committed frame leaves it.
     func checkHealth() {
         var failed = permission.state != .granted
         for d in displayManager.displays {
@@ -176,14 +194,21 @@ struct SitrApp: App {
             case .stopped(let error): if error != nil || sawOK.contains(d.id) { failed = true }
             }
         }
-        if failed { setHealth(.needsPermission) }
+        if failed {
+            setHealth(.needsPermission)
+        } else if model.policy.health != .needsPermission {
+            setHealth(detectionHealth)
+        }
     }
+
+    /// `.degraded` while any display's detection has been over 250 ms/frame for 3 s (PRD FR10).
+    private var detectionHealth: Health { DetectionMeter.shared.isDegraded ? .degraded : .ok }
 
     private func frameCommitted(_ id: CGDirectDisplayID, _ specs: [CoverLayerSpec], _ frame: Frame, _ at: Double) {
         sawOK.insert(id)
         if model.policy.health == .needsPermission, permission.state == .granted,
            displayManager.displays.allSatisfy({ $0.session.health.isOK }) {
-            setHealth(.ok)
+            setHealth(detectionHealth)  // capture is back; slow detection stays degraded rather than flashing `.ok`
         }
         onCommit?(id, specs, frame, at)
     }

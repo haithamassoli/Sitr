@@ -11,6 +11,15 @@ struct GeneralTab: View {
 
     var body: some View {
         Form {
+            // FR7's status line, where a user who opened Settings after seeing the warning icon looks for it. The
+            // degraded footer is the only state that needs explaining (M4-T07); the others are self-describing.
+            Section {
+                LabeledContent("Protection status") { Text(model.statusText) }
+            } footer: {
+                if model.status == .degraded {
+                    Text("Detection is slower than 250 ms per frame, so covers can lag until it speeds up again.")
+                }
+            }
             Section {
                 LaunchAtLoginToggle()
             }

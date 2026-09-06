@@ -601,6 +601,18 @@
         }
       }
     },
+    "Detection is slower than 250 ms per frame, so covers can lag until it speeds up again." : {
+      "comment" : "Settings › General footer, shown only in the degraded state",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاكتشاف أبطأ من ٢٥٠ ملّي ثانية لكل إطار، لذا قد تتأخر الأغطية إلى أن تتحسّن السرعة."
+          }
+        }
+      }
+    },
     "Disable Protection" : {
       "comment" : "Menu bar item",
       "extractionState" : "manual",
@@ -1377,6 +1389,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الحماية"
+          }
+        }
+      }
+    },
+    "Protection status" : {
+      "comment" : "Settings › General: label of the FR7 status line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حالة الحماية"
           }
         }
       }

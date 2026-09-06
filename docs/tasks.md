@@ -169,10 +169,10 @@ Exit: bench gates (recall ≥ 95 %, misclassification ≤ 2 %); PRD performance 
 - [x] **M4-T05 Localization EN/AR** (L) deps: M4-T01, M4-T02, M4-T03, M4-T04, M2-T14 — `Localizable.xcstrings` 193 keys, 193 Arabic; `scripts/check-strings.sh` gate in CI; RTL fixes (AppleTextDirection, LTR isolate for hotkey glyphs, command text); all 5 tabs + 5 onboarding steps screenshot-verified in Arabic; native-speaker review pending (10 doubtful terms listed in `docs/m4/localization.md`)
   Do: String Catalog for all strings including notifications and menu bar; Arabic reviewed by a native speaker; RTL audit (mirrored layouts, hotkey glyph order, locale numerals); `-AppleLanguages (ar)` scheme.
   Done when: zero untranslated strings; Arabic screenshots of every screen attached to the PR.
-- [ ] **M4-T06 Low Power Mode** (S) deps: M2-T05
+- [x] **M4-T06 Low Power Mode** (S) deps: M2-T05 — `LowPowerMonitor` on `NSProcessInfoPowerStateDidChange`; the Runtime pushes 8 fps (15 normally) into every session, applied with `SCStream.updateConfiguration`; the General toggle wins over the power state; `--selftest lowpower`: applied_ms=0, measured 14.7 → 8.0 → 14.4 fps, restarts=0 (load1 10, noisy)
   Do: observe `NSProcessInfoPowerStateDidChange` → `minimumFrameInterval` 1/8 s, back to 1/15 s; respect the General toggle.
   Done when: fps change logged within 1 s of toggling Low Power.
-- [ ] **M4-T07 Degraded state** (M) deps: M2-T12, M2-T16
+- [x] **M4-T07 Degraded state** (M) deps: M2-T12, M2-T16 — `DegradedMonitor` + `HealthNotificationGate` in SitrCore (24 unit tests across both targets, injected clock), `DetectionMeter` per display fed from the pipeline, health polled by the Runtime; menu bar keeps FR7 "Degraded", Settings › General gains a status row with a degraded footer; `--selftest degraded`: enter 3.7 s / recover 5.4 s, 1 notification each, repeat inside 5 min flips the state with none
   Do: detection > 250 ms/frame for 3 s → degraded; recover after 5 s under 150 ms; notification dedupe (one per transition, ≥ 5 min between repeats); status texts.
   Done when: a synthetic slowdown toggles the state and sends exactly one notification.
 - [~] **M4-T08 Bench CLI** (L) deps: M2-T06, M2-T07, M1-T06 — `sitr-bench` + labels + CI smoke done; results: recall 84.5 % (≥ 80 px 88.5 %, large+medium 91.6 %), misclassification 5.6 % at 0.80/0.85/0.90 (confident errors), Unknown 9.7 %; PRD gates 95 % / 2 % NOT met → PRD amendment or a stronger classifier (see `docs/bench.md`)
