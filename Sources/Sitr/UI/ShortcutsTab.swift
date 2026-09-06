@@ -25,6 +25,7 @@ struct ShortcutsTab: View {
                         }
                         .disabled(combo == .default)
                         .accessibilityLabel("Reset shortcut to default, Control Option Space")
+                        .accessibilityHint("Applies at once, no relaunch")
                     }
                 }
                 Text("Hold it to see what is under the covers; release to cover again. Click the field, then press the new keys. ⎋ cancels.")
@@ -46,8 +47,10 @@ struct ShortcutsTab: View {
             Section("Known conflicts") {
                 ForEach(KeyCombo.knownConflicts, id: \.combo) { conflict in
                     LabeledContent(conflict.combo.displayString) { Text(conflict.owner) }
+                        .accessibilityElement(children: .combine)
                 }
                 LabeledContent("⌥ + key") { Text("Typing special characters; regressed in macOS 15.0") }
+                    .accessibilityElement(children: .combine)
             }
         }
         .formStyle(.grouped)

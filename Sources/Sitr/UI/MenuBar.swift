@@ -47,6 +47,7 @@ struct MenuBarContent: View {
         if case .paused = model.status {
             Button("Resume Protection") { model.resume() }
                 .accessibilityLabel("Resume Protection")
+                .accessibilityHint("Covers come back at once")
         } else {
             Menu("Pause Protection") {
                 Button("15 minutes") { model.pause(minutes: 15) }
@@ -56,6 +57,7 @@ struct MenuBarContent: View {
             }
             .disabled(model.policy.protection == .disabled)
             .accessibilityLabel("Pause Protection")
+            .accessibilityHint("Removes all covers and resumes on its own")
         }
         if model.policy.protection == .disabled {
             Button("Enable Protection") { model.enable() }
@@ -63,6 +65,7 @@ struct MenuBarContent: View {
         } else {
             Button("Disable Protection") { model.disable() }
                 .accessibilityLabel("Disable Protection")
+                .accessibilityHint("Removes all covers until you enable protection again")
         }
         Text(model.revealAvailable ? "Reveal: hold \(model.preferences.hotkey.displayString)" : "Reveal unavailable")
             .accessibilityLabel(
@@ -77,6 +80,7 @@ struct MenuBarContent: View {
         .accessibilityLabel("Settings")
         Button("Check for Updates…") { AppModel.checkForUpdates() }
             .accessibilityLabel("Check for Updates")
+            .accessibilityHint("Opens the releases page on GitHub in your browser")
         Divider()
         Button("Quit Sitr") { NSApp.terminate(nil) }
             .keyboardShortcut("q")

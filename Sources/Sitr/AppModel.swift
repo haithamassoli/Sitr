@@ -51,7 +51,13 @@ import SitrCore
     let rulesStore: RulesStore
 
     var policy: Policy {
-        didSet { if policy != oldValue { onPolicyChanged?(policy) } }
+        didSet {
+            if policy != oldValue { onPolicyChanged?(policy) }
+            // FR8: a lost grant brings the permission step back; `present` never opens a second window.
+            if Self.showsOnboarding, OnboardingFlow.reopens(from: oldValue.health, to: policy.health) {
+                Task { @MainActor [weak self] in if let self { OnboardingWindow.present(model: self) } }
+            }
+        }
     }
 
     var reveal: RevealState = .covered {
@@ -78,9 +84,12 @@ import SitrCore
     init(preferences: Preferences = Preferences(), rulesStore: RulesStore = RulesStore(directory: AppModel.rulesDirectory)) {
         self.preferences = preferences
         self.rulesStore = rulesStore
-        // ponytail: M2 = Entire Mac Blur; M4-T01 onboarding switches the default to Off. Until then a missing rules.json
-        // seeds Blur in memory only (nothing is written), so onboarding can still tell a first launch from a saved choice.
-        let rules = FileManager.default.fileExists(atPath: rulesStore.fileURL.path) ? rulesStore.load() : Rules(defaultMode: .blur)
+        // Missing rules.json: Default Rule Off (PRD), in memory only until the user changes something. SITR_DEV_BLUR=1 keeps
+        // the M2 Entire-Mac Blur for pipeline selftests before onboarding has run (docs/m4/onboarding.md).
+        let rules = FileManager.default.fileExists(atPath: rulesStore.fileURL.path)
+            ? rulesStore.load()
+            : Rules(defaultMode: OnboardingFlow.seedDefaultMode(
+                onboardingCompleted: preferences.onboardingCompleted, environment: ProcessInfo.processInfo.environment))
         policy = Policy(hiddenSet: preferences.hiddenSet, strictMode: preferences.strictMode, rules: rules)
         hotkey = HotkeyManager(combo: preferences.hotkey)
         hotkey.onPress = { [weak self] in self?.hotkeyPressed() }
@@ -88,6 +97,28 @@ import SitrCore
         observe(NSWorkspace.didWakeNotification, on: NSWorkspace.shared.notificationCenter) { $0.refreshTimers() }
         observe(NSApplication.didResignActiveNotification) { $0.reveal.lostRelease() }
         observe(NSApplication.willTerminateNotification) { $0.hotkey.unregister() }
+        // M4-T01: first launch opens onboarding on the next run-loop turn (the window needs the running app).
+        if Self.showsOnboarding, !preferences.onboardingCompleted || OnboardingWindow.devStep != nil {
+            Task { @MainActor [weak self] in if let self { OnboardingWindow.present(model: self) } }
+        }
+    }
+
+    /// Onboarding UI only from inside the .app: never in the test runner or a `--selftest` run, and not in `SITR_DEV_BLUR=1`
+    /// pipeline runs, which want the M2 behaviour with no windows of ours on screen.
+    // ponytail: process-wide flag from bundle + arguments; Runtime (SitrApp.swift, another task's file) would be the natural owner.
+    static let showsOnboarding = Bundle.main.bundleURL.pathExtension == "app" && !CommandLine.arguments.contains("--selftest")
+        && ProcessInfo.processInfo.environment["SITR_DEV_BLUR"] != "1"
+
+    /// What finishing onboarding stores: the hidden set and Strict Mode (when asked), the rules (Default Rule Off, preset
+    /// overrides when chosen; `rules.json` is written), and the completed flag. Health is untouched: skipping the
+    /// permission leaves the app in Needs permission with the warning icon.
+    func completeOnboarding(_ flow: OnboardingFlow) {
+        if let hiddenSet = flow.hiddenSet {
+            setHiddenSet(hiddenSet)
+            setStrict(flow.effectiveStrict)
+        }
+        if let rules = flow.rulesOnFinish(policy.rules) { updateRules { $0 = rules } }
+        preferences.onboardingCompleted = true
     }
 
     // MARK: Status

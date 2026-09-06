@@ -12,11 +12,14 @@ struct SettingsView: View {
 
     init(model: AppModel) {
         self.model = model
-        _tab = State(initialValue: Tab(rawValue: Self.requestedTab ?? "") ?? .general)
+        _tab = State(initialValue: Self.initialTab ?? .general)
     }
 
     /// Value of `SITR_OPEN_SETTINGS`, when set ("1" opens General).
     static var requestedTab: String? { ProcessInfo.processInfo.environment["SITR_OPEN_SETTINGS"] }
+    /// Tab the window opens on, consumed by `onAppear`: `SITR_OPEN_SETTINGS` at launch; onboarding's "Configure myself"
+    /// sets `.protection` before calling `openSettings`.
+    static var initialTab: Tab? = Tab(rawValue: requestedTab ?? "")
 
     var body: some View {
         TabView(selection: $tab) {
@@ -37,5 +40,12 @@ struct SettingsView: View {
                 .tag(Tab.about)
         }
         .frame(width: 560, height: 600)
+        .onAppear {
+            // The scene builds this view at launch; a tab requested later (onboarding's "Configure myself") lands here.
+            if let requested = Self.initialTab {
+                tab = requested
+                Self.initialTab = nil
+            }
+        }
     }
 }

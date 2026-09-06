@@ -21,8 +21,8 @@ nonisolated enum AppLanguage: String, CaseIterable, Sendable {
 
 /// Settings that survive relaunch, one `UserDefaults` key each. `@Observable` so the menu and Settings follow changes.
 @Observable final class Preferences {
-    // ponytail: Everyone + Strict is an M2 placeholder, the PRD has no default hidden set; M4-T01 onboarding forces
-    // the choice and these defaults go away.
+    // ponytail: Everyone + Strict until onboarding stores the user's choice (FR8 step 3 has no preselection). Safe as a
+    // fallback: the Default Rule is Off until then, so nothing is captured. Upgrade = optional hidden set through Policy.
     var hiddenSet: HiddenSet { didSet { store(hiddenSet, key: "hiddenSet") } }
     var strictMode: Bool { didSet { defaults.set(strictMode, forKey: "strictMode") } }
     var hotkey: KeyCombo { didSet { store(hotkey, key: "hotkey") } }
@@ -43,6 +43,9 @@ nonisolated enum AppLanguage: String, CaseIterable, Sendable {
     }
     /// "Reduce frame rate in Low Power Mode" (default on). The capture side that honours it is M4-T06.
     var lowPowerReducesFrameRate: Bool { didSet { defaults.set(lowPowerReducesFrameRate, forKey: "lowPowerReducesFrameRate") } }
+    /// M4-T01: set when the onboarding window finishes. While false the window opens at launch, and a missing `rules.json`
+    /// may seed Blur for dev runs (`SITR_DEV_BLUR=1`); afterwards it always seeds Off.
+    var onboardingCompleted: Bool { didSet { defaults.set(onboardingCompleted, forKey: "onboardingCompleted") } }
 
     private let defaults: UserDefaults
 
@@ -56,6 +59,7 @@ nonisolated enum AppLanguage: String, CaseIterable, Sendable {
         bodyPadding = defaults.object(forKey: "bodyPadding") as? Double ?? 0.15
         language = defaults.string(forKey: "language").flatMap(AppLanguage.init(rawValue:)) ?? .system
         lowPowerReducesFrameRate = defaults.object(forKey: "lowPowerReducesFrameRate") as? Bool ?? true
+        onboardingCompleted = defaults.bool(forKey: "onboardingCompleted")
     }
 
     private func store(_ value: some Encodable, key: String) {

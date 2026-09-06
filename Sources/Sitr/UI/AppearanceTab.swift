@@ -21,6 +21,7 @@ struct AppearanceTab: View {
                 }
                 .pickerStyle(.segmented)
                 .accessibilityLabel("Cover style")
+                .accessibilityHint("Gaussian blurs, Pixelate blocks, Solid paints an opaque color")
                 LabeledContent("Blur Strength") {
                     Slider(value: Binding(get: { preferences.blurStrength }, set: { preferences.blurStrength = $0 }), in: 0...1)
                         .accessibilityLabel("Blur Strength")
