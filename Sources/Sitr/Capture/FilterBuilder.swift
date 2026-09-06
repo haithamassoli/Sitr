@@ -101,6 +101,9 @@ nonisolated enum FilterPlan: Equatable, Sendable {
 
     /// One `SCShareableContent` fetch → one filter per display, installed only where the plan changed.
     func refresh() async {
+        // M4-T10: a simulated topology owns no streams, so there is nothing to install and no reason to ask the window
+        // server anything (the reconciliation unit tests must not touch ScreenCaptureKit).
+        guard displays().contains(where: { !$0.session.simulated }) else { return }
         let content: SCShareableContent
         do {
             content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)

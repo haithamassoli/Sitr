@@ -181,7 +181,7 @@ Exit: bench gates (recall ≥ 95 %, misclassification ≤ 2 %); PRD performance 
 - [ ] **M4-T09 Performance pass** (L) deps: M2-T12, M3-T05
   Do: Instruments (Time Profiler, Core ML, Metal): reuse `CIContext` and pixel-buffer pools, remove per-frame allocations; detection ROI from `dirtyRects` plus tracked boxes if the CPU target is missed; verify the PRD table on M1 8 GB.
   Done when: static < 1 %, browsing ≤ 15 %, video with people ≤ 25 % of one P-core, memory < 300 MB; `docs/perf.md`.
-- [ ] **M4-T10 Robustness** (M) deps: M2-T04, M2-T05
+- [~] **M4-T10 Robustness** (M) deps: M2-T04, M2-T05 — `SitrCore.Resilience` (backoff capped at 10 s, suspend/resume state machine, mirror dedupe) + `SystemEventMonitor` + `DisplayManager.suspendCapture/resumeCapture` + `Runtime.suspend/resume`; 35 unit tests and `Sitr --selftest robustness --cycles 20` green (23 synthetic cycles, one stream / panel / pipeline per display throughout). Status is `[~]`: the "done when" asks for 20 **real** sleep/wake cycles, which an agent may not run on the owner's machine — the procedure and the log predicate are in `docs/m4/robustness.md` (rows R1–R6 manual, pending; R4/R5 also need a second display)
   Do: sleep/wake, lock/unlock, fast user switching, display hot-plug, Stage Manager, mirrored displays; stream restart with exponential backoff (max 10 s); no duplicate panels.
   Done when: 20 sleep/wake cycles leave exactly one stream and one panel per display.
 - [~] **M4-T11 Accessibility basics** (S) deps: M2-T14, M4-T01 — labels/hints on onboarding, all tabs, menu bar; focus order; no motion; overlay panels outside the a11y tree; Accessibility Inspector audit manual pending

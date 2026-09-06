@@ -38,8 +38,8 @@ struct SitrApp: App {
 }
 
 /// The running app: `AppModel` + `PermissionMonitor` + `DisplayManager` + `WindowTracker` + `FilterBuilder` + one `Pipeline` per
-/// display + `Notifier`, connected (M2-T12 glue, M2-T16 fail states, M3-T03 filters, M3-T05 Curtain, M3-T06 fail-closed). The
-/// selftests build one too, so the wiring exists exactly once.
+/// display + `Notifier`, connected (M2-T12 glue, M2-T16 fail states, M3-T03 filters, M3-T05 Curtain, M3-T06 fail-closed,
+/// M4-T10 suspend/resume). The selftests build one too, so the wiring exists exactly once.
 @MainActor final class Runtime {
     /// Capture rate for displays showing a Curtain window (docs/spike/latency.md: 15 fps alone is 72 ms p95). `SITR_CURTAIN_FPS`
     /// overrides it for the 30-vs-60 measurement.
@@ -55,6 +55,8 @@ struct SitrApp: App {
     let notifier = Notifier()
     /// M4-T06: Low Power Mode → 8 fps on every session.
     let lowPower: LowPowerMonitor
+    /// M4-T10: sleep/wake, lock/unlock, fast user switching, displays off/on.
+    let systemEvents = SystemEventMonitor()
     private(set) var pipelines: [CGDirectDisplayID: Pipeline] = [:]
     /// Selftest hooks: every processed frame of every display, on the main actor, with the commit time; every frame arrival with
     /// its pre-covers.
@@ -62,6 +64,9 @@ struct SitrApp: App {
     var onPreCover: ((CGDirectDisplayID, [CoverLayerSpec], Frame, Double) -> Void)?
     /// Displays whose stream is stalled (M3-T06): fail-closed covers are up on them.
     private(set) var stalled: Set<CGDirectDisplayID> = []
+    /// Stall checks waiting to fire, at most one per display (M4-T10: a burst of window changes — Stage Manager shuffling
+    /// a Space, a Curtain window resizing — must not leave one task per change behind).
+    var pendingStallChecks: Int { stallChecks.count }
     /// Detection plug-ins shared by every display's pipeline: the CoreML models once `loadModels()` has them, else these fallbacks.
     private var detector: any PersonDetecting = VisionPersonDetector()
     private var classifier: any GenderClassifying = NoClassifier()
@@ -90,6 +95,9 @@ struct SitrApp: App {
             self.windowsChanged()
         }
         model.onRevealChanged = { [weak self] revealed in self?.displayManager.setRevealed(revealed) }
+        // Wired in `init`, observed in `start()`: the unit tests drive `systemEvents.simulate(_:)` on a runtime that
+        // never starts real capture.
+        systemEvents.onChange = { [weak self] state, _ in self?.systemActivityChanged(state) }
     }
 
     /// Dynamic type names of the plug-ins in use, for logs and the selftests.
@@ -103,6 +111,7 @@ struct SitrApp: App {
         displayManager.start()
         lowPower.onChange = { [weak self] _ in self?.windowsChanged() }  // windowsChanged is the only writer of session.fps
         lowPower.start()
+        systemEvents.start()
         windowTracker.start()
         filters.start()
         healthTask = Task { [weak self] in
@@ -123,7 +132,9 @@ struct SitrApp: App {
     /// Selftests: stops pipelines and capture, closes the panels.
     func stop() async {
         healthTask?.cancel()
+        healthTask = nil
         lowPower.stop()
+        systemEvents.reset()
         for t in stallChecks.values { t.cancel() }
         stallChecks = [:]
         filters.stop()
@@ -172,9 +183,11 @@ struct SitrApp: App {
     }
 
     /// One Pipeline per ManagedDisplay, following hot-plug. A new display gets a filter at the builder's next refresh.
+    /// Idempotent: the keys of `pipelines` are exactly the ids of `displayManager.displays` when it returns, so however
+    /// many times a transition calls it there is one pipeline, one panel and one stream per display (M4-T10).
     private func reconcile() {
         let current = displayManager.displays
-        for id in pipelines.keys where !current.contains(where: { $0.id == id }) {
+        for id in Array(pipelines.keys) where !current.contains(where: { $0.id == id }) {
             let gone = pipelines.removeValue(forKey: id)
             sawOK.remove(id)
             DetectionMeter.shared.forget(display: id)  // M4-T07: an unplugged display leaves no degraded state behind
@@ -192,6 +205,68 @@ struct SitrApp: App {
             Task { await p.start() }
             filters.schedule()
         }
+    }
+
+    // MARK: - M4-T10 sleep / wake / lock / fast user switching
+
+    /// The screen went away or came back. `.active` is only ever produced by a frame arriving, which `frameCommitted`
+    /// already handles, so there is nothing to do for it here.
+    private func systemActivityChanged(_ state: SystemActivity) {
+        switch state {
+        case .suspended: suspend()
+        case .resuming: resume()
+        case .active: break
+        }
+    }
+
+    /// Going to sleep, locking, or handing the session to another user. Every stream stops on purpose (a stream macOS
+    /// tears down under us costs an error and a backoff retry per display), the stall watches are cancelled, and every
+    /// per-display judgement made against the old streams is forgotten — a session we stopped ourselves is not evidence
+    /// of a lost grant, and detection timings from before a sleep say nothing about after it. Panels and pipelines are
+    /// left exactly as they are: closing and reopening them is how duplicates appear.
+    private func suspend() {
+        for t in stallChecks.values { t.cancel() }
+        stallChecks = [:]
+        stalled = []
+        sawOK = []
+        sessionOK = [:]
+        lastFrameAt = [:]
+        curtainChangedAt = [:]
+        curtainRects = [:]
+        DetectionMeter.shared.reset()
+        displayManager.suspendCapture()
+        refreshFailClosed()  // FR10: Curtain windows stay covered across the gap, and through the wake
+        logTopology("suspended")
+    }
+
+    /// Awake, unlocked, or our session is back. The topology is re-read first — displays can be plugged, unplugged,
+    /// mirrored or re-arranged while we are away — then the streams come back, then the pipelines follow whatever the
+    /// display set now is. Fail-closed covers stay up until the first frame commits (`frameCommitted`).
+    private func resume() {
+        permission.refresh()
+        displayManager.refresh()
+        displayManager.resumeCapture()
+        reconcile()
+        filters.refreshNow()  // the stream is new: its filter has to be installed again
+        windowsChanged()
+        checkHealth()
+        refreshFailClosed()
+        logTopology("resuming")
+    }
+
+    /// The M4-T10 invariant in one line per transition: one pipeline, one panel and one stream per managed display.
+    private func logTopology(_ what: String) {
+        let line = "\(what) displays=\(displayManager.displays.count) pipelines=\(pipelines.count) "
+            + "panels=\(OverlayPanel.openCount) streams=\(CaptureSession.liveStreams)"
+        log.notice("\(line, privacy: .public)")
+    }
+
+    /// M4-T10 seam for `--selftest robustness` and the unit tests: re-read the topology and reconcile panels, streams and
+    /// pipelines in this turn, instead of waiting for the observation callback.
+    func reconcileNow() {
+        displayManager.refresh()
+        reconcile()
+        windowsChanged()
     }
 
     /// Displays (hot-plug), permission, and appearance preferences. `onChange` fires before the value lands; act next turn.
@@ -273,6 +348,9 @@ struct SitrApp: App {
 
     private func checkStall(_ id: CGDirectDisplayID) {
         stallChecks[id] = nil
+        // M4-T10: "no frame arrived" says nothing while the stream is parked for a sleep or a lock, and the covers are
+        // already up for that reason. `windowsChanged` arms a fresh check once the topology is back.
+        guard systemEvents.capturesFrames else { return }
         guard let changed = curtainChangedAt[id], permission.state == .granted,
               displayManager.displays.first(where: { $0.id == id })?.session.health.isOK == true else { return }
         let now = CACurrentMediaTime()
@@ -293,8 +371,10 @@ struct SitrApp: App {
     /// M3-T06: while the grant is gone or a display's stream is stalled, every Curtain window on it gets a Solid cover over its
     /// visible region (rects from the `WindowTracker`, so they follow moves at 10 Hz); Blur apps stay uncovered. Lifted by the first
     /// frame the pipeline commits (`frameCommitted`).
+    /// M4-T10 adds the suspended and resuming states to that: from the moment the Mac starts to sleep or the screen locks
+    /// until the first frame after the wake, capture is not live, so Curtain windows are covered rather than trusted.
     private func refreshFailClosed() {
-        let down = model.policy.health == .needsPermission
+        let down = model.policy.health == .needsPermission || !systemEvents.capturesFrames
         for d in displayManager.displays {
             let specs = down || stalled.contains(d.id)
                 ? failClosedSpecs(windows: windowTracker.windows, rules: model.policy.rules, displayID: d.id, color: d.renderer.solidColor) : []
@@ -307,7 +387,12 @@ struct SitrApp: App {
     /// initial `.stopped(nil)` before its first connect is not a failure; `stop()` after it ran is.
     /// M4-T07: with capture healthy, slow detection is `.degraded` and speeding up again clears it (`DetectionMeter`).
     /// Needs permission outranks degraded (FR7) and only a committed frame leaves it.
+    /// M4-T10: across sleep, lock and fast user switching the streams are down because we stopped them, so health holds
+    /// where it is until capture has had `SystemActivityMachine.settleFor` to come back. A grant that is really gone still
+    /// reports immediately, and the covers do not depend on this — `refreshFailClosed` keeps Curtain windows covered for
+    /// the whole transition.
     func checkHealth() {
+        if permission.state == .granted, systemEvents.holdsHealth() { return }
         var failed = permission.state != .granted
         for d in displayManager.displays {
             switch d.session.health {
@@ -343,6 +428,13 @@ struct SitrApp: App {
     private func frameCommitted(_ id: CGDirectDisplayID, _ specs: [CoverLayerSpec], _ frame: Frame, _ at: Double) {
         sessionBecameOK(id)
         lastFrameAt[id] = at
+        // M4-T10: the wake is over and the covers can come down — but only on a frame from a stream that is actually
+        // connected. `SCStream.stopCapture` is asynchronous, so a frame or two from the stream we tore down for the sleep
+        // still arrives afterwards; ending the resume on one of those closes the health grace before the new stream is up
+        // and flashes "Needs Screen Recording permission" on the way through.
+        if displayManager.displays.first(where: { $0.id == id })?.session.isConnected == true, systemEvents.framesResumed() {
+            refreshFailClosed()
+        }
         if stalled.remove(id) != nil {
             if stalled.isEmpty, stallDegraded, model.policy.health == .degraded {
                 stallDegraded = false

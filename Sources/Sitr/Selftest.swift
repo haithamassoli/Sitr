@@ -1,6 +1,7 @@
-// `Sitr --selftest [capture|overlay|render|pipeline|category|failstate|lowpower|degraded|stimulus] [options]`: automated checks
-// for M2 track A (capture, overlay, renderer), the pipeline / fail-state glue (M2-T12, M2-T16), the category wiring (M2-T07),
-// Low Power Mode (M4-T06) and the degraded state (M4-T07). Each subcommand prints one parseable
+// `Sitr --selftest [capture|overlay|render|pipeline|category|failstate|lowpower|degraded|robustness|stimulus] [options]`:
+// automated checks for M2 track A (capture, overlay, renderer), the pipeline / fail-state glue (M2-T12, M2-T16), the
+// category wiring (M2-T07), Low Power Mode (M4-T06), the degraded state (M4-T07) and the sleep/wake, lock, user-switch and
+// hot-plug robustness of M4-T10. Each subcommand prints one parseable
 // line per metric, removes every window it created and exits on its own (hard deadline). Plain `--selftest` prints the
 // M2-T01 facts as before. Run from a shell, never via `open` (docs/dev.md). Pixels are sampled as numbers only; no frame is
 // ever written anywhere.
@@ -38,6 +39,9 @@ enum Selftest {
             Harness.run("lowpower", deadline: 120) { try await lowPowerTest() }
         case "degraded":
             Harness.run("degraded", deadline: 120) { try await degradedTest() }
+        case "robustness":
+            let cycles = option(args, "--cycles", default: 20)
+            Harness.run("robustness", deadline: Double(cycles) * 8 + 150) { try await robustnessTest(cycles: cycles) }
         case "stimulus" where args.contains("--remote"):
             // M3: the stimulus as its own app (Stimulus.app, another bundle id), driven by distributed notifications.
             let seconds = option(args, "--seconds", default: 300.0)
@@ -963,6 +967,123 @@ private func degradedTest() async throws -> Bool {
 
     runtime.displayManager.stop()
     return ok
+}
+
+// MARK: - robustness (M4-T10)
+
+/// The live display topology as CoreGraphics reports it: ids, bounds, built-in, mirror master, asleep, active. Read-only,
+/// no capture, so it is safe on every run and it is what a two-display or mirrored session has to be checked against.
+@MainActor
+private func liveDisplayTopology() -> String {
+    var count: UInt32 = 0
+    guard CGGetActiveDisplayList(0, nil, &count) == .success, count > 0 else { return "none" }
+    var ids = [CGDirectDisplayID](repeating: 0, count: Int(count))
+    guard CGGetActiveDisplayList(count, &ids, &count) == .success else { return "unavailable" }
+    return ids.prefix(Int(count)).map { id in
+        let b = CGDisplayBounds(id)
+        return "\(id)=\(Int(b.width))x\(Int(b.height))+\(Int(b.minX))+\(Int(b.minY))"
+            + ",builtin=\(CGDisplayIsBuiltin(id) != 0),mirrors=\(CGDisplayMirrorsDisplay(id))"
+            + ",asleep=\(CGDisplayIsAsleep(id) != 0),active=\(CGDisplayIsActive(id) != 0)"
+    }.joined(separator: " ")
+}
+
+/// M4-T10: the transitions that take the screen away and give it back, driven through the real `Runtime` on real capture —
+/// the same `SystemEventMonitor` path a real notification takes, minus the notification, because an agent may not put this
+/// machine to sleep twenty times. Per cycle: suspend, and every stream must be parked with no panel and no pipeline
+/// rebuilt and the covers still on screen; resume, and there must be exactly one stream, one panel and one pipeline per
+/// display, with frames flowing again. Then the same for lock/unlock, fast user switching and the displays going dark,
+/// and the restart backoff on the live session (three failures in one turn are one retry, ~1 s away, and the stream comes
+/// back on its own). The real sleep/wake, lock and user-switch runs are the manual procedure in docs/m4/robustness.md.
+@MainActor
+private func robustnessTest(cycles: Int) async throws -> Bool {
+    print("robustness_topology displays=\(liveDisplayTopology())")
+    let (runtime, d, _) = try await bootRuntime()
+    let stim = try Stimulus(display: d.frame.size, motion: false)
+    _ = stim.show(true)
+    var commits: [CGDirectDisplayID: Int] = [:]
+    runtime.onCommit = { id, _, _, _ in commits[id, default: 0] += 1 }
+    let covered = await waitUntil(10) {
+        stim.pulse()
+        return d.panel.layerCount > 0
+    }
+    let ids = runtime.displayManager.displays.map(\.id).sorted()
+    print("robustness_baseline displays=\(ids) pipelines=\(runtime.pipelines.count) panels=\(OverlayPanel.openCount) "
+        + "streams=\(CaptureSession.liveStreams) covered=\(covered) layers=\(d.panel.layerCount) health=\(runtime.model.policy.health)")
+    var ok = covered && runtime.pipelines.count == ids.count && OverlayPanel.openCount == ids.count
+        && CaptureSession.liveStreams == ids.count
+
+    /// One suspend/resume pair through `SystemEventMonitor`, with every invariant checked on both halves.
+    func cycle(_ label: String, _ down: SystemActivityMachine.Event, _ up: SystemActivityMachine.Event, _ n: Int) async -> Bool {
+        let restartsBefore = runtime.displayManager.displays.map(\.session.restarts).reduce(0, +)
+        let layersBefore = d.panel.layerCount
+        runtime.systemEvents.simulate(down)
+        let parked = CaptureSession.liveStreams == 0
+        let heldPanels = OverlayPanel.openCount == ids.count
+        let heldPipelines = runtime.pipelines.count == ids.count
+        let heldCovers = d.panel.layerCount == layersBefore  // a suspend must not touch the covers already on screen
+        let t0 = CACurrentMediaTime()
+        runtime.systemEvents.simulate(up)
+        // `stopCapture` is asynchronous, so the torn-down stream can still deliver a frame or two: wait for the new
+        // stream to be connected, and only then for a frame it produced.
+        let connected = await waitUntil(5) { d.session.isConnected }
+        let mark = commits[d.id] ?? 0
+        let fresh = await waitUntil(5) {
+            stim.pulse()
+            return (commits[d.id] ?? 0) > mark
+        }
+        let flowing = connected && fresh
+        let ms = Int((CACurrentMediaTime() - t0) * 1000)
+        let sameIDs = runtime.displayManager.displays.map(\.id).sorted() == ids
+        let one = runtime.pipelines.count == ids.count && OverlayPanel.openCount == ids.count
+            && CaptureSession.liveStreams == ids.count && Set(runtime.pipelines.keys) == Set(ids)
+        let restarts = runtime.displayManager.displays.map(\.session.restarts).reduce(0, +) - restartsBefore
+        print("robustness_cycle kind=\(label) n=\(n) parked=\(parked) held_panels=\(heldPanels) held_pipelines=\(heldPipelines) "
+            + "covers_untouched=\(heldCovers) layers=\(d.panel.layerCount) frames_back=\(flowing) resume_ms=\(ms) "
+            + "displays=\(runtime.displayManager.displays.count) "
+            + "pipelines=\(runtime.pipelines.count) panels=\(OverlayPanel.openCount) streams=\(CaptureSession.liveStreams) "
+            + "backoff_restarts=\(restarts) state=\(runtime.systemEvents.state) health=\(runtime.model.policy.health)")
+        return parked && heldPanels && heldPipelines && heldCovers && flowing && sameIDs && one
+            && runtime.systemEvents.state == .active && runtime.pendingStallChecks <= ids.count
+    }
+
+    for n in 1...max(1, cycles) { ok = await cycle("sleep", .willSleep, .didWake, n) && ok }
+    ok = await cycle("lock", .screenLocked, .screenUnlocked, 1) && ok
+    ok = await cycle("user_switch", .sessionResignedActive, .sessionBecameActive, 1) && ok
+    ok = await cycle("screens_off", .screensDidSleep, .screensDidWake, 1) && ok
+
+    // The live backoff: three failures inside one turn are one scheduled retry, ~1 s away, and the stream comes back.
+    let restartsBefore = d.session.restarts
+    let t1 = CACurrentMediaTime()
+    for _ in 0..<3 { d.session.simulateStreamFailure(CaptureError.displayGone) }
+    let scheduled = d.session.restarts - restartsBefore
+    let delay = d.session.pendingRetryDelay ?? -1
+    let reconnected = await waitUntil(8) { d.session.isConnected }
+    let mark = commits[d.id] ?? 0
+    let framesBack = await waitUntil(5) {
+        stim.pulse()
+        return (commits[d.id] ?? 0) > mark
+    }
+    let healthBack = await waitUntil(5) {
+        stim.pulse()
+        return runtime.model.policy.health == .ok
+    }
+    print("robustness_backoff failures=3 retries_scheduled=\(scheduled) next_delay_s=\(fmt(delay)) cap_s=\(Int(Backoff.captureStream.cap)) "
+        + "reconnected=\(reconnected) recovery_ms=\(Int((CACurrentMediaTime() - t1) * 1000)) frames_back=\(framesBack) "
+        + "health_back=\(healthBack) restarts_total=\(d.session.restarts - restartsBefore) streams=\(CaptureSession.liveStreams) "
+        + "panels=\(OverlayPanel.openCount) health=\(runtime.model.policy.health)")
+    // One retry for the burst, ~1 s away, and the stream is back on its own with health restored and no second retry
+    // triggered by the torn-down stream's own late stop callback.
+    ok = ok && scheduled == 1 && delay > 0 && delay <= Backoff.captureStream.cap && reconnected && framesBack && healthBack
+        && d.session.restarts - restartsBefore == 1
+
+    print("robustness_summary cycles=\(cycles) events=\(runtime.systemEvents.seen.count) displays=\(runtime.displayManager.displays.count) "
+        + "pipelines=\(runtime.pipelines.count) panels=\(OverlayPanel.openCount) streams=\(CaptureSession.liveStreams) "
+        + "stall_checks=\(runtime.pendingStallChecks) state=\(runtime.systemEvents.state) health=\(runtime.model.policy.health) "
+        + "load1=\(fmt(loadAverage())) manual_pending=sleep_wake,lock_unlock,fast_user_switch,two_display_hotplug,mirroring ok=\(ok)")
+    stim.panel.orderOut(nil)
+    await runtime.stop()
+    print("robustness_teardown panels=\(OverlayPanel.openCount) streams=\(CaptureSession.liveStreams)")
+    return ok && OverlayPanel.openCount == 0 && CaptureSession.liveStreams == 0
 }
 
 /// Dev stimulus for a manual run of the real app from another shell: two person photos moving for `seconds` (frames keep flowing),
