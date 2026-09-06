@@ -1,0 +1,41 @@
+name: Feature request
+description: Suggest a change or an addition to Sitr.
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check `docs/PRD.md` first: the "Out (v1)" list and the backlog in `docs/tasks.md` explain what is deliberately
+        deferred. Never attach screenshots or recordings that show people.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: What should Sitr do instead? Where would it live (menu bar, Settings, onboarding, hotkey)?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you tried, other apps' behaviour, or settings that almost do it.
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy impact
+      description: Would this need any data to leave the Mac, be written to disk, or be logged? Sitr does none of those; say how the proposal keeps it that way.
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Privacy check
+      options:
+        - label: This request contains no screenshots, recordings or crops that show people.
+          required: true

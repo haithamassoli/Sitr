@@ -1,0 +1,93 @@
+name: Bug report
+description: Something in Sitr does not work as documented.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. **Never attach screenshots or screen recordings that show people** (that is exactly what
+        Sitr exists to keep private). Describe what you saw, or reproduce it with synthetic content such as a drawing.
+        Security issues go to https://github.com/haithamassoli/Sitr/security/advisories/new instead of this tracker.
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      description: From  > About This Mac, e.g. "macOS 15.6.1 (24G90)".
+      placeholder: macOS 15.6.1
+    validations:
+      required: true
+  - type: dropdown
+    id: chip
+    attributes:
+      label: Chip
+      options:
+        - Apple M1 / M1 Pro / M1 Max / M1 Ultra
+        - Apple M2 family
+        - Apple M3 family
+        - Apple M4 family
+        - Apple M5 family or newer
+        - Intel (unsupported, but tell us)
+    validations:
+      required: true
+  - type: textarea
+    id: displays
+    attributes:
+      label: Display setup
+      description: Number of displays, resolution and scaling of each, mirrored or extended, Stage Manager on or off, fullscreen app involved?
+      placeholder: Built-in 14" (2560x1664, default scaling) + external 4K at 2x, extended. Stage Manager off.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Sitr version
+      description: Menu bar > Settings > About, or `defaults read /Applications/Sitr.app/Contents/Info.plist CFBundleShortVersionString`.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Protection mode in effect
+      description: The Default Rule or the per-app override that applied to the window where the bug happened.
+      options:
+        - Blur (Default Rule)
+        - Blur (per-app override)
+        - Curtain (Default Rule)
+        - Curtain (per-app override)
+        - "Off"
+        - Paused or Disabled
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Safari with a page containing ...
+        2. Switch to the fullscreen Space ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include menu bar status (Protected / Paused / Needs permission / Degraded), any notification text, and timings if relevant. No screenshots with people.
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Privacy check
+      options:
+        - label: This report contains no screenshots, recordings or crops that show people.
+          required: true
