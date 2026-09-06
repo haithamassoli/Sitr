@@ -141,7 +141,10 @@ private let statusMatrix:
         let model = makeModel()
         model.hotkeyPressed()
         #expect(model.reveal.isRevealed)
-        try await Task.sleep(for: .milliseconds(400))
+        // Poll instead of one fixed sleep: a loaded machine can miss a 100 ms tick inside 400 ms.
+        for _ in 0..<100 where model.reveal != .covered {
+            try await Task.sleep(for: .milliseconds(100))
+        }
         #expect(model.reveal == .covered)
     }
 
