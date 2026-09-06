@@ -106,7 +106,9 @@ private func entry(_ id: Int, pid: Int, layer: Int = 0, alpha: Double = 1, bound
 
 // MARK: - Live WindowServer query
 
-@Suite(.serialized) @MainActor struct WindowTrackerLiveTests {
+// Live WindowServer queries need on-screen windows; headless CI runners have none.
+@Suite(.serialized, .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil, "needs a logged-in session with windows"))
+@MainActor struct WindowTrackerLiveTests {
     @Test func queryReturnsWindowsAndResolvesBundleIDs() {
         let tracker = WindowTracker()
         tracker.refresh()
