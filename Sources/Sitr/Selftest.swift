@@ -655,9 +655,46 @@ private func pipelineTest(trials: Int) async throws -> Bool {
         + "detect_ms=\(PipelineMetrics.p(m.detect)) classify_ms=\(PipelineMetrics.p(m.classify)) crops=\(m.crops) track_ms=\(PipelineMetrics.p(m.track)) "
         + "render_ms=\(PipelineMetrics.p(m.render)) commit_ms=\(PipelineMetrics.p(m.commit)) e2e_ms=\(PipelineMetrics.p(m.e2e)) "
         + "health=\(runtime.model.policy.health) \(runtime.modelsNote)")
+    let budget = PerFrameBudget(m)
+    print(budget.line(load: load))
     runtime.displayManager.stop()
     // Correctness always gates; the p95 target only on a quiet machine (other agents' GPU/ANE load stalls Vision and Core Image).
-    return exposures.count >= trials * 9 / 10 && controlOK && notCleared == 0 && (noisy || p95 <= 0.150)
+    return exposures.count >= trials * 9 / 10 && controlOK && notCleared == 0 && budget.ok && (noisy || p95 <= 0.150)
+}
+
+/// M4-T09 regression gate: the per-frame work the performance pass removed, as ratios of processed frames, so it does not
+/// depend on how fast the machine is. Each one is the counter behind a change that paid; if a later change puts the work back,
+/// this fails on a machine of any speed and under any load.
+///   `applies`  — the overlay is on the display the stream captures, so a commit per frame makes SCK deliver a frame per commit
+///                and the pipeline runs on its own output. Before the pass this was exactly 1.00; the ceiling is what a
+///                still-photo trial leaves once identical cover sets stop being re-committed.
+///   `crops`    — face crops through the classifier, one pooled buffer and one CoreML call each (0.78–0.89 before the pass).
+/// `renders` (cover renders, one pooled buffer and one GPU submission each) and `reuses` are printed but not gated: how many
+/// covers can keep their pixels depends on how much of the user's own screen is moving, which this test does not control.
+/// Everything gated here is a ratio of processed frames, so it does not depend on how fast the machine is or what its load was.
+/// The exposure test's own protocol is the fixture: a still photo, blank between trials, so a pipeline that re-commits
+/// unchanged covers shows up immediately.
+@MainActor
+struct PerFrameBudget {
+    static let maxAppliesPerFrame = 0.90, maxCropsPerFrame = 0.50
+    let frames: Int, applies: Double, crops: Double, renders: Double, reuses: Double
+
+    init(_ m: PipelineMetrics) {
+        frames = m.framesOut
+        let n = Double(max(1, m.framesOut))
+        applies = Double(m.applies) / n
+        crops = Double(m.crops) / n
+        renders = Double(m.renders) / n
+        reuses = Double(m.reuses) / n
+    }
+
+    var ok: Bool { frames >= 30 && applies <= Self.maxAppliesPerFrame && crops <= Self.maxCropsPerFrame }
+
+    func line(load: Double) -> String {
+        "perf_budget frames=\(frames) applies_per_frame=\(fmt(applies))/\(fmt(Self.maxAppliesPerFrame)) "
+            + "crops_per_frame=\(fmt(crops))/\(fmt(Self.maxCropsPerFrame)) renders_per_frame=\(fmt(renders)) reuses_per_frame=\(fmt(reuses)) "
+            + "ok=\(ok) load1=\(fmt(load))"
+    }
 }
 
 /// M2-T12 backlog check: the photo moves like video for `seconds`; every 10 s a line with frames in, detections, skipped
@@ -707,6 +744,11 @@ private func motionTest(seconds: Double) async throws -> Bool {
     print("backlog_growth=\(growth) rss_mb_first=\(Int(rssFirst)) rss_mb_last=\(Int(rssLast)) skip_ratio_first=\(fmt(skipFirst)) skip_ratio_last=\(fmt(skipLast)) "
         + "frames_in=\(m.framesIn) skipped_total=\(m.skipped) skip_ratio_total=\(fmt(m.skipRatio)) layers_max=\(layersSeen) seconds=\(Int(seconds)) "
         + "load1=\(fmt(loadAverage())) \(runtime.modelsNote)")
+    // M4-T09: the counters, reported not gated here — continuous motion moves every cover on every frame, so this run has
+    // nothing to reuse and nothing to skip committing. The gate lives on the still-photo `--selftest pipeline` protocol.
+    print("motion_frame_work frames=\(m.framesOut) applies_per_frame=\(fmt(Double(m.applies) / Double(max(1, m.framesOut)))) "
+        + "crops_per_frame=\(fmt(Double(m.crops) / Double(max(1, m.framesOut)))) renders_per_frame=\(fmt(Double(m.renders) / Double(max(1, m.framesOut)))) "
+        + "reuses=\(m.reuses) face_skips=\(m.faceSkips) detect_skips=\(m.detectSkips)")
     runtime.displayManager.stop()
     return !growth && layersSeen > 0 && m.framesIn > 0
 }

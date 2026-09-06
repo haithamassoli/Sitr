@@ -97,7 +97,15 @@ previous one is still being processed waits behind it. That queueing, not any si
 the Vision detector and no classifier measured **129 ms p95** (`docs/m2/pipeline.md`), which is the same pipeline without the
 per-frame cost — the structure is sound, the per-frame budget is not.
 
-Fix list, in the order the numbers justify (all of it is M4-T09, already in `docs/tasks.md`):
+**M4-T09 has since been done and the diagnosis above is only half right — see `docs/perf.md`.** The per-frame cost was real and
+is now 22–60 % lower, but the larger cause was that the overlay panel sits on the display the stream captures: every commit
+damaged it, SCK answered each commit with a `.complete` frame, and the pipeline ran on its own output at ~3× the rate the screen
+actually changed. Measured after the pass, on M3, still pending M1 8 GB: browsing **30.0 → 5.6 %** (target ≤ 15, pass),
+near-static with 7 people **30.5 → 0.5 %** (< 1, pass), Blur exposure p95 **254.6 → 121–143 ms** quiet (≤ 150, pass on a quiet
+machine), video with people **28.7 → 26.1 %** (≤ 25, **still missed**), Curtain exposure not re-measurable on this machine.
+Recall unchanged (84.5 → 84.6 %).
+
+Fix list as it was written after M1, in the order the numbers then justified (all of it is M4-T09, already in `docs/tasks.md`):
 1. Skip detection on frames whose `dirtyRects` miss every tracked box (the "idle user, people on screen" 30 % becomes ~0).
 2. Detect every other frame and let the tracker's 300 ms persistence carry the gap — roughly halves the per-frame cost.
 3. Re-render a cover only when its rect or its source pixels changed (render is 25–40 % of the frame when 7 covers are up).

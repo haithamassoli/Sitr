@@ -12,6 +12,12 @@ nonisolated struct CoverLayerSpec: @unchecked Sendable {
     let frame: CGRect
     let contents: CVPixelBuffer?
     let color: CGColor?
+
+    /// Same layer, same place, same pixels — nothing for `OverlayPanel.apply` to do. `contents` is compared by identity: the
+    /// renderer hands out a fresh buffer per render, so the same object means the same surface, already on screen.
+    func matches(_ other: CoverLayerSpec) -> Bool {
+        id == other.id && frame == other.frame && contents === other.contents && color == other.color
+    }
 }
 
 /// Display-local rect (origin top-left, y down) → CALayer rect inside a panel `displayHeight` points tall (origin bottom-left, y up).
@@ -67,12 +73,18 @@ final class OverlayPanel: NSPanel {
 
     /// Add / move / resize / recolor / remove so the layer set equals `specs`, in one transaction. Keeps each shown buffer
     /// alive (the layer only holds the IOSurface) so the renderer's pool cannot recycle a surface that is on screen.
+    // M4-T09: every write here is guarded by a comparison, and a pass that changes nothing commits nothing. Re-assigning an
+    // identical `contents` still marks the layer dirty, which damages the display — and the display is what we are capturing,
+    // so an unconditional commit per frame made SCK deliver a `.complete` frame per commit and the pipeline ran on its own
+    // output. `Pipeline.applyAll` skips the call entirely in that case; this is the second line of defence and covers the
+    // partial case (one cover of five moved).
     func apply(_ specs: [CoverLayerSpec]) {
         let displayHeight = frame.height
         guard let root = contentView?.layer else { return }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         var seen = Set<Int>()
+        var changed = false
         for spec in specs {
             seen.insert(spec.id)
             let layer: CALayer
@@ -83,24 +95,33 @@ final class OverlayPanel: NSPanel {
                 layer.contentsGravity = .resize
                 layer.isHidden = isRevealed
                 root.addSublayer(layer)
+                changed = true
             }
             let target = appKitRect(spec.frame, displayHeight: displayHeight)
-            if layer.frame != target { layer.frame = target }
+            if layer.frame != target {
+                layer.frame = target
+                changed = true
+            }
             if let buffer = spec.contents {
-                layer.contents = CVPixelBufferGetIOSurface(buffer)?.takeUnretainedValue()
-                layer.backgroundColor = nil
-            } else {
+                if covers[spec.id]?.buffer !== buffer {
+                    layer.contents = CVPixelBufferGetIOSurface(buffer)?.takeUnretainedValue()
+                    layer.backgroundColor = nil
+                    changed = true
+                }
+            } else if layer.contents != nil || layer.backgroundColor != spec.color {
                 layer.contents = nil
                 layer.backgroundColor = spec.color
+                changed = true
             }
             covers[spec.id] = (layer, spec.contents)
         }
         for (id, cover) in covers where !seen.contains(id) {
             cover.layer.removeFromSuperlayer()
             covers[id] = nil
+            changed = true
         }
         CATransaction.commit()
-        CATransaction.flush()  // hand the frame to the render server now rather than at the end of the run-loop turn
+        if changed { CATransaction.flush() }  // hand the frame to the render server now rather than at the end of the run-loop turn
     }
 
     /// Reveal Hold: hides every cover layer (new ones are added hidden) until `setRevealed(false)`.

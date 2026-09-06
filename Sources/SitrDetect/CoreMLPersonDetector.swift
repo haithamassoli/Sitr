@@ -21,6 +21,13 @@ public struct CoreMLPersonDetector: @unchecked Sendable {
     public var threshold: Float
     /// Greedy NMS: a box is dropped when its IoU with a kept, higher-scoring box exceeds this.
     public var nmsIoU: Double
+    /// Resample the frame into the network canvas with Lanczos only below this scale factor; at or above it the affine
+    /// transform's bilinear tap is used. Default 0.9: a real reduction (a COCO photo, a 2560 px screenshot) keeps Lanczos,
+    /// while the app's own frames — captured at the model's long side, so scaled by ~0.92 — take the cheap path.
+    // M4-T09: the Lanczos pass was almost the whole of the detector's per-frame cost. In a 30 s `video` profile
+    // `-[CIContext render:toCVPixelBuffer:]` was 4967 of the detector's 4947 samples — the CoreML prediction itself was 835.
+    // `sitr-bench --lanczos-below 0` (never Lanczos, far past what the app does) measures the recall cost; see docs/perf.md.
+    public var lanczosBelow: Double = 0.9
 
     /// `url` is a compiled `.mlmodelc` or an `.mlpackage` (compiled into a temp dir first, ~1 s; the app bundle ships it
     /// compiled). `computeUnits` `.all` lets CoreML pick; `.cpuAndNeuralEngine` keeps the GPU free for rendering.
@@ -51,15 +58,26 @@ public struct CoreMLPersonDetector: @unchecked Sendable {
 
     func detect(_ source: CIImage, size: Size) async throws -> [Detection] {
         let r = min(inputSize.width / size.width, inputSize.height / size.height)
-        // Lanczos (not the affine transform's bilinear tap) so a 4x downscale of a 2560 frame keeps small people intact.
-        let scale = CIFilter.lanczosScaleTransform()
-        scale.inputImage = source
-        scale.scale = Float(r)
-        scale.aspectRatio = 1
-        guard let scaled = scale.outputImage else { throw CoreMLDetectorError("scale failed") }
+        // Lanczos (not the affine transform's bilinear tap) so a 4x downscale of a 2560 frame keeps small people intact —
+        // but only where the frame is really being reduced (`lanczosBelow`); see that property for the cost.
+        let scaled: CIImage
+        if r < lanczosBelow {
+            let scale = CIFilter.lanczosScaleTransform()
+            scale.inputImage = source
+            scale.scale = Float(r)
+            scale.aspectRatio = 1
+            guard let out = scale.outputImage else { throw CoreMLDetectorError("scale failed") }
+            scaled = out
+        } else {
+            scaled = source.transformed(by: CGAffineTransform(scaleX: r, y: r))
+        }
         // CoreImage's origin is bottom-left: lift the scaled image to the top edge so the grey padding lands right/bottom.
+        // The grey is cropped to the strip the image does not cover instead of an infinite colour plane, so the composite
+        // touches the padding only rather than blending over the whole canvas.
+        let grey = CIImage(color: CIColor(red: 114 / 255, green: 114 / 255, blue: 114 / 255))
+            .cropped(to: CGRect(x: 0, y: 0, width: inputSize.width, height: inputSize.height))
         let letterboxed = scaled.transformed(by: CGAffineTransform(translationX: 0, y: inputSize.height - scaled.extent.height))
-            .composited(over: CIImage(color: CIColor(red: 114 / 255, green: 114 / 255, blue: 114 / 255)))
+            .composited(over: grey)
         var buffer: CVPixelBuffer?
         guard CVPixelBufferPoolCreatePixelBuffer(nil, pool, &buffer) == kCVReturnSuccess, let input = buffer else {
             throw CoreMLDetectorError("cannot allocate an input pixel buffer")

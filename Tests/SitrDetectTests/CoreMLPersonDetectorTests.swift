@@ -62,3 +62,23 @@ func coreMLPixelBufferPathMatchesCGImagePath() async throws {
     let c = Detection(box: Rect(x: 300, y: 0, width: 100, height: 200), confidence: 0.4)  // disjoint
     #expect(CoreMLPersonDetector.nms([b, c, a], iou: 0.5) == [a, c])
 }
+
+// M4-T09: the frame is resampled into the network canvas with Lanczos only where it is really being reduced
+// (`lanczosBelow`); above that the affine transform's bilinear tap is used, which is what the app hits — it captures at the
+// model's long side, so the scale factor is ~0.92. The two paths must agree on the same picture, or the shortcut changed
+// what the detector sees. `sitr-bench --lanczos-below 0 | 2` measures the same thing over 199 COCO photos (docs/perf.md:
+// 84.7 % recall never, 84.5 % always, 84.6 % shipped).
+@Test(.enabled(if: modelPresent, missing))
+func bothResamplePathsSeeTheSamePerson() async throws {
+    var detector = try await CoreMLPersonDetector(contentsOf: modelURL)
+    let image = try fixture()
+    detector.lanczosBelow = 2  // always Lanczos: the pre-M4-T09 path
+    let lanczos = try await detector.detect(in: image)
+    detector.lanczosBelow = 0  // never Lanczos: past anything the app asks for
+    let affine = try await detector.detect(in: image)
+    let a = try #require(lanczos.max { $0.confidence < $1.confidence })
+    let b = try #require(affine.max { $0.confidence < $1.confidence })
+    #expect(within5Percent(a.box, b.box), "lanczos \(a.box) vs affine \(b.box)")
+    #expect(abs(Double(a.confidence - b.confidence)) < 0.1, "confidence \(a.confidence) vs \(b.confidence)")
+    #expect(lanczos.count == affine.count, "\(lanczos.count) boxes vs \(affine.count)")
+}
