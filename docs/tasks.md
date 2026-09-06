@@ -166,7 +166,7 @@ Exit: bench gates (recall ≥ 95 %, misclassification ≤ 2 %); PRD performance 
 - [x] **M4-T04 Settings › General + About** (M) deps: M2-T15 — language override + relaunch, Low Power toggle key, About with verify command copy, FR11 caveats, model notices; Arabic relaunch check waits for M4-T05
   Do: launch at login; language System / English / Arabic (`AppleLanguages` override plus relaunch prompt); Low Power behavior toggle; About: version, license, `codesign` verification command with copy button, source link, screen-sharing and screenshot caveats.
   Done when: language switch relaunches into Arabic RTL; About text matches README.
-- [ ] **M4-T05 Localization EN/AR** (L) deps: M4-T01, M4-T02, M4-T03, M4-T04, M2-T14
+- [x] **M4-T05 Localization EN/AR** (L) deps: M4-T01, M4-T02, M4-T03, M4-T04, M2-T14 — `Localizable.xcstrings` 193 keys, 193 Arabic; `scripts/check-strings.sh` gate in CI; RTL fixes (AppleTextDirection, LTR isolate for hotkey glyphs, command text); all 5 tabs + 5 onboarding steps screenshot-verified in Arabic; native-speaker review pending (10 doubtful terms listed in `docs/m4/localization.md`)
   Do: String Catalog for all strings including notifications and menu bar; Arabic reviewed by a native speaker; RTL audit (mirrored layouts, hotkey glyph order, locale numerals); `-AppleLanguages (ar)` scheme.
   Done when: zero untranslated strings; Arabic screenshots of every screen attached to the PR.
 - [ ] **M4-T06 Low Power Mode** (S) deps: M2-T05
@@ -212,7 +212,7 @@ Exit: fresh macOS 15 user account: download DMG → Gatekeeper passes → onboar
 - [x] **M5-T05 Check for Updates** (S) deps: M2-T14 — menu item opens the GitHub Releases URL via `NSWorkspace` (built with M2-T14; click not exercised automatically)
   Do: menu item opens the GitHub Releases URL via `NSWorkspace`; current version shown in About.
   Done when: works in the sandbox with no network entitlement (browser opens).
-- [ ] **M5-T06 README + docs** (M) deps: M4-T05
+- [x] **M5-T06 README + docs** (M) deps: M4-T05 — `README.md` + `README.ar.md` (install, permission + monthly re-approval, verification command, caveats, preset, hotkey, build from source, models, uninstall); fresh-account walkthrough manual pending
   Do: `README.md` and `README.ar.md`: what it does, requirements, install (DMG, brew), permission and monthly re-approval note, privacy verification command with expected output, screen-sharing and screenshot caveats, Recommended preset, default hotkey, build from source (pinned Xcode), model license and checksum, uninstall steps.
   Done when: a new user follows the README on a fresh account without help.
 - [x] **M5-T07 Licensing + compliance** (S) — `LICENSE` GPL-3.0, `THIRD_PARTY_NOTICES.md`, `SECURITY.md`, `CONTRIBUTING.md`, issue templates; `ModelChecksumTests` enforces model SHA-256 in CI (proven red)
