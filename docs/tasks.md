@@ -123,7 +123,7 @@ Exit: Curtain exposure ≤ 50 ms p95; YouTube without people in Safari-as-Curtai
 - [x] **M3-T01 Rules model + store** (M) deps: M2-T09 — `Rules`/`RuleMode`/`AppRule`/`RulesStore` (schema 1, `.bak` on bad file), Policy resolves per bundle ID; 7 + 3 tests
   Do: `AppRule { bundleID, mode }`, `DefaultRule` (off / blur / curtain, initial off); JSON in Application Support with a schema version; Policy resolves mode per bundle ID; rules for uninstalled apps allowed.
   Done when: resolve tests (override beats default, unknown app → default); persistence round-trip test.
-- [ ] **M3-T02 Window geometry provider** (M) deps: M2-T04
+- [x] **M3-T02 Window geometry provider** (M) deps: M2-T04 — `WindowTracker`/`WindowGeometry`; 10 Hz poll costs 0.15–0.21 % of one core (noisy); 9 tests incl. 2-display split layouts; wiring lands with M3-T03/T05
   Do: `WindowTracker`: `CGWindowListCopyWindowInfo` (on-screen, layer 0) at 10 Hz plus `NSWorkspace` activate / launch / terminate notifications; ownerPID → bundle ID via `NSRunningApplication`; flipped global points → per-display points in one utility; publishes `[WindowRect(bundleID, displayID, rect, zOrder)]`.
   Done when: conversion tests on 2-display layouts (secondary above, left, right); poll cost < 0.3 % CPU.
 - [ ] **M3-T03 Filter builder + live updates** (M) deps: M3-T01, M2-T05
