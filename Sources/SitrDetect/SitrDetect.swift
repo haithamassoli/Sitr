@@ -41,3 +41,16 @@ func computeNote(_ request: some VisionRequest) -> String {
 extension CGImage {
     var sitrSize: Size { Size(width: Double(width), height: Double(height)) }
 }
+
+/// Pool of IOSurface-backed, Metal-compatible 32BGRA buffers of one size: CoreML image inputs that CoreImage renders into.
+func bgraPool(width: Int, height: Int) throws -> CVPixelBufferPool {
+    var pool: CVPixelBufferPool?
+    let attributes: [CFString: Any] = [
+        kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_32BGRA, kCVPixelBufferWidthKey: width, kCVPixelBufferHeightKey: height,
+        kCVPixelBufferIOSurfacePropertiesKey: [:] as CFDictionary, kCVPixelBufferMetalCompatibilityKey: true,
+    ]
+    guard CVPixelBufferPoolCreate(nil, nil, attributes as CFDictionary, &pool) == kCVReturnSuccess, let pool else {
+        throw CoreMLDetectorError("cannot create the input pixel buffer pool")
+    }
+    return pool
+}

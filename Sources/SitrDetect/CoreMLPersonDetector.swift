@@ -33,16 +33,7 @@ public struct CoreMLPersonDetector: @unchecked Sendable {
               model.modelDescription.outputDescriptionsByName["predictions"] != nil
         else { throw CoreMLDetectorError("model needs an image input `image` and a multiarray output `predictions`") }
         inputSize = Size(width: Double(image.pixelsWide), height: Double(image.pixelsHigh))
-        var pool: CVPixelBufferPool?
-        let attributes: [CFString: Any] = [
-            kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_32BGRA, kCVPixelBufferWidthKey: image.pixelsWide,
-            kCVPixelBufferHeightKey: image.pixelsHigh, kCVPixelBufferIOSurfacePropertiesKey: [:] as CFDictionary,
-            kCVPixelBufferMetalCompatibilityKey: true,
-        ]
-        guard CVPixelBufferPoolCreate(nil, nil, attributes as CFDictionary, &pool) == kCVReturnSuccess, let pool else {
-            throw CoreMLDetectorError("cannot create the input pixel buffer pool")
-        }
-        self.pool = pool
+        pool = try bgraPool(width: image.pixelsWide, height: image.pixelsHigh)
         self.threshold = threshold
         self.nmsIoU = nmsIoU
     }

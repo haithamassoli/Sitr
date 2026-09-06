@@ -1,7 +1,9 @@
 import AppKit
 import QuartzCore
 import SitrCore
+import SitrDetect
 import SwiftUI
+import os
 
 @main
 struct SitrApp: App {
@@ -45,8 +47,12 @@ struct SitrApp: App {
     private(set) var pipelines: [CGDirectDisplayID: Pipeline] = [:]
     /// Selftest hook: every processed frame of every display, on the main actor, with the commit time.
     var onCommit: ((CGDirectDisplayID, [CoverLayerSpec], Frame, Double) -> Void)?
+    /// Detection plug-ins shared by every display's pipeline: the CoreML models once `loadModels()` has them, else these fallbacks.
+    private var detector: any PersonDetecting = VisionPersonDetector()
+    private var classifier: any GenderClassifying = NoClassifier()
     private var sawOK: Set<CGDirectDisplayID> = []
     private var healthTask: Task<Void, Never>?
+    private let log = Logger(subsystem: "com.goldentik.Sitr", category: "runtime")
 
     init(model: AppModel) {
         self.model = model
@@ -55,16 +61,23 @@ struct SitrApp: App {
         model.onRevealChanged = { [weak self] revealed in self?.displayManager.setRevealed(revealed) }
     }
 
-    /// Brings capture, pipelines and health tracking up; follows display and permission changes from then on.
+    /// Dynamic type names of the plug-ins in use, for logs and the selftests.
+    var modelsNote: String { "detector=\(String(describing: type(of: detector))) classifier=\(String(describing: type(of: classifier)))" }
+
+    /// Brings capture, pipelines and health tracking up; follows display and permission changes from then on. The models load
+    /// while capture connects (~0.5 s): ~0.1 s when the ANE cache is warm, 3–5 s on the first launch after an update.
     func start() {
         displayManager.start()
-        reconcile()
-        observe()
         healthTask = Task { [weak self] in
             while !Task.isCancelled {
                 self?.checkHealth()
                 try? await Task.sleep(for: .seconds(1))
             }
+        }
+        Task {
+            await loadModels()
+            reconcile()
+            observe()
         }
     }
 
@@ -80,6 +93,40 @@ struct SitrApp: App {
         CoverAppearance(style: model.preferences.coverStyle, strength: model.preferences.blurStrength, padding: model.preferences.bodyPadding)
     }
 
+    /// M2-T06 / M2-T07: `PersonDetector.mlmodelc` and `GenderClassifier.mlmodelc` from the bundle (`scripts/build-app.sh` compiles
+    /// them in), both on `.cpuAndNeuralEngine` (the GPU stays free for rendering; `.all` put parts of the ViT on the GPU and doubled
+    /// its latency). A model that cannot load leaves its fallback (Vision persons / every person Unknown) with one logged line.
+    private func loadModels() async {
+        let t0 = CACurrentMediaTime()
+        async let d = Self.load("person detector (CoreML)") {
+            try await CoreMLPersonDetector(contentsOf: Self.modelURL("PersonDetector"), computeUnits: .cpuAndNeuralEngine)
+        }
+        async let c = Self.load("gender classifier") { try await GenderClassifier(contentsOf: Self.modelURL("GenderClassifier")) }
+        if let d = await d { detector = d }
+        if let c = await c { classifier = c }
+        log.info("models \(self.modelsNote, privacy: .public) load_ms=\(Int((CACurrentMediaTime() - t0) * 1000))")
+    }
+
+    private nonisolated static func load<T: Sendable>(_ what: String, _ make: @Sendable () async throws -> T) async -> T? {
+        do {
+            return try await make()
+        } catch {
+            Logger(subsystem: "com.goldentik.Sitr", category: "runtime")
+                .error("\(what, privacy: .public) unavailable, using the fallback: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+    }
+
+    private nonisolated static func modelURL(_ name: String) throws -> URL {
+        if let url = Bundle.main.url(forResource: name, withExtension: "mlmodelc") { return url }
+        // ponytail: dev fallback keyed on #filePath so a checkout's `.build/debug/Sitr` (selftests, `swift run`) finds Models/dist and
+        // compiles it on the fly (~0.6 s per model); a shipped app has the bundle copy and never gets here.
+        let dist = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Models/dist/\(name).mlpackage")
+        guard FileManager.default.fileExists(atPath: dist.path) else { throw ModelError("\(name).mlmodelc is not in the bundle") }
+        return dist
+    }
+
     /// One Pipeline per ManagedDisplay, following hot-plug.
     private func reconcile() {
         let current = displayManager.displays
@@ -90,7 +137,7 @@ struct SitrApp: App {
         }
         for d in current where pipelines[d.id] == nil {
             let p = Pipeline(displayID: d.id, frames: d.session.frames, panel: d.panel, renderer: d.renderer,
-                             policy: model.policy, appearance: appearance)
+                             policy: model.policy, appearance: appearance, detector: detector, classifier: classifier)
             let id = d.id
             p.onCommit { [weak self] specs, frame, at in self?.frameCommitted(id, specs, frame, at) }
             pipelines[id] = p
@@ -146,4 +193,9 @@ struct SitrApp: App {
         model.policy.health = health
         notifier.healthChanged(to: health)
     }
+}
+
+nonisolated struct ModelError: Error, CustomStringConvertible {
+    let description: String
+    init(_ d: String) { description = d }
 }
