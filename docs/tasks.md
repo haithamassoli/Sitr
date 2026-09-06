@@ -197,7 +197,7 @@ Exit: bench gates (recall ≥ 95 %, misclassification ≤ 2 %); PRD performance 
 Goal: v1.0 anyone can install and verify.
 Exit: fresh macOS 15 user account: download DMG → Gatekeeper passes → onboarding → protection works; `codesign` output matches README; `brew install --cask` works.
 
-- [~] **M5-T01 Sign + notarize script** (M) — `scripts/release.sh` dry run from a clean clone builds, verifies, gates entitlements; notarize/staple/spctl pending Developer ID + notarytool credentials (`docs/m5/release.md`)
+- [x] **M5-T01 Sign + notarize script** (M) — `scripts/release.sh` run for real on `macos-26` with the Developer ID and notarytool secrets: notarization **Accepted** by Apple (submission `3634fe48-d613-4f78-9c70-7f5690d6e9be`, `Sitr-0.1.0.zip`), `stapler staple` + `validate` worked, `spctl -a -vv` returned `accepted` / `source=Notarized Developer ID` / `origin=Developer ID Application: Haitham Assoli (U3C6DM4QX4)`, and the entitlement gate passed (`app-sandbox` + `files.user-selected.read-only`, no network). The exported `.p12` carries the leaf only — signing worked because the runner image already has Apple's Developer ID G2 intermediate, and the workflow's own fetch of it logged `could not import` (`docs/m5/release.md`)
   Do: `scripts/release.sh`: `xcodebuild archive` → export with Developer ID, Hardened Runtime, entitlements (sandbox, no network) → `notarytool submit --wait` → `stapler staple` → `spctl -a -vv` and entitlement check.
   Done when: the script produces a stapled `.app` from a clean checkout.
 - [x] **M5-T02 DMG** (S) deps: M5-T01 — `scripts/make-dmg.sh` (HFS+ UDZO, /Applications link), mount check + `shasum -c` verified
