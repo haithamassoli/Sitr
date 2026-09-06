@@ -80,10 +80,10 @@ Exit: on 1 and 2 displays, hidden-set persons covered with exposure ≤ 150 ms p
 - [x] **M2-T05 Capture session** (L) deps: M2-T03, M2-T04 — `CaptureSession`/`Frame`; selftest: 129 frames, idle skipped, `overlay_excluded=true` (control shows marker); dirtyRects are pixel-space (fixed); sleep/wake pending
   Do: `SCStream` per display: BGRA, output scaled to the spike's long side, `minimumFrameInterval` 1/15 s, `queueDepth` 3–5, `showsCursor` false; filter excludes own process; skip `.idle`; `dirtyRects`, `contentRect`, `scaleFactor` into a `Frame` value (pixel buffer, metadata, sequence number); stop/error → health state; restart with backoff.
   Done when: frames on all displays; overlay marker absent from frames (M1-T02 check as a manual XCTest); stream survives sleep/wake.
-- [ ] **M2-T06 Detect: persons + faces** (M) deps: M2-T01
+- [x] **M2-T06 Detect: persons + faces** (M) deps: M2-T01 — production detector = `CoreMLPersonDetector` (yolox-s 1280×768) + Vision faces, face→person by largest overlap; Vision fallback with a logged reason; fixture tests within 5 %; quiet detect 17.8/21.3 ms p50/p95
   Do: `PersonDetector` (spike choice; Vision full body with upper-body fallback unless the spike chose otherwise), `FaceDetector`, face → person assignment by largest overlap; normalized → capture pixels → display points.
   Done when: fixture images yield expected boxes within 5 %; conversion tests pass.
-- [ ] **M2-T07 Detect: gender classifier** (M) deps: M2-T06, M1-T05
+- [x] **M2-T07 Detect: gender classifier** (M) deps: M2-T06, M1-T05 — `GenderClassifier` (spike crop rule, batch predict, ≤ 3 faces/frame), category rule tests + fixture tests (woman/man CC0), `ModelChecksumTests`; 5.1/6.4 ms per crop quiet; `category` selftest passes women/men/strict cases
   Do: bundle the chosen `.mlpackage` with its LICENSE; checksum test; face crop with 20 % margin, resize, batch predict P(woman); category rule as a pure function: no face / face < 32 px / body < 40 px / max p < 0.80 → Unknown.
   Done when: every category-rule branch tested; checksum test passes; ms/crop ≤ spike number.
 - [x] **M2-T08 Tracker** (M) deps: M2-T01 — `SitrCore/Tracker.swift`, 15 tests (dropout, 300 ms drop, flip after exactly 3, merge, crossing ids)
