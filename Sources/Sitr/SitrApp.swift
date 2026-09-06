@@ -409,6 +409,9 @@ struct SitrApp: App {
         }
     }
 
+    /// M4-T10: every managed display's stream is connected. The resume grace may only end on a frame once this holds.
+    var captureFullyBack: Bool { !displayManager.displays.isEmpty && displayManager.displays.allSatisfy(\.session.isConnected) }
+
     /// `.degraded` while any display's detection has been over 250 ms/frame for 3 s (PRD FR10).
     private var detectionHealth: Health { DetectionMeter.shared.isDegraded ? .degraded : .ok }
 
@@ -432,7 +435,10 @@ struct SitrApp: App {
         // connected. `SCStream.stopCapture` is asynchronous, so a frame or two from the stream we tore down for the sleep
         // still arrives afterwards; ending the resume on one of those closes the health grace before the new stream is up
         // and flashes "Needs Screen Recording permission" on the way through.
-        if displayManager.displays.first(where: { $0.id == id })?.session.isConnected == true, systemEvents.framesResumed() {
+        // Every display, not just this one: the sessions reconnect independently, so on two displays the first stream back
+        // would otherwise end the grace while the second is still connecting, and `checkHealth` would read that as a grant we
+        // never lost — warning icon and onboarding window, on every wake.
+        if captureFullyBack, systemEvents.framesResumed() {
             refreshFailClosed()
         }
         if stalled.remove(id) != nil {

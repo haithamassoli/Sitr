@@ -1074,24 +1074,43 @@ private func robustnessTest(cycles: Int) async throws -> Bool {
             return (commits[d.id] ?? 0) > mark
         }
         let flowing = connected && fresh
+        // Resume reconnects each display's session independently; `connected`/`fresh` only speak for `d`. Time how long the
+        // *other* displays take, so a slow reconnect is told apart from one that never comes back.
+        let tAll = CACurrentMediaTime()
+        let allConnected = await waitUntil(8) { CaptureSession.liveStreams == ids.count }
+        let allMs = Int((CACurrentMediaTime() - tAll) * 1000)
+        // The resume grace is ended by the 250 ms health poll once every session is connected, so `.active` arrives a poll
+        // after the frames do. Wait for it rather than sampling, and print the time: a regression shows up as a growing number.
+        let tActive = CACurrentMediaTime()
+        let backActive = await waitUntil(3) { runtime.systemEvents.state == .active }
+        let activeMs = Int((CACurrentMediaTime() - tActive) * 1000)
         let ms = Int((CACurrentMediaTime() - t0) * 1000)
         let sameIDs = runtime.displayManager.displays.map(\.id).sorted() == ids
         let one = runtime.pipelines.count == ids.count && OverlayPanel.openCount == ids.count
             && CaptureSession.liveStreams == ids.count && Set(runtime.pipelines.keys) == Set(ids)
         let restarts = runtime.displayManager.displays.map(\.session.restarts).reduce(0, +) - restartsBefore
+        let verdict = parked && heldPanels && heldPipelines && heldCovers && flowing && sameIDs && one
+            && allConnected && backActive && runtime.pendingStallChecks <= ids.count
         print("robustness_cycle kind=\(label) n=\(n) parked=\(parked) held_panels=\(heldPanels) held_pipelines=\(heldPipelines) "
             + "covers_untouched=\(heldCovers) layers=\(d.panel.layerCount) frames_back=\(flowing) resume_ms=\(ms) "
             + "displays=\(runtime.displayManager.displays.count) "
             + "pipelines=\(runtime.pipelines.count) panels=\(OverlayPanel.openCount) streams=\(CaptureSession.liveStreams) "
-            + "backoff_restarts=\(restarts) state=\(runtime.systemEvents.state) health=\(runtime.model.policy.health)")
-        return parked && heldPanels && heldPipelines && heldCovers && flowing && sameIDs && one
-            && runtime.systemEvents.state == .active && runtime.pendingStallChecks <= ids.count
+            + "backoff_restarts=\(restarts) state=\(runtime.systemEvents.state) health=\(runtime.model.policy.health) "
+            + "same_ids=\(sameIDs) keys=\(Set(runtime.pipelines.keys) == Set(ids)) stall_checks=\(runtime.pendingStallChecks) "
+            + "connected=\(connected) fresh=\(fresh) all_connected=\(allConnected) all_connected_ms=\(allMs) "
+            + "active_ms=\(activeMs) ok=\(verdict)")
+        return verdict
     }
 
+    print("robustness_phase after_baseline ok=\(ok)")
     for n in 1...max(1, cycles) { ok = await cycle("sleep", .willSleep, .didWake, n) && ok }
+    print("robustness_phase after_sleep ok=\(ok)")
     ok = await cycle("lock", .screenLocked, .screenUnlocked, 1) && ok
+    print("robustness_phase after_lock ok=\(ok)")
     ok = await cycle("user_switch", .sessionResignedActive, .sessionBecameActive, 1) && ok
+    print("robustness_phase after_switch ok=\(ok)")
     ok = await cycle("screens_off", .screensDidSleep, .screensDidWake, 1) && ok
+    print("robustness_phase after_screens_off ok=\(ok)")
 
     // The live backoff: three failures inside one turn are one scheduled retry, ~1 s away, and the stream comes back.
     let restartsBefore = d.session.restarts

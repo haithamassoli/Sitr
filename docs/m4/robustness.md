@@ -229,3 +229,25 @@ and the panel stays above the Stage Manager strip. Then switch Spaces a few time
 
 Until R1 has run, M4-T10's "done when" is **not** met: the synthetic 20 cycles prove the reconciliation, not that macOS's
 own sleep leaves the process in the state the notifications claim.
+
+## Two displays: the resume grace must wait for every stream (found after the merge)
+
+The first live run on a **two-display** machine failed 1–5 of 20 sleep cycles, intermittently, and flashed
+`health=needsPermission` on some of them. Both displays' streams did come back — but not at the same instant, and the
+resume grace ended on the first frame from the *first* stream back. `checkHealth` then looked at the second display,
+saw a session that had run and stopped, and reported a grant we never lost: warning icon and the onboarding window,
+for roughly 100 ms, on every wake.
+
+`Runtime.captureFullyBack` now gates the grace: a committed frame ends it only once **every** managed display's session
+is connected. `Sitr --selftest robustness --cycles 20` went from ~1 failing cycle per run to 0 across 11 consecutive
+runs, with no `needsPermission` in any cycle, and `.active` returning 92–160 ms after the wake (the grace is ended by a
+frame, so this is the frame interval, not a fixed delay).
+
+Two notes on how this was verified, so the next reader does not over-trust it:
+
+- `theResumeGraceWaitsForEveryDisplayNotTheFirstOneBack` (RobustnessTests) pins the **predicate** — parked, one display
+  connecting, both back. It does not exercise the call site, which needs a real committed frame; that half is covered by
+  the live selftest above. A unit test written against the old call site passed without the fix, so it was replaced
+  rather than kept as false assurance.
+- The single-display runs that shipped M4-T10 could not have seen this. Any future change to the wake path should be run
+  once on two displays.

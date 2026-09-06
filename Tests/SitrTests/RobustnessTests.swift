@@ -232,6 +232,27 @@ import Testing
         await tearDown(runtime, suite)
     }
 
+    /// Two displays wake independently, and the resume grace may only end once *both* streams are back. Before this, the
+    /// first stream's frame ended it while the second was still connecting; `checkHealth` then saw a session that had run and
+    /// stopped and reported a grant we never lost — warning icon and onboarding window, on every wake. Only visible with two
+    /// displays, which the single-display runs that shipped M4-T10 did not have.
+    @Test func theResumeGraceWaitsForEveryDisplayNotTheFirstOneBack() async {
+        let (runtime, suite) = makeRuntime([screen(81), screen(82, x: 1440)])
+        #expect(runtime.captureFullyBack, "both displays are up before the sleep")
+
+        runtime.systemEvents.simulate(.willSleep)
+        #expect(!runtime.captureFullyBack, "every stream is parked for the sleep")
+        runtime.systemEvents.simulate(.didWake)
+
+        let second = runtime.displayManager.displays.first { $0.id == 82 }!
+        second.session.stop()  // a slower display, still mid-wake when the first one's frames are already flowing
+        #expect(!runtime.captureFullyBack, "one display still connecting is not a capture that is back")
+
+        second.session.start()
+        #expect(runtime.captureFullyBack)
+        await tearDown(runtime, suite)
+    }
+
     // MARK: the restart policy on a real session
 
     @Test func aBurstOfFailuresSchedulesOneRetryAndAGoneDisplayNone() {

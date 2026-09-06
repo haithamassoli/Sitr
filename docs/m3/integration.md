@@ -66,7 +66,9 @@ S=/path/to/scratch
 rm -rf $S/Stimulus.app && cp -R build/Sitr.app $S/Stimulus.app
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.goldentik.SitrStimulus" -c "Set :CFBundleName Stimulus" $S/Stimulus.app/Contents/Info.plist
 cp Sources/SitrSpike/Fixtures/person.jpg $S/Stimulus.app/Contents/Resources/   # the sandboxed copy cannot read the checkout
-codesign --force --sign - --options runtime --timestamp=none --entitlements App/Sitr.entitlements $S/Stimulus.app
+codesign --force --sign - --options runtime --timestamp=none $S/Stimulus.app   # NO --entitlements: the sandbox blocks the
+# distributed-notification control channel, and every command then times out (`missed` on every trial). Nothing under test
+# depends on the throwaway stimulus being sandboxed; the app under test is the real, sandboxed build.
 # Stimulus2.app: same with com.goldentik.SitrStimulus2
 ```
 `Stimulus.app/Contents/MacOS/Sitr --selftest stimulus --remote [--seconds N]` shows a 600×640 pt normal-level window (magenta

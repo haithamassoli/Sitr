@@ -282,3 +282,21 @@ Profiling, which needs no sudo and no Instruments UI: start the release bundle w
   cheap enough to run on every track on every frame and to close the 3 s category-flip window in §2.1.
 - `coverCanReuse`'s tolerance is a fixed 1.5 pt rather than a fraction of the cover's padding.
 - `nothingDetectableChanged` is kept although it never fired here (§3).
+
+## Curtain exposure: still not re-measured (checked, not a regression from this pass)
+
+`--selftest curtain` reports `missed` on every trial on this machine, so the Curtain exposure p95 amended in M1-T09
+(≤ 60 ms) is still unverified after the perf pass. Two things were ruled out:
+
+- **Not caused by the perf changes.** `SITR_PERF_LEGACY=1` — which restores the old per-frame commit behaviour — misses
+  every trial in exactly the same way (`missed=20/20`, `pre_layers=0`, `best_coverage=0.000`). Whatever this is, it is
+  not the commit-skipping or the surface reuse, so no safety regression was introduced here.
+- **Not the sandbox entitlement** that blocked M4-T09's run. `docs/m3/integration.md` had the wrong `codesign` recipe
+  (it passed `--entitlements`, which sandboxes the throwaway stimulus and kills its control channel); that is fixed, and
+  the stimulus now drives correctly — `settled=true`, the region is tracked, `track_ms` is measured, and the person
+  cover lands at p50 129 ms. Only the *pre-cover* is never seen in the armed window.
+
+What is different from M3-T05's successful run: that one was on a **quiet, single-display** machine. This one has two
+displays and the host's own load average sat at 15–19 throughout. The trial deliberately waits out `Curtain.staticReset`
+so trusted motion (FR4.3) has lapsed before it flips the photo — a machine that never goes quiet is exactly the
+condition where that assumption stops holding. Re-run on a quiet machine before drawing any conclusion.
