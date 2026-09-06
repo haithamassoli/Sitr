@@ -6,14 +6,17 @@ import SwiftUI
 struct AboutTab: View {
     static let repositoryURL = URL(string: "https://github.com/haithamassoli/Sitr")!
     static let noticesURL = URL(string: "https://github.com/haithamassoli/Sitr/blob/main/THIRD_PARTY_NOTICES.md")!
-    /// What the README tells users to run; the Copy button puts exactly this on the clipboard.
+    /// What the README tells users to run; the Copy button puts exactly this on the clipboard. Never localized, always LTR.
     static let verifyCommand = "codesign -d --entitlements :- --xml /Applications/Sitr.app"
-    static let verifyHint = "Look for com.apple.security.app-sandbox set to true and no com.apple.security.network keys: Sitr cannot open a network connection."
+    static let verifyHint = String(
+        localized: "Look for com.apple.security.app-sandbox set to true and no com.apple.security.network keys: Sitr cannot open a network connection.",
+        comment: "About › Verify privacy, under the codesign command")
     static let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
 
     @State private var copied = false
 
     var body: some View {
+        let version = AppModel.version, build = Self.build
         Form {
             Section {
                 HStack(spacing: 12) {
@@ -21,7 +24,7 @@ struct AboutTab: View {
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Sitr").font(.title2.bold())
-                        Text("Version \(AppModel.version) (\(Self.build))").foregroundStyle(.secondary)
+                        Text("Version \(version) (\(build))").foregroundStyle(.secondary)
                         Text("Hides people on screen, entirely on this Mac.")
                     }
                     Spacer()
@@ -39,9 +42,10 @@ struct AboutTab: View {
                     Text(Self.verifyCommand)
                         .font(.system(.callout, design: .monospaced))
                         .textSelection(.enabled)
+                        .environment(\.layoutDirection, .leftToRight)  // a shell command stays LTR inside the RTL layout
                         .accessibilityLabel("Verification command: \(Self.verifyCommand)")
                     Spacer()
-                    Button(copied ? "Copied" : "Copy") {
+                    Button(copied ? String(localized: "Copied", comment: "Copy button after a click") : String(localized: "Copy", comment: "Copy button")) {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(Self.verifyCommand, forType: .string)
                         copied = true

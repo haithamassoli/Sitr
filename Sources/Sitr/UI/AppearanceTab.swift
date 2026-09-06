@@ -36,7 +36,7 @@ struct AppearanceTab: View {
                     Text(percent(preferences.bodyPadding)).monospacedDigit().frame(width: 40, alignment: .trailing)
                 }
             } footer: {
-                Text("Changes apply to the covers on screen immediately. Defaults: Gaussian, 70 %, 15 %. Solid ignores Blur Strength.")
+                Text("Changes apply to the covers on screen immediately. Defaults: Gaussian, 70%, 15%. Solid ignores Blur Strength.")
             }
             Section {
                 CoverPreview(style: preferences.coverStyle, strength: preferences.blurStrength, padding: preferences.bodyPadding)
@@ -52,7 +52,8 @@ struct AppearanceTab: View {
         .formStyle(.grouped)
     }
 
-    private func percent(_ value: Double) -> String { "\(Int((value * 100).rounded())) %" }
+    /// Locale-aware ("70%" in English, Arabic-Indic digits and ٪ under `ar`), PRD FR12.
+    private func percent(_ value: Double) -> String { value.formatted(.percent.precision(.fractionLength(0))) }
 }
 
 /// The real `CoverRenderer` over `SampleScene`, shown the way `OverlayPanel` shows covers (the layer's contents is the

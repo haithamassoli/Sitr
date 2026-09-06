@@ -10,9 +10,9 @@ nonisolated extension AppRule: Identifiable {
 extension RuleMode {
     var title: String {
         switch self {
-        case .off: "Off"
-        case .blur: "Blur"
-        case .curtain: "Curtain"
+        case .off: String(localized: "Off", comment: "Per-app rule mode: the app is never captured")
+        case .blur: String(localized: "Blur", comment: "Per-app rule mode: detect, then cover")
+        case .curtain: String(localized: "Curtain", comment: "Per-app rule mode: cover changes at once, uncover what is verified safe")
         }
     }
 }
@@ -41,7 +41,10 @@ struct ProtectionTab: View {
                 Toggle("Blur Unknown (Strict Mode)", isOn: Binding(get: { model.policy.effectiveStrict }, set: { model.setStrict($0) }))
                     .disabled(model.policy.hiddenSet == .everyone)
                     .accessibilityLabel("Blur Unknown, Strict Mode")
-                    .accessibilityHint(model.policy.hiddenSet == .everyone ? "Always on while Everyone is selected" : "Also covers people whose category is unknown")
+                    .accessibilityHint(
+                        model.policy.hiddenSet == .everyone
+                            ? String(localized: "Always on while Everyone is selected", comment: "Accessibility hint for the Strict Mode toggle")
+                            : String(localized: "Also covers people whose category is unknown", comment: "Accessibility hint for the Strict Mode toggle"))
             } footer: {
                 Text("Unknown: facing away, face hidden or too small, or the classifier is unsure.")
             }
@@ -58,17 +61,19 @@ struct ProtectionTab: View {
                 Table(rules.overrides, selection: $selection) {
                     TableColumn("App") { rule in AppCell(bundleID: rule.bundleID) }
                     TableColumn("Mode") { rule in
+                        let name = AppInfo.lookup(rule.bundleID).name
                         Picker("Mode", selection: Binding(get: { rule.mode }, set: { mode in model.updateRules { $0.upsert(AppRule(bundleID: rule.bundleID, mode: mode)) } })) {
                             ForEach(RuleMode.allCases, id: \.self) { Text($0.title).tag($0) }
                         }
                         .labelsHidden()
-                        .accessibilityLabel("Mode for \(AppInfo.lookup(rule.bundleID).name)")
+                        .accessibilityLabel("Mode for \(name)")
                     }
                     .width(110)
                     TableColumn("") { rule in
+                        let name = AppInfo.lookup(rule.bundleID).name
                         Button { remove([rule.bundleID]) } label: { Image(systemName: "minus.circle") }
                             .buttonStyle(.borderless)
-                            .accessibilityLabel("Remove \(AppInfo.lookup(rule.bundleID).name)")
+                            .accessibilityLabel("Remove \(name)")
                     }
                     .width(24)
                 }
@@ -140,12 +145,13 @@ struct ProtectionTab: View {
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.directoryURL = URL(filePath: "/Applications")
-        panel.message = "Choose an app to add an override for."
+        panel.message = String(localized: "Choose an app to add an override for.", comment: "Open panel prompt")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         if let bundleID = Bundle(url: url)?.bundleIdentifier {
             add(bundleID)
         } else {
-            addProblem = "\(url.lastPathComponent) has no bundle identifier, so no rule can be stored for it."
+            let file = url.lastPathComponent
+            addProblem = String(localized: "\(file) has no bundle identifier, so no rule can be stored for it.", comment: "Error under the overrides table; %@ is the chosen file name")
         }
     }
 }

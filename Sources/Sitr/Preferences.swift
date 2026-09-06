@@ -10,9 +10,17 @@ nonisolated enum AppLanguage: String, CaseIterable, Sendable {
     /// Value for `AppleLanguages`; nil = remove the key so the system language list applies again.
     var appleLanguages: [String]? { self == .system ? nil : [rawValue] }
 
+    /// Value for `AppleTextDirection`, the default AppKit (and so SwiftUI on macOS) reads for the layout direction; nil for
+    /// `system`. `AppleLanguages` alone switches the strings but leaves an Arabic UI left-to-right (M4-T05 smoke runs).
+    var appleTextDirection: Bool? {
+        self == .system ? nil : Locale.Language(identifier: rawValue).characterDirection == .rightToLeft
+    }
+
+    /// Picker titles. "System" is localized; the two languages are endonyms on purpose (a user who cannot read the
+    /// current UI language still finds their own), so they stay out of the String Catalog.
     var title: String {
         switch self {
-        case .system: "System"
+        case .system: String(localized: "System", comment: "Language picker: follow the system language order")
         case .english: "English"
         case .arabic: "العربية"
         }
@@ -30,14 +38,16 @@ nonisolated enum AppLanguage: String, CaseIterable, Sendable {
     var coverStyle: CoverStyle { didSet { defaults.set(coverStyle.rawValue, forKey: "coverStyle") } }
     var blurStrength: Double { didSet { defaults.set(blurStrength, forKey: "blurStrength") } }
     var bodyPadding: Double { didSet { defaults.set(bodyPadding, forKey: "bodyPadding") } }
-    /// General (M4-T04). `language` also writes / removes `AppleLanguages` in the same domain.
+    /// General (M4-T04). `language` also writes / removes `AppleLanguages` and `AppleTextDirection` in the same domain.
     var language: AppLanguage {
         didSet {
             defaults.set(language.rawValue, forKey: "language")
-            if let languages = language.appleLanguages {
+            if let languages = language.appleLanguages, let rightToLeft = language.appleTextDirection {
                 defaults.set(languages, forKey: "AppleLanguages")
+                defaults.set(rightToLeft, forKey: "AppleTextDirection")
             } else {
                 defaults.removeObject(forKey: "AppleLanguages")
+                defaults.removeObject(forKey: "AppleTextDirection")
             }
         }
     }

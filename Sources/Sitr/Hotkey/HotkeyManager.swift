@@ -26,11 +26,14 @@ nonisolated struct KeyCombo: Codable, Hashable, Sendable {
         (controlKey, "⌃", .control), (optionKey, "⌥", .option), (shiftKey, "⇧", .shift), (cmdKey, "⌘", .command),
     ]
 
-    /// Keys the keyboard layout does not name (or names with a control character).
+    /// Keys the keyboard layout does not name (or names with a control character). Glyphs are universal; the two
+    /// names that are words come from the String Catalog (M4-T05).
     private static let specialKeyNames: [UInt32: String] = [
-        UInt32(kVK_Space): "Space", UInt32(kVK_Return): "↩", UInt32(kVK_Tab): "⇥", UInt32(kVK_Escape): "⎋",
+        UInt32(kVK_Space): String(localized: "Space", comment: "Key name in a shortcut such as ⌃⌥Space"),
+        UInt32(kVK_Return): "↩", UInt32(kVK_Tab): "⇥", UInt32(kVK_Escape): "⎋",
         UInt32(kVK_Delete): "⌫", UInt32(kVK_ForwardDelete): "⌦", UInt32(kVK_Home): "↖", UInt32(kVK_End): "↘",
-        UInt32(kVK_PageUp): "⇞", UInt32(kVK_PageDown): "⇟", UInt32(kVK_ANSI_KeypadEnter): "⌤", UInt32(kVK_Help): "Help",
+        UInt32(kVK_PageUp): "⇞", UInt32(kVK_PageDown): "⇟", UInt32(kVK_ANSI_KeypadEnter): "⌤",
+        UInt32(kVK_Help): String(localized: "Help", comment: "Key name: the Help key on extended keyboards"),
         UInt32(kVK_LeftArrow): "←", UInt32(kVK_RightArrow): "→", UInt32(kVK_DownArrow): "↓", UInt32(kVK_UpArrow): "↑",
         UInt32(kVK_F1): "F1", UInt32(kVK_F2): "F2", UInt32(kVK_F3): "F3", UInt32(kVK_F4): "F4", UInt32(kVK_F5): "F5",
         UInt32(kVK_F6): "F6", UInt32(kVK_F7): "F7", UInt32(kVK_F8): "F8", UInt32(kVK_F9): "F9", UInt32(kVK_F10): "F10",
@@ -46,18 +49,28 @@ nonisolated struct KeyCombo: Codable, Hashable, Sendable {
     ]
 
     /// Modifier glyphs in the standard menu order ⌃⌥⇧⌘, then the key name. Main actor: the key name comes from the
-    /// current keyboard layout through Text Input Sources, which is a main-thread API.
+    /// current keyboard layout through Text Input Sources, which is a main-thread API. A key name in a right-to-left
+    /// script (Arabic "مسافة") would pull the neutral glyphs to its right and reverse them inside an RTL sentence, so
+    /// the combo is then wrapped in a left-to-right isolate (U+2066 … U+2069): glyph order stays ⌃⌥⇧⌘ + key everywhere.
     @MainActor var displayString: String {
-        Self.glyphs.filter { carbonModifiers & UInt32($0.bit) != 0 }.map(\.glyph).joined() + Self.keyName(keyCode)
+        let name = Self.keyName(keyCode)
+        let combo = Self.glyphs.filter { carbonModifiers & UInt32($0.bit) != 0 }.map(\.glyph).joined() + name
+        return Self.isRightToLeft(name) ? "\u{2066}\(combo)\u{2069}" : combo
+    }
+
+    // ponytail: Swift exposes no bidi class; the Hebrew-to-Arabic-Extended blocks cover every RTL key name we ship.
+    private static func isRightToLeft(_ text: String) -> Bool {
+        text.unicodeScalars.contains { (0x0590...0x08FF).contains($0.value) }
     }
 
     /// What the current layout types for `keyCode` without modifiers (`UCKeyTranslate`, uppercased), a glyph for the
     /// special keys, "Keypad N" for the numeric pad, "Key N" when the layout has nothing for it.
     @MainActor static func keyName(_ keyCode: UInt32) -> String {
         if let special = specialKeyNames[keyCode] { return special }
+        let code = Int(keyCode)
         guard let source = TISCopyCurrentKeyboardLayoutInputSource()?.takeRetainedValue(),
               let raw = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData)
-        else { return "Key \(keyCode)" }
+        else { return String(localized: "Key \(code)", comment: "Key name fallback; %lld is the virtual key code") }
         let data = Unmanaged<CFData>.fromOpaque(raw).takeUnretainedValue() as Data
         var deadKeys: UInt32 = 0
         var chars = [UniChar](repeating: 0, count: 4)
@@ -69,8 +82,10 @@ nonisolated struct KeyCombo: Codable, Hashable, Sendable {
             }
         }
         let name = String(utf16CodeUnits: chars, count: length).uppercased()
-        guard status == noErr, let scalar = name.unicodeScalars.first, scalar.value >= 0x20 else { return "Key \(keyCode)" }
-        return keypadKeys.contains(keyCode) ? "Keypad \(name)" : name
+        guard status == noErr, let scalar = name.unicodeScalars.first, scalar.value >= 0x20 else {
+            return String(localized: "Key \(code)", comment: "Key name fallback; %lld is the virtual key code")
+        }
+        return keypadKeys.contains(keyCode) ? String(localized: "Keypad \(name)", comment: "Numeric keypad key; %@ is the digit or symbol") : name
     }
 
     /// True while every modifier of the combo is down; `flags` comes from `NSEvent.modifierFlags` (no permission
@@ -86,37 +101,53 @@ nonisolated struct KeyCombo: Codable, Hashable, Sendable {
     /// System shortcuts that a global hot key would steal from every app. Key codes are ANSI positions.
     // ponytail: a short fixed list; the OS has no API for "is this combo reserved". Upgrade = read the symbolic hot keys plist.
     private static let reserved: [(modifiers: UInt32, keyCode: Int, use: String)] = [
-        (cmd, kVK_ANSI_Q, "Quit"), (cmd, kVK_ANSI_W, "Close Window"), (cmd, kVK_ANSI_H, "Hide"), (cmd, kVK_ANSI_M, "Minimize"),
-        (cmd, kVK_ANSI_Comma, "Settings"), (cmd, kVK_Tab, "the app switcher"), (cmd | shift, kVK_ANSI_Q, "Log Out"),
-        (cmd | option, kVK_Escape, "Force Quit"), (cmd | control, kVK_ANSI_Q, "Lock Screen"),
-        (cmd | shift, kVK_ANSI_3, "Screenshot"), (cmd | shift, kVK_ANSI_4, "Screenshot"), (cmd | shift, kVK_ANSI_5, "Screenshot"),
+        (cmd, kVK_ANSI_Q, String(localized: "Quit", comment: "System shortcut name, fills '%@ is %@, a system shortcut.'")),
+        (cmd, kVK_ANSI_W, String(localized: "Close Window", comment: "System shortcut name")),
+        (cmd, kVK_ANSI_H, String(localized: "Hide", comment: "System shortcut name (⌘H hides the app)")),
+        (cmd, kVK_ANSI_M, String(localized: "Minimize", comment: "System shortcut name")),
+        (cmd, kVK_ANSI_Comma, String(localized: "Settings", comment: "System shortcut name (⌘, opens Settings)")),
+        (cmd, kVK_Tab, String(localized: "the app switcher", comment: "System shortcut name (⌘⇥)")),
+        (cmd | shift, kVK_ANSI_Q, String(localized: "Log Out", comment: "System shortcut name")),
+        (cmd | option, kVK_Escape, String(localized: "Force Quit", comment: "System shortcut name")),
+        (cmd | control, kVK_ANSI_Q, String(localized: "Lock Screen", comment: "System shortcut name")),
+        (cmd | shift, kVK_ANSI_3, String(localized: "Screenshot", comment: "System shortcut name (⌘⇧3/4/5)")),
+        (cmd | shift, kVK_ANSI_4, String(localized: "Screenshot", comment: "System shortcut name (⌘⇧3/4/5)")),
+        (cmd | shift, kVK_ANSI_5, String(localized: "Screenshot", comment: "System shortcut name (⌘⇧3/4/5)")),
     ]
 
     /// Combos other software listens for (PRD FR5). Shown as a static list and as a warning when one is chosen.
     static let knownConflicts: [(combo: KeyCombo, owner: String)] = [
-        (KeyCombo(keyCode: UInt32(kVK_Space), carbonModifiers: option), "Siri (hold) and the ChatGPT app"),
-        (KeyCombo(keyCode: UInt32(kVK_Space), carbonModifiers: cmd), "Spotlight"),
-        (KeyCombo(keyCode: UInt32(kVK_Space), carbonModifiers: control), "Input source switching"),
+        (KeyCombo(keyCode: UInt32(kVK_Space), carbonModifiers: option),
+         String(localized: "Siri (hold) and the ChatGPT app", comment: "Who else uses ⌥Space")),
+        (KeyCombo(keyCode: UInt32(kVK_Space), carbonModifiers: cmd), String(localized: "Spotlight", comment: "Who else uses ⌘Space")),
+        (KeyCombo(keyCode: UInt32(kVK_Space), carbonModifiers: control),
+         String(localized: "Input source switching", comment: "Who else uses ⌃Space")),
     ]
 
     /// Why this combo cannot be the Reveal hot key, or nil when it can: at least one modifier, not Option alone, not Shift
     /// alone (both swallow typing), and none of the `reserved` system shortcuts.
     @MainActor var validationProblem: String? {
         let mods = carbonModifiers & (Self.cmd | Self.shift | Self.option | Self.control)
-        if mods == 0 { return "Add at least one modifier key (⌃, ⌥, ⇧ or ⌘)." }
-        if mods == Self.option { return "Option alone types special characters and is unreliable since macOS 15; add ⌃ or ⌘." }
-        if mods == Self.shift { return "Shift alone would swallow capital letters; add ⌃, ⌥ or ⌘." }
+        if mods == 0 { return String(localized: "Add at least one modifier key (⌃, ⌥, ⇧ or ⌘).", comment: "Shortcut recorder rejection") }
+        if mods == Self.option {
+            return String(localized: "Option alone types special characters and is unreliable since macOS 15; add ⌃ or ⌘.", comment: "Shortcut recorder rejection")
+        }
+        if mods == Self.shift { return String(localized: "Shift alone would swallow capital letters; add ⌃, ⌥ or ⌘.", comment: "Shortcut recorder rejection") }
         if let hit = Self.reserved.first(where: { $0.modifiers == mods && UInt32($0.keyCode) == keyCode }) {
-            return "\(displayString) is \(hit.use), a system shortcut."
+            let combo = displayString, use = hit.use
+            return String(localized: "\(combo) is \(use), a system shortcut.", comment: "Shortcut recorder rejection; %1$@ the combo such as ⌘Q, %2$@ its system use such as Quit")
         }
         return nil
     }
 
     /// A valid combo that is still a poor choice: a known conflict, or Option without ⌃ / ⌘ (FR5's macOS 15.0 regression).
     @MainActor var conflictNote: String? {
-        if let hit = Self.knownConflicts.first(where: { $0.combo == self }) { return "\(displayString) is also used by \(hit.owner)." }
+        if let hit = Self.knownConflicts.first(where: { $0.combo == self }) {
+            let combo = displayString, owner = hit.owner
+            return String(localized: "\(combo) is also used by \(owner).", comment: "Shortcut conflict warning; %1$@ the combo, %2$@ the other software")
+        }
         if carbonModifiers & Self.option != 0, carbonModifiers & (Self.control | Self.cmd) == 0 {
-            return "Shortcuts with Option but neither ⌃ nor ⌘ can collide with typing special characters."
+            return String(localized: "Shortcuts with Option but neither ⌃ nor ⌘ can collide with typing special characters.", comment: "Shortcut conflict warning")
         }
         return nil
     }
