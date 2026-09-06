@@ -20,6 +20,12 @@ nonisolated func appKitRect(_ r: CGRect, displayHeight: CGFloat) -> CGRect {
 }
 
 final class OverlayPanel: NSPanel {
+    /// M4-T10: the panels that are open right now. Exactly one per managed display, through sleep/wake, lock, fast user
+    /// switching and hot-plug, is the invariant; the unit tests and `--selftest robustness` read the count. `close()`
+    /// unregisters, and `DisplayManager` never reuses a closed panel — a display that comes back gets a new one.
+    private(set) static var open: Set<ObjectIdentifier> = []
+    static var openCount: Int { open.count }
+
     private var covers: [Int: (layer: CALayer, buffer: CVPixelBuffer?)] = [:]
     private(set) var isRevealed = false
     var layerCount: Int { covers.count }
@@ -46,11 +52,18 @@ final class OverlayPanel: NSPanel {
         view.setAccessibilityElement(false)
         contentView = view
         setAccessibilityElement(false)
+        Self.open.insert(ObjectIdentifier(self))
     }
 
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
     override func isAccessibilityElement() -> Bool { false }
+
+    /// `isReleasedWhenClosed` is false, so a closed panel is still alive; this is what takes it out of `open`.
+    override func close() {
+        Self.open.remove(ObjectIdentifier(self))
+        super.close()
+    }
 
     /// Add / move / resize / recolor / remove so the layer set equals `specs`, in one transaction. Keeps each shown buffer
     /// alive (the layer only holds the IOSurface) so the renderer's pool cannot recycle a surface that is on screen.

@@ -1,9 +1,13 @@
 // M2-T05: one SCStream per display. `.complete` frames land in `frames` (latest-only); `.idle` frames are dropped in the
 // callback. Stop/error → `health`, restart with exponential backoff (1, 2, 4, 8, 10, 10… s); revocation-class errors also
 // reach the PermissionMonitor. The filter excludes our own process (docs/spike/overlay.md) unless M3 installs its own.
+// M4-T10: the backoff itself is `SitrCore.RestartPolicy` (pure, injected clock) — one pending retry per session however
+// many failures arrive at once, and no retry at all once the display has gone.
 import AppKit
 import ScreenCaptureKit
+import SitrCore
 import Synchronization
+import os
 
 @MainActor
 final class CaptureSession {
@@ -15,12 +19,36 @@ final class CaptureSession {
         var isOK: Bool { if case .ok = self { return true } else { return false } }
     }
 
+    /// Sessions holding a live stream right now, across the process. Exactly one per managed display through sleep/wake,
+    /// lock, fast user switching and hot-plug is the M4-T10 invariant; the unit tests and `--selftest robustness` read it.
+    private(set) static var liveStreams = 0
+
     let displayID: CGDirectDisplayID
     /// Latest-only: a slow consumer sees the newest frame, never a backlog.
     let frames: AsyncStream<Frame>
+    /// M4-T10 test seam: a session for a display that does not exist. It reports health and takes part in every
+    /// reconciliation, but never talks to ScreenCaptureKit — so display topology, sleep/wake and the restart policy are
+    /// unit-testable with no capture traffic and no contention for the screen.
+    let simulated: Bool
     private(set) var health: Health = .stopped(nil)
+    /// True between a successful connect and the next teardown; the only writer of `liveStreams`.
+    private(set) var isConnected = false {
+        didSet {
+            guard isConnected != oldValue else { return }
+            CaptureSession.liveStreams += isConnected ? 1 : -1
+        }
+    }
     /// Restarts scheduled after an error since the session was created.
-    private(set) var restarts = 0
+    var restarts: Int { policy.retries }
+    /// Seconds until the scheduled reconnect, nil when none is pending (M4-T10 logs and selftests).
+    var pendingRetryDelay: Double? { policy.timeToRetry(at: CACurrentMediaTime()) }
+    /// Whether the display still exists. `DisplayManager` points this at its own reconciled list, so a stream that fails
+    /// while its display is being unplugged stops retrying instead of backing off against nothing (M4-T10).
+    var displayIsPresent: @MainActor () -> Bool = { true }
+    /// Whether capture is allowed at all; the `PermissionMonitor` by default. While the grant is gone nothing is retried
+    /// here — `DisplayManager` starts the sessions again when it comes back. The M4-T10 tests point this at a fixed
+    /// answer, since the machine's own TCC state is not their business.
+    lazy var captureAllowed: @MainActor () -> Bool = { [permission] in permission.state == .granted }
     /// Capture rate, applied live (`updateConfiguration`). Curtain mode (M3) and Low Power (M4) change it at runtime.
     var fps: Int = CaptureSession.devOverride("SITR_FPS", default: 15) { didSet { if fps != oldValue { applyConfiguration() } } }
     /// Long side of the output buffer in pixels (PRD: detection input ≤ 1280), applied live.
@@ -44,13 +72,16 @@ final class CaptureSession {
     /// Installed by `updateFilter`; nil = the default (display minus our own process).
     private var customFilter: SCContentFilter?
     private var wantsRunning = false
-    private var attempt = 0
-    private var startedAt = 0.0
+    /// Which connection the stream delegate's callbacks belong to; bumped by every teardown (M4-T10).
+    private var generation = 0
+    private var policy = RestartPolicy(backoff: .captureStream)
     private var restartTask: Task<Void, Never>?
+    private let log = Logger(subsystem: "com.goldentik.Sitr", category: "capture")
 
-    init(displayID: CGDirectDisplayID, permission: PermissionMonitor) {
+    init(displayID: CGDirectDisplayID, permission: PermissionMonitor, simulated: Bool = false) {
         self.displayID = displayID
         self.permission = permission
+        self.simulated = simulated
         let (stream, continuation) = AsyncStream.makeStream(of: Frame.self, bufferingPolicy: .bufferingNewest(1))
         frames = stream
         sink = FrameSink(displayID: displayID, continuation: continuation)
@@ -60,28 +91,40 @@ final class CaptureSession {
     func start() {
         wantsRunning = true
         restartTask?.cancel()
-        sink.onStop.withLock {
-            $0 = { [weak self] error in
-                let session = self  // a `let`, not the weak box, so the main-actor task can capture it
-                Task { @MainActor in session?.failed(error) }
-            }
-        }
-        Task { await connect() }
+        beginConnect()
     }
 
     func stop() {
         wantsRunning = false
         restartTask?.cancel()
+        restartTask = nil
         teardown()
+        policy.reset()
         health = .stopped(nil)
     }
 
     /// Tears the stream down and reconnects with fresh display geometry (resolution change, display re-plugged).
     func restart() {
         guard wantsRunning else { return }
+        restartTask?.cancel()
+        restartTask = nil
         teardown()
-        attempt = 0
+        policy.reset()
+        beginConnect()
+    }
+
+    /// A simulated session connects in this turn (the reconciliation tests assert counts without awaiting); a real one
+    /// hands the ScreenCaptureKit round trip to a task.
+    private func beginConnect() {
+        guard !simulated else { return connectSimulated() }
         Task { await connect() }
+    }
+
+    private func connectSimulated() {
+        guard wantsRunning, !isConnected else { return }
+        isConnected = true
+        policy.connected(at: CACurrentMediaTime())
+        health = .ok
     }
 
     /// M3 filter builder: replaces the default own-process exclusion, live when the stream runs, otherwise at the next start.
@@ -99,6 +142,7 @@ final class CaptureSession {
 
     private func connect() async {
         guard wantsRunning, stream == nil else { return }
+        guard !simulated else { return connectSimulated() }  // M4-T10 seam: a display that does not exist
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
             guard let display = content.displays.first(where: { $0.displayID == displayID }) else { throw CaptureError.displayGone }
@@ -106,11 +150,22 @@ final class CaptureSession {
             let s = SCStream(filter: filter, configuration: configuration(for: filter), delegate: sink)
             try s.addStreamOutput(sink, type: .screen, sampleHandlerQueue: sink.queue)
             sink.displaySize.withLock { $0 = CGSize(width: display.width, height: display.height) }
+            // M4-T10: the delegate reports the stop of *this* stream. `stopCapture` is asynchronous, so a stream we tore
+            // down for a sleep, a restart or a failure can report its stop after the next one is already running; without
+            // the generation that late callback would take the healthy successor down with it.
+            let generation = self.generation
+            sink.onStop.withLock {
+                $0 = { [weak self] error in
+                    let session = self  // a `let`, not the weak box, so the main-actor task can capture it
+                    Task { @MainActor in session?.streamStopped(generation, error) }
+                }
+            }
             try await s.startCapture()
             guard wantsRunning, stream == nil else { try? await s.stopCapture(); return }  // stop() or restart() raced us
             stream = s
             activeFilter = filter
-            startedAt = CACurrentMediaTime()
+            isConnected = true
+            policy.connected(at: CACurrentMediaTime())
             health = .ok
         } catch {
             failed(error)
@@ -139,31 +194,64 @@ final class CaptureSession {
     }
 
     private func teardown() {
+        generation &+= 1  // whatever the dropped stream reports from here on is about a stream nobody is watching
+        isConnected = false
         guard let s = stream else { return }
         stream = nil
         Task { try? await s.stopCapture() }
     }
 
-    /// Delegate error or failed start. Revocation-class errors inform the PermissionMonitor; while the grant is gone nothing
-    /// is retried here (DisplayManager restarts sessions when it returns). Otherwise: backoff 1, 2, 4, 8, 10, 10… s.
+    /// `SCStreamDelegate.stream(_:didStopWithError:)`, from the stream of generation `generation`.
+    private func streamStopped(_ generation: Int, _ error: Error) {
+        guard generation == self.generation else { return }
+        failed(error)
+    }
+
+    /// Delegate error or failed start. Revocation-class errors inform the PermissionMonitor; while the grant is gone, or
+    /// once the display has left the topology, nothing is retried here (`DisplayManager` starts sessions again when the
+    /// grant or the display returns). Otherwise `RestartPolicy` decides: backoff 1, 2, 4, 8, 10, 10… s, and a failure
+    /// arriving while a retry is already pending joins it instead of stacking a second timer.
     private func failed(_ error: Error) {
-        let ranFor = stream == nil ? 0 : CACurrentMediaTime() - startedAt
+        let now = CACurrentMediaTime()
         teardown()
         health = .stopped(error)
         if PermissionLogic.isRevocation(error) { permission.markRevoked() }
-        guard wantsRunning, permission.state == .granted else { return }
-        if ranFor > 30 { attempt = 0 }  // a stream that ran for a while earns a fresh backoff
-        let delay = min(10.0, pow(2.0, Double(attempt)))
-        attempt += 1
-        restarts += 1
-        restartTask?.cancel()
-        restartTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(delay))
-            guard !Task.isCancelled else { return }
-            await self?.connect()
+        let retryable = wantsRunning && captureAllowed() && displayIsPresent()
+        switch policy.failed(at: now, retryable: retryable) {
+        case .stop:
+            restartTask?.cancel()
+            restartTask = nil
+            let line = "capture display=\(displayID) stopped, not retrying (wanted=\(wantsRunning) "
+                + "allowed=\(captureAllowed()) display_present=\(displayIsPresent()))"
+            log.notice("\(line, privacy: .public)")
+        case .alreadyScheduled:
+            break  // one timer per session: a burst of failures must not stack retries
+        case .retry(let after):
+            let line = "capture display=\(displayID) restart in \(fmtSeconds(after))s attempt=\(policy.attempt)"
+            log.notice("\(line, privacy: .public)")
+            restartTask?.cancel()
+            restartTask = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(after))
+                guard !Task.isCancelled else { return }
+                await self?.retry()
+            }
         }
     }
+
+    private func retry() async {
+        policy.retryFired()
+        await connect()
+    }
+
+    /// M4-T10 test seam: the failure path without a stream to break, so the backoff and the display-gone rule are
+    /// unit-testable. Only tests and `--selftest robustness` call it.
+    func simulateStreamFailure(_ error: Error = CaptureError.displayGone) {
+        failed(error)
+    }
 }
+
+/// One decimal, for the restart log lines.
+private func fmtSeconds(_ value: Double) -> String { String(format: "%.1f", value) }
 
 nonisolated enum CaptureError: Error {
     /// The display left `SCShareableContent` between the topology refresh and the connect.
