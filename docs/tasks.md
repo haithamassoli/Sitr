@@ -154,7 +154,7 @@ Exit: Curtain exposure ≤ 50 ms p95; YouTube without people in Safari-as-Curtai
 Goal: onboarding, full Settings, EN/AR with RTL, Low Power, degraded state, bench CLI, performance pass.
 Exit: bench gates (recall ≥ 95 %, misclassification ≤ 2 %); PRD performance table met on M1 8 GB; manual matrix green; Arabic complete.
 
-- [ ] **M4-T01 Onboarding** (L) deps: M2-T03, M2-T09, M3-T07
+- [x] **M4-T01 Onboarding** (L) deps: M2-T03, M2-T09, M3-T07 — 5-step "Sitr Setup" window, driven end to end via the Accessibility API (skip permission → Needs permission + warning icon; preset writes Off + 8 Curtain overrides); 15 tests; fresh-account Finder launch manual pending
   Do: first-launch window, 5 steps per FR8; step 2 auto-advances on grant; step 3 requires a hidden-set choice; step 4 preset buttons; step 5 hotkey hint plus Launch at login (on); reopens at Needs permission; Default Rule is Off after onboarding.
   Done when: a fresh user account completes the flow; skipping permission leaves the app in Needs permission with the correct icon.
 - [x] **M4-T02 Settings › Appearance** (M) deps: M2-T11 — style/strength/padding bound to Preferences (Runtime pushes live); preview = synthetic `SampleScene` through the real `CoverRenderer`; screenshot reviewed
@@ -184,7 +184,7 @@ Exit: bench gates (recall ≥ 95 %, misclassification ≤ 2 %); PRD performance 
 - [ ] **M4-T10 Robustness** (M) deps: M2-T04, M2-T05
   Do: sleep/wake, lock/unlock, fast user switching, display hot-plug, Stage Manager, mirrored displays; stream restart with exponential backoff (max 10 s); no duplicate panels.
   Done when: 20 sleep/wake cycles leave exactly one stream and one panel per display.
-- [ ] **M4-T11 Accessibility basics** (S) deps: M2-T14, M4-T01
+- [~] **M4-T11 Accessibility basics** (S) deps: M2-T14, M4-T01 — labels/hints on onboarding, all tabs, menu bar; focus order; no motion; overlay panels outside the a11y tree; Accessibility Inspector audit manual pending
   Do: VoiceOver labels on menu items and controls; keyboard navigation in onboarding and settings; overlay panels outside the accessibility tree; no motion.
   Done when: Accessibility Inspector audit shows no errors on menu bar, onboarding, settings.
 - [ ] **M4-T12 Manual matrix + bug bash** (M) deps: all M4

@@ -11,6 +11,8 @@ import SitrCore
 
 enum Selftest {
     static func run() {
+        // Selftests exercise Entire Mac Blur; onboarding (M4-T01) made a missing rules.json seed Off unless this is set.
+        setenv("SITR_DEV_BLUR", "1", 1)
         let args = Array(CommandLine.arguments.dropFirst())
         let sub = args.firstIndex(of: "--selftest").flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil } ?? ""
         switch sub {
