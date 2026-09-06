@@ -39,6 +39,7 @@ struct AboutTab: View {
                     Text(Self.verifyCommand)
                         .font(.system(.callout, design: .monospaced))
                         .textSelection(.enabled)
+                        .accessibilityLabel("Verification command: \(Self.verifyCommand)")
                     Spacer()
                     Button(copied ? "Copied" : "Copy") {
                         NSPasteboard.general.clearContents()
@@ -46,6 +47,7 @@ struct AboutTab: View {
                         copied = true
                     }
                     .accessibilityLabel("Copy the verification command")
+                    .accessibilityHint("Paste it in Terminal to check the entitlements of the installed app")
                 }
                 Text(Self.verifyHint).font(.callout).foregroundStyle(.secondary)
             }

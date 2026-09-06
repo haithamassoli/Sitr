@@ -23,6 +23,7 @@ struct GeneralTab: View {
                     LabeledContent("The new language applies after a relaunch.") {
                         Button("Relaunch now") { Self.relaunch() }
                             .accessibilityLabel("Relaunch Sitr now")
+                            .accessibilityHint("Quits and reopens Sitr in the new language")
                     }
                     .font(.callout)
                 }
@@ -35,6 +36,7 @@ struct GeneralTab: View {
                     isOn: Binding(get: { model.preferences.lowPowerReducesFrameRate }, set: { model.preferences.lowPowerReducesFrameRate = $0 })
                 )
                 .accessibilityLabel("Reduce frame rate in Low Power Mode")
+                .accessibilityHint("8 frames per second instead of 15 while the Mac is in Low Power Mode")
             } footer: {
                 Text("Captures at 8 frames per second instead of 15 while the Mac is in Low Power Mode.")
             }

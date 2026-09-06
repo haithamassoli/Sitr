@@ -22,9 +22,10 @@ import Testing
         UserDefaults(suiteName: suite)!.removePersistentDomain(forName: suite)
     }
 
-    @Test func missingFileSeedsBlurInMemoryOnly() {
+    @Test func missingFileSeedsOffInMemoryOnly() {
+        // M4-T01: the PRD's initial Default Rule; Blur only with SITR_DEV_BLUR=1 before onboarding (OnboardingTests).
         let model = makeModel()
-        #expect(model.policy.rules == Rules(defaultMode: .blur))
+        #expect(model.policy.rules == Rules(defaultMode: .off))
         #expect(!FileManager.default.fileExists(atPath: store.fileURL.path))
         cleanUp()
     }
@@ -34,16 +35,16 @@ import Testing
         var seen: [Rules] = []
         model.onPolicyChanged = { seen.append($0.rules) }
         model.updateRules { $0.upsert(AppRule(bundleID: "com.example.Chat", mode: .curtain)) }
-        model.updateRules { $0.defaultMode = .off }
-        model.updateRules { $0.defaultMode = .off }  // no change: no hook call, no write
+        model.updateRules { $0.defaultMode = .blur }
+        model.updateRules { $0.defaultMode = .blur }  // no change: no hook call, no write
         #expect(seen.count == 2)
         #expect(model.policy.rules.mode(for: "com.example.Chat") == .curtain)
-        #expect(model.policy.rules.mode(for: "com.example.Other") == .off)
+        #expect(model.policy.rules.mode(for: "com.example.Other") == .blur)
         #expect(store.load() == model.policy.rules)
         model.updateRules { $0.remove(bundleID: "com.example.Chat") }
         #expect(model.policy.rules.overrides.isEmpty)
         #expect(store.load().overrides.isEmpty)
-        #expect(makeModel().policy.rules.defaultMode == .off)  // a fresh model reads the file, not the seed
+        #expect(makeModel().policy.rules.defaultMode == .blur)  // a fresh model reads the file, not the Off seed
         cleanUp()
     }
 
@@ -52,7 +53,7 @@ import Testing
         #expect(!RecommendedPreset.isApplied(model.policy.rules))
         model.updateRules { RecommendedPreset.apply(to: &$0) }
         #expect(RecommendedPreset.isApplied(model.policy.rules))
-        #expect(model.policy.rules.defaultMode == .blur)  // the preset leaves the Default Rule alone
+        #expect(model.policy.rules.defaultMode == .off)  // the preset leaves the Default Rule alone
         #expect(store.load().mode(for: "com.apple.Safari") == .curtain)
         model.updateRules { $0.upsert(AppRule(bundleID: "com.apple.Safari", mode: .blur)) }  // a user edit un-applies it
         #expect(!RecommendedPreset.isApplied(model.policy.rules))

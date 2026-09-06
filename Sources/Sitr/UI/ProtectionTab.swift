@@ -36,10 +36,12 @@ struct ProtectionTab: View {
                     Text("Everyone").tag(HiddenSet.everyone)
                 }
                 .accessibilityLabel("Hidden set")
+                .accessibilityHint("Who gets covered. Everyone includes people Sitr cannot classify.")
                 // PRD: Everyone forces Strict Mode on and disables the toggle.
                 Toggle("Blur Unknown (Strict Mode)", isOn: Binding(get: { model.policy.effectiveStrict }, set: { model.setStrict($0) }))
                     .disabled(model.policy.hiddenSet == .everyone)
                     .accessibilityLabel("Blur Unknown, Strict Mode")
+                    .accessibilityHint(model.policy.hiddenSet == .everyone ? "Always on while Everyone is selected" : "Also covers people whose category is unknown")
             } footer: {
                 Text("Unknown: facing away, face hidden or too small, or the classifier is unsure.")
             }
@@ -48,6 +50,7 @@ struct ProtectionTab: View {
                     ForEach(RuleMode.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
                 .accessibilityLabel("Default Rule")
+                .accessibilityHint("Mode for every app without an override. Off means never captured.")
             } footer: {
                 Text("For apps without an override. Off: never captured. Blur: detect, then cover. Curtain: cover changes at once, uncover what is verified safe.")
             }
@@ -84,9 +87,11 @@ struct ProtectionTab: View {
                     }
                     .fixedSize()
                     .accessibilityLabel("Add app override")
+                    .accessibilityHint("Pick a running app, or Other to choose an app file")
                     Button("Use recommended settings") { model.updateRules { RecommendedPreset.apply(to: &$0) } }
                         .disabled(presetApplied)
                         .accessibilityLabel("Use recommended settings")
+                        .accessibilityHint("Sets Safari, Chrome, Arc, Telegram, WhatsApp and Discord to Curtain")
                     if presetApplied {
                         Label("Recommended settings applied", systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.secondary)
