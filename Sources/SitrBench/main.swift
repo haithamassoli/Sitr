@@ -15,12 +15,15 @@ import enum SitrCore.Category
 import SitrDetect
 
 let usage = """
-usage: sitr-bench <labels.json> [--images <dir>] [--models <dir>] [--threshold 0.80] [--limit N] [--json out.json] [--verbose]
+usage: sitr-bench <labels.json> [--images <dir>] [--models <dir>] [--threshold 0.80] [--limit N] [--lanczos-below X]
+                  [--json out.json] [--verbose]
        sitr-bench --selfcheck
   labels     Bench/labels/recall-coco.json or Bench/labels/faces-commons.json (python3 Bench/convert_labels.py)
   --images   image folder; default: the labels file's images_dir (python3 Bench/download.py --labels <labels.json>)
   --models   folder with PersonDetector and GenderClassifier .mlpackage or .mlmodelc; default Models/dist
   --limit    first N images only; --json writes every number as JSON; --verbose prints one line per image (counts only)
+  --lanczos-below  M4-T09: resample into the network canvas with Lanczos only below this scale factor (default 0.9;
+                   0 = never, 2 = always, which is what every number before M4-T09 was measured with)
 """
 
 struct BenchError: Error, CustomStringConvertible {
@@ -128,11 +131,12 @@ func run(_ args: [String], labelsPath: String) async throws {
 
     // Models as the app loads them: both on .cpuAndNeuralEngine (docs/m2/detect.md), detector threshold 0.30 / NMS 0.5.
     var t0 = ContinuousClock.now
-    let detector = try await CoreMLPersonDetector(contentsOf: try await compiledModel(modelsDir, "PersonDetector"), computeUnits: .cpuAndNeuralEngine)
+    var detector = try await CoreMLPersonDetector(contentsOf: try await compiledModel(modelsDir, "PersonDetector"), computeUnits: .cpuAndNeuralEngine)
+    if let l = Double(option("--lanczos-below", in: args) ?? "") { detector.lanczosBelow = l }
     let classifier = try await GenderClassifier(contentsOf: try await compiledModel(modelsDir, "GenderClassifier"), computeUnits: .cpuAndNeuralEngine)
     let faces = FaceDetector()
     print("sitr-bench set=\(labels.set) labels=\(labelsURL.lastPathComponent) images_dir=\(imagesDir.path) models=\(modelsDir.path) "
-        + "detector_input=\(Int(detector.inputSize.width))x\(Int(detector.inputSize.height)) detector_threshold=\(detector.threshold) nms=\(detector.nmsIoU) "
+        + "detector_input=\(Int(detector.inputSize.width))x\(Int(detector.inputSize.height)) detector_threshold=\(detector.threshold) nms=\(detector.nmsIoU) lanczos_below=\(detector.lanczosBelow) "
         + "classifier_input=\(Int(classifier.inputSize.width))x\(Int(classifier.inputSize.height)) load_ms=\(f1(ms(t0.duration(to: .now))))")
     let context = CIContext(options: [.workingColorSpace: NSNull(), .outputColorSpace: NSNull(), .cacheIntermediates: false])
 
@@ -223,7 +227,7 @@ if args.contains("--selfcheck") {
     selfcheck()
     exit(0)
 }
-let valueFlags: Set<String> = ["--images", "--models", "--threshold", "--limit", "--json"]
+let valueFlags: Set<String> = ["--images", "--models", "--threshold", "--limit", "--json", "--lanczos-below"]
 var positional: [String] = []
 var i = 0
 while i < args.count {

@@ -5,6 +5,7 @@
 # per-stage p50/p95, the skipped-frame ratio and the thermal state.
 #   scripts/measure-system.sh <browsing|video|static> <seconds>
 #   SITR_CAPTURE_SIDE=1920 SITR_FPS=30 scripts/measure-system.sh video 120     # CaptureSession dev overrides pass through
+#   SITR_PERF_LEGACY=1 scripts/measure-system.sh browsing 120                  # M4-T09 A/B: the pre-M4-T09 per-frame behaviour
 # Needs scripts/build-app.sh --debug (build/Sitr.app; the stimulus runs from .build/debug/Sitr so it can read the fixtures).
 # Screen Recording is inherited from the shell (docs/dev.md). Exits on its own, kills both processes on any exit; the logs
 # hold timings and counts only. GPU / ANE utilisation needs `sudo powermetrics --samplers gpu_power,ane_power`: pending.
@@ -33,7 +34,7 @@ therm() { pmset -g therm | grep -E 'CPU_|No thermal' | sed -E 's/^[[:space:]]+//
 # nearest-rank percentile of the numbers on stdin (same rounding as the Swift rigs); "-" when empty
 pct() { sort -n | awk -v p="$1" '{a[NR]=$1} END { if (NR == 0) { print "-"; exit } i = int((NR - 1) * p + 0.5) + 1; printf "%.1f\n", a[i] }'; }
 
-echo "system_run mode=$MODE seconds=$RUN_SECONDS build=$BUILD side=${SITR_CAPTURE_SIDE:-1280} fps=${SITR_FPS:-15} load1_start=$(load1) therm_start=$(therm)"
+echo "system_run mode=$MODE seconds=$RUN_SECONDS build=$BUILD side=${SITR_CAPTURE_SIDE:-1280} fps=${SITR_FPS:-15} perf_legacy=${SITR_PERF_LEGACY:-0} load1_start=$(load1) therm_start=$(therm)"
 SITR_METRICS=1 SITR_DEV_BLUR=1 "$APP" --quit-after "$RUN_SECONDS" >"$OUT/app.log" 2>&1 &
 APP_PID=$!
 T0=$(date +%s)
@@ -68,7 +69,7 @@ RSS_MAX=$(awk 'BEGIN { m = 0 } $3 > m { m = $3 } END { printf "%d", m / 1024 }' 
 LOAD_STATS=$(awk 'NR == 1 { lo = $5; hi = $5 } { s += $5; if ($5 < lo) lo = $5; if ($5 > hi) hi = $5 } END { if (NR) printf "%.1f/%.1f/%.1f", lo, s / NR, hi; else print "-" }' "$OUT/samples")
 REPLAYD_MEAN=$(awk '{s += $6} END { if (NR) printf "%.1f", s / NR; else print "-" }' "$OUT/steady")
 REPLAYD_P95=$(awk '{print $6}' "$OUT/steady" | pct 0.95)
-echo "system_cpu mode=$MODE build=$BUILD side=${SITR_CAPTURE_SIDE:-1280} fps=${SITR_FPS:-15} samples=$N cpu_mean=$CPU_MEAN cpu_p95=$CPU_P95 cpu_max=$CPU_MAX cpu_exact_mean=$CPU_EXACT startup_cpu_max=$STARTUP_MAX rss_max_mb=$RSS_MAX replayd_cpu_mean=$REPLAYD_MEAN replayd_cpu_p95=$REPLAYD_P95 load1_min/mean/max=$LOAD_STATS app_exit=$APP_EXIT leftover_processes=$LEFT therm_end=$(therm)"
+echo "system_cpu mode=$MODE build=$BUILD side=${SITR_CAPTURE_SIDE:-1280} fps=${SITR_FPS:-15} perf_legacy=${SITR_PERF_LEGACY:-0} samples=$N cpu_mean=$CPU_MEAN cpu_p95=$CPU_P95 cpu_max=$CPU_MAX cpu_exact_mean=$CPU_EXACT startup_cpu_max=$STARTUP_MAX rss_max_mb=$RSS_MAX replayd_cpu_mean=$REPLAYD_MEAN replayd_cpu_p95=$REPLAYD_P95 load1_min/mean/max=$LOAD_STATS app_exit=$APP_EXIT leftover_processes=$LEFT therm_end=$(therm)"
 
 # Pipeline metrics: every 5 s window with t ≥ 10 → median of the window p50s and p95s (and the worst p95) per stage
 grep -E '^pipeline display=[0-9]+ (detector=|first_frame)' "$OUT/app.log"
@@ -87,6 +88,11 @@ RATIO=$(awk -v i="${IN:-0}" -v s="${SKIPPED:-0}" 'BEGIN { if (i + s > 0) printf 
 LAYERS_MAX=$(grep -o 'layers=[0-9]*' "$OUT/windows" | cut -d= -f2 | pct 1.0)
 RSS_PIPE=$(grep -o 'rss_mb=[0-9]*' "$OUT/windows" | cut -d= -f2 | pct 1.0)
 echo "system_pipeline mode=$MODE windows=$W frames_in=${IN:--} skipped=${SKIPPED:--} skipped_ratio=$RATIO layers_max=$LAYERS_MAX rss_mb_max=$RSS_PIPE$STAGES"
+# M4-T09 per-frame work (cumulative counters on the last window ÷ frames processed): face crops classified, covers rendered,
+# covers that reused the previous frame's pixels, detections skipped because nothing detectable had changed.
+OUTF=$(field out); CROPS=$(field crops); RENDERS=$(field renders); REUSES=$(field reuses); DSKIP=$(field detect_skips)
+per() { awk -v a="${1:-0}" -v b="${OUTF:-0}" 'BEGIN { if (b > 0) printf "%.2f", a / b; else print "-" }'; }
+echo "system_frame mode=$MODE perf_legacy=${SITR_PERF_LEGACY:-0} frames_out=${OUTF:--} crops_per_frame=$(per "$CROPS") renders_per_frame=$(per "$RENDERS") reuses_per_frame=$(per "$REUSES") detect_skips=${DSKIP:--} face_skips=$(field face_skips) apply_skips=$(field apply_skips) applies=$(field applies) reuse_blocked=$(field reuse_blocked)"
 tail -2 "$OUT/windows"
 [ -f "$OUT/stim.log" ] && grep -E '^(stimulus|selftest_)' "$OUT/stim.log"
 echo "system_logs dir=$OUT"
