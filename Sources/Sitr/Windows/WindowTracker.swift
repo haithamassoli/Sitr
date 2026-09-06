@@ -81,7 +81,7 @@ final class WindowTracker {
 
     /// Frontmost window under a display-local point (per-detection attribution); `nil` over the desktop.
     func topmostWindow(at point: CGPoint, on displayID: CGDirectDisplayID) -> WindowRect? {
-        windows.first { $0.displayID == displayID && $0.rect.contains(point) }
+        windows.topmost(at: point, on: displayID)
     }
 
     /// Every on-screen window of one app, front to back (Curtain covers, FR10 fail-closed).
@@ -145,4 +145,38 @@ nonisolated enum WindowGeometry {
     private static func rect(_ d: CFDictionary, _ key: CFString) -> CGRect? {
         value(d, key, CFDictionaryGetTypeID()).flatMap { CGRect(dictionaryRepresentation: unsafeDowncast($0, to: CFDictionary.self)) }
     }
+}
+
+// M3-T05 / M3-T09: the same lookups on a snapshot (`windows` is Sendable, so the pipeline actor keeps its own copy per frame).
+nonisolated extension [WindowRect] {
+    /// Frontmost entry under a display-local point on `displayID`; nil over the desktop. The list is front to back.
+    func topmost(at point: CGPoint, on displayID: CGDirectDisplayID) -> WindowRect? {
+        first { $0.displayID == displayID && $0.rect.contains(point) }
+    }
+
+    /// Windows stacked above `window` on its display (lower `zOrder`), front to back.
+    func occluders(of window: WindowRect) -> [CGRect] {
+        filter { $0.displayID == window.displayID && $0.zOrder < window.zOrder && $0.windowID != window.windowID }.map(\.rect)
+    }
+}
+
+/// `rect` minus every `hole`, as up to 4 pieces per hole per piece (rectangle decomposition). Pre-covers and fail-closed covers
+/// clip to a Curtain window's visible region this way so they never land on a window stacked above it (PRD M3-T09).
+// ponytail: pieces can multiply with many overlapping occluders (k holes → ≤ 4^k pieces in theory); real desktops have a handful
+// of windows over any one window. Upgrade path: sweep-line union of the holes first, or cap the hole count at the 8 frontmost.
+nonisolated func subtract(_ rect: CGRect, holes: [CGRect]) -> [CGRect] {
+    var pieces = [rect]
+    for hole in holes {
+        var next: [CGRect] = []
+        for p in pieces {
+            let h = p.intersection(hole)
+            guard !h.isEmpty else { next.append(p); continue }
+            if h.minY > p.minY { next.append(CGRect(x: p.minX, y: p.minY, width: p.width, height: h.minY - p.minY)) }
+            if h.maxY < p.maxY { next.append(CGRect(x: p.minX, y: h.maxY, width: p.width, height: p.maxY - h.maxY)) }
+            if h.minX > p.minX { next.append(CGRect(x: p.minX, y: h.minY, width: h.minX - p.minX, height: h.height)) }
+            if h.maxX < p.maxX { next.append(CGRect(x: h.maxX, y: h.minY, width: p.maxX - h.maxX, height: h.height)) }
+        }
+        pieces = next
+    }
+    return pieces
 }

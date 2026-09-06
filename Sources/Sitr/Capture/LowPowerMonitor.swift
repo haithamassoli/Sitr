@@ -11,6 +11,9 @@ import os
 
     /// The rate every display should capture at right now.
     private(set) var fps = LowPowerMonitor.standardFPS
+    /// The ceiling every display's rate is clamped to. `.max` — no clamp — unless Low Power Mode is actually reducing, so a
+    /// Curtain display keeps its 30 fps on mains power (M3-T05) and drops to 8 with the rest on battery.
+    var cap: Int { fps < Self.standardFPS ? fps : .max }
     /// Called on the main actor whenever `fps` changes.
     var onChange: ((Int) -> Void)?
     /// Test and selftest seam (`--selftest lowpower`): forces the power state, since Low Power Mode itself can only be

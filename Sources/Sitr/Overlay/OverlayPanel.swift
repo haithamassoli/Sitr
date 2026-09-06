@@ -23,6 +23,9 @@ final class OverlayPanel: NSPanel {
     private var covers: [Int: (layer: CALayer, buffer: CVPixelBuffer?)] = [:]
     private(set) var isRevealed = false
     var layerCount: Int { covers.count }
+    /// Current cover frames by id in display-local points (the flip is its own inverse). Selftests read this; M3-T06 checks
+    /// fail-closed covers follow a moving window with it.
+    var coverFrames: [Int: CGRect] { covers.mapValues { appKitRect($0.layer.frame, displayHeight: frame.height) } }
 
     /// `screenFrame` = `NSScreen.frame` (global AppKit points).
     init(screenFrame: CGRect) {
