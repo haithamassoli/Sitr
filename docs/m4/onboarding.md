@@ -6,8 +6,8 @@ String Catalog (M4-T05). Window 560×400 pt content, centered, not resizable, `t
 ## Files
 - `Sources/Sitr/UI/Onboarding.swift`
   - `OnboardingFlow` — pure, `nonisolated`, unit-tested: `step`, `permissionOnly`, `permissionGranted`, `hiddenSet`
-    (optional: no preselection), `strict`, `usePreset`, `launchAtLogin`, `finished`; `canContinue`, `advance()`, `back()`,
-    `skipPermission()`, `choosePreset(_:)`, `effectiveStrict` / `strictLocked` (Everyone forces Strict on), `rulesOnFinish(_:)`,
+    (optional: no preselection), `strict`, `usePreset`, `launchAtLogin`, `usedDefaults`, `finished`; `canContinue`, `advance()`,
+    `back()`, `skipPermission()`, `choosePreset(_:)`, `useDefaults()`, `effectiveStrict` / `strictLocked` (Everyone forces Strict on), `rulesOnFinish(_:)`,
     `opensSettingsOnFinish`, `registersLaunchAtLogin`; the two `AppModel` hooks `seedDefaultMode(onboardingCompleted:environment:)`
     and `reopens(from:to:)`.
   - `OnboardingWindow` — one `NSWindow` + `NSHostingView`; `present(model:)` brings an existing window to the front instead of
@@ -19,7 +19,11 @@ String Catalog (M4-T05). Window 560×400 pt content, centered, not resizable, `t
 - `Tests/SitrTests/OnboardingTests.swift`; two assertions in `SettingsTests.swift` follow the seed change (Off instead of Blur).
 
 ## Steps (FR8)
-1. Welcome: what Sitr does, "everything happens on this Mac, no network access", the `codesign` command (`AboutTab.verifyCommand`).
+1. Welcome: what Sitr does, "everything happens on this Mac, no network access", the `codesign` command (`AboutTab.verifyCommand`),
+   and a line naming the defaults. Two buttons: **Use Default Settings** (default button, `useDefaults()`) and **Customize**
+   (the five steps). `useDefaults()` sets Everyone + Strict, the preset, launch at login, jumps to step 2 and makes it the last
+   one (`isLast`, "Step 2 of 2", Finish; "Skip for now" finishes too). With the grant already in hand the view finishes right
+   away. **Back** from there discards the defaults and restarts the full flow with nothing preselected.
 2. Screen Recording: "Allow Screen Recording" → `PermissionMonitor.request()`, "Open System Settings" → `openSystemSettings()`;
    status line (granted / not yet: nothing covered, warning icon); the monthly re-approval note (macOS 15.1+). Continue is
    disabled until the monitor reports `granted`, and a grant that arrives while on this step advances automatically.
@@ -93,6 +97,12 @@ login registration. `build/Sitr.app/Contents/MacOS/Sitr --quit-after 7` from the
 - Shell-launched agent apps are not allowed to activate themselves on this macOS (`NSApp.activate()` is a cooperative request), so in
   the smoke runs the window opened behind the terminal; Return = default button is by `.keyboardShortcut(.defaultAction)` and not
   exercised (a real key event needs the app to be active).
+
+- Defaults path (0.1.1), driven through the accessibility tree from `SITR_ONBOARDING_STEP=1`: Use Default Settings → "Step 2
+  of 2" with Finish disabled and Skip for now present; Back → "Step 1 of 5" with nothing preselected; Use Default Settings →
+  Skip for now → window gone, `onboardingCompleted=1`, `hiddenSet` everyone, `strictMode=1`, `rules.json` `defaultMode: off`
+  with the eight preset overrides as Curtain. Step 1 captured with `screencapture -l` in English and in Arabic (RTL, buttons
+  mirrored). The defaults domain was restored from a backup and the smoke `rules.json` removed.
 
 ## Manual pending
 - Fresh user account: the real first launch from Finder (activation, the TCC dialog from "Allow Screen Recording", auto-advance on

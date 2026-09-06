@@ -30,6 +30,8 @@ nonisolated struct OnboardingFlow: Equatable, Sendable {
     /// Step 4: true = "Use recommended settings", false = "Configure myself", nil = not chosen yet.
     var usePreset: Bool?
     var launchAtLogin = true
+    /// Welcome "Use Default Settings": steps 3–5 are answered with the shipped defaults, so only the permission is left.
+    private(set) var usedDefaults = false
     private(set) var finished = false
 
     init(permissionOnly: Bool = false, permissionGranted: Bool = false, step: Step? = nil) {
@@ -38,8 +40,8 @@ nonisolated struct OnboardingFlow: Equatable, Sendable {
         self.step = step ?? (permissionOnly ? .permission : .welcome)
     }
 
-    var stepCount: Int { permissionOnly ? 1 : Step.allCases.count }
-    var isLast: Bool { permissionOnly || step == .done }
+    var stepCount: Int { permissionOnly ? 1 : usedDefaults ? 2 : Step.allCases.count }
+    var isLast: Bool { permissionOnly || step == .done || usedDefaults }
     /// Strict Mode as applied: Everyone forces it on (PRD Definitions); the toggle then shows on and disabled.
     var effectiveStrict: Bool { hiddenSet == .everyone || strict }
     var strictLocked: Bool { hiddenSet == .everyone }
@@ -56,7 +58,20 @@ nonisolated struct OnboardingFlow: Equatable, Sendable {
 
     mutating func back() {
         guard !permissionOnly, let previous = Step(rawValue: step.rawValue - 1) else { return }
-        step = previous
+        // Back out of the defaults path = the full flow from the top again, nothing preselected.
+        if usedDefaults { self = OnboardingFlow(permissionGranted: permissionGranted) } else { step = previous }
+    }
+
+    /// Welcome, one click: Everyone + Strict, the recommended preset, launch at login. The permission step still has to be
+    /// answered (only the user can grant it), and it is then the last one.
+    mutating func useDefaults() {
+        guard step == .welcome else { return }
+        hiddenSet = .everyone
+        strict = true
+        usePreset = true
+        launchAtLogin = true
+        usedDefaults = true
+        step = .permission
     }
 
     /// Return / Continue. Does nothing while `canContinue` is false (Return cannot skip the permission); finishes on the last step.
@@ -72,7 +87,7 @@ nonisolated struct OnboardingFlow: Equatable, Sendable {
     /// "Skip for now": on without the grant (Needs permission, warning icon, nothing covered); in a reopen it just closes.
     mutating func skipPermission() {
         guard step == .permission else { return }
-        if permissionOnly { finished = true } else { step = .hiddenSet }
+        if isLast { finished = true } else { step = .hiddenSet }
     }
 
     mutating func choosePreset(_ use: Bool) {
@@ -224,6 +239,9 @@ struct OnboardingView: View {
                     .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 6))
                     .environment(\.layoutDirection, .leftToRight)  // a shell command stays LTR and left-aligned inside the RTL layout
                     .accessibilityLabel("Verification command: \(AboutTab.verifyCommand)")
+                Text("Default settings: hide everyone, cover browsers and chat apps, start at login. Everything is changeable later in Settings.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
         case .permission:
             page("rectangle.dashed.badge.record", Text("Allow Screen Recording")) {
@@ -356,7 +374,15 @@ struct OnboardingView: View {
                 Button("Skip for now") { skipPermission() }
                     .accessibilityHint("Continues without Screen Recording. Sitr covers nothing until it is allowed.")
             }
-            if flow.step == .recommended {
+            if flow.step == .welcome {
+                Button("Customize") { flow.advance() }
+                    .accessibilityHint("Walks through the setup step by step")
+                Button("Use Default Settings") { useDefaults() }
+                    .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction)
+                    .focused($focus, equals: .primary)
+                    .accessibilityHint("Hides everyone including unknown people, sets browsers and chat apps to Curtain, starts Sitr at login. Only Screen Recording is left to allow.")
+            } else if flow.step == .recommended {
                 Button("Configure myself") { flow.choosePreset(false) }
                     .accessibilityHint("Leaves every app Off and opens Settings, Protection, when setup finishes")
                 Button("Use recommended settings") { flow.choosePreset(true) }
@@ -396,6 +422,12 @@ struct OnboardingView: View {
     private func advance() {
         flow.advance()
         if flow.finished { finish() }
+    }
+
+    /// One click on the welcome step: the defaults, then straight to the permission — or done, when it is already granted.
+    private func useDefaults() {
+        flow.useDefaults()
+        if flow.permissionGranted { advance() }
     }
 
     private func skipPermission() {

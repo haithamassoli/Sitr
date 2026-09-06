@@ -33,7 +33,10 @@ brew install --cask haithamassoli/sitr/sitr
 
 ## First run
 
-Sitr has no Dock icon; look for the eye-slash icon in the menu bar. The first launch opens a five-step setup window:
+Sitr has no Dock icon; look for the eye-slash icon in the menu bar. The first launch opens a setup window. The
+fastest way through it is **Use Default Settings** on the first screen: everyone hidden (Strict Mode on), the
+recommended app rules applied, launch at login on, leaving only the Screen Recording permission to allow. Everything
+is changeable later in Settings. **Customize** walks the five steps instead:
 
 1. What Sitr does, and the verification command.
 2. **Screen Recording.** Click *Allow Screen Recording* and approve the macOS dialog, or open System Settings ›

@@ -565,6 +565,18 @@
         }
       }
     },
+    "Customize" : {
+      "comment" : "Onboarding step 1 button: walk through the steps instead of the defaults",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تخصيص"
+          }
+        }
+      }
+    },
     "Default Rule" : {
       "comment" : "Protection picker: mode for apps without an override",
       "extractionState" : "manual",
@@ -573,6 +585,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "القاعدة الافتراضية"
+          }
+        }
+      }
+    },
+    "Default settings: hide everyone, cover browsers and chat apps, start at login. Everything is changeable later in Settings." : {
+      "comment" : "Onboarding step 1, what Use Default Settings applies",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإعدادات الافتراضية: إخفاء الجميع، وتغطية المتصفحات وتطبيقات المحادثة، والتشغيل عند تسجيل الدخول. يمكنك تغيير كل ذلك لاحقًا من الإعدادات."
           }
         }
       }
@@ -825,6 +849,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "إخفاء"
+          }
+        }
+      }
+    },
+    "Hides everyone including unknown people, sets browsers and chat apps to Curtain, starts Sitr at login. Only Screen Recording is left to allow." : {
+      "comment" : "Accessibility hint for the Use Default Settings button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يخفي الجميع بمن فيهم الأشخاص غير المعروفين، ويضبط المتصفحات وتطبيقات المحادثة على وضع الستارة، ويشغّل Sitr عند تسجيل الدخول. يبقى السماح بتسجيل الشاشة فقط."
           }
         }
       }
@@ -2185,6 +2221,18 @@
         }
       }
     },
+    "Use Default Settings" : {
+      "comment" : "Onboarding step 1 default button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استخدام الإعدادات الافتراضية"
+          }
+        }
+      }
+    },
     "Use recommended settings" : {
       "comment" : "Button, Protection and onboarding step 4",
       "extractionState" : "manual",
@@ -2229,6 +2277,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الإصدار %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "Walks through the setup step by step" : {
+      "comment" : "Accessibility hint for the Customize button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمر بخطوات الإعداد خطوة خطوة"
           }
         }
       }

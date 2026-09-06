@@ -44,6 +44,39 @@ import Testing
         #expect(flow.finished && flow.step == .done)
     }
 
+    @Test func useDefaultsLeavesOnlyThePermissionStep() {
+        var flow = OnboardingFlow()
+        flow.useDefaults()
+        #expect(flow.step == .permission && flow.stepCount == 2 && flow.isLast && flow.usedDefaults)
+        #expect(flow.hiddenSet == .everyone && flow.effectiveStrict && flow.launchAtLogin && flow.usePreset == true)
+        #expect(!flow.canContinue && !flow.finished)  // the grant is still the user's to give
+        flow.permissionGranted = true
+        flow.advance()
+        #expect(flow.finished)
+        let rules = flow.rulesOnFinish(Rules(defaultMode: .blur))
+        #expect(rules?.defaultMode == .off && rules.map(RecommendedPreset.isApplied) == true)
+        #expect(!flow.opensSettingsOnFinish && flow.registersLaunchAtLogin)
+    }
+
+    @Test func useDefaultsIsWelcomeOnlyAndSkippingItStillFinishes() {
+        var flow = OnboardingFlow()
+        flow.advance()
+        flow.useDefaults()  // not on the welcome step: nothing happens
+        #expect(!flow.usedDefaults && flow.step == .permission)
+        flow.back()
+        flow.useDefaults()
+        flow.skipPermission()  // no grant, but everything else is answered
+        #expect(flow.finished && flow.hiddenSet == .everyone)
+    }
+
+    @Test func backOutOfTheDefaultsPathRestartsTheFullFlow() {
+        var flow = OnboardingFlow()
+        flow.useDefaults()
+        flow.back()
+        #expect(flow.step == .welcome && !flow.usedDefaults && flow.stepCount == 5 && !flow.isLast)
+        #expect(flow.hiddenSet == nil && flow.usePreset == nil)  // no preselection carried over
+    }
+
     @Test func skipForNowMovesOnWithoutTheGrant() {
         var flow = OnboardingFlow()
         flow.skipPermission()  // only on step 2

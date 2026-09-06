@@ -7,6 +7,13 @@ per version and move `Unreleased` entries into it before tagging.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-06
+
+### Added
+- **Use Default Settings** on the first onboarding screen: one click applies the defaults (hide everyone with Strict
+  Mode on, the recommended app rules, launch at login) and leaves only the Screen Recording permission, which is then
+  the last step. **Customize** still walks the five steps, and Back from the shortened path restores the full flow.
+
 ## [0.1.0] - 2026-09-06
 
 First public release.
