@@ -35,14 +35,16 @@ struct MenuBarLabel: View {
     }
 }
 
-/// FR7 menu, items in order. Strings are literals until the String Catalog lands (M4-T05).
+/// FR7 menu, items in order. Every literal here is a String Catalog key (M4-T05); `statusText` is localized in `AppModel`.
 struct MenuBarContent: View {
     let model: AppModel
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
-        Text(model.statusText)
-            .accessibilityLabel("Status: \(model.statusText)")
+        let status = model.statusText
+        let hotkey = model.preferences.hotkey.displayString
+        Text(status)
+            .accessibilityLabel("Status: \(status)")
         Divider()
         if case .paused = model.status {
             Button("Resume Protection") { model.resume() }
@@ -67,10 +69,13 @@ struct MenuBarContent: View {
                 .accessibilityLabel("Disable Protection")
                 .accessibilityHint("Removes all covers until you enable protection again")
         }
-        Text(model.revealAvailable ? "Reveal: hold \(model.preferences.hotkey.displayString)" : "Reveal unavailable")
-            .accessibilityLabel(
-                model.revealAvailable
-                    ? "Reveal available: hold \(model.preferences.hotkey.displayString)" : "Reveal unavailable")
+        if model.revealAvailable {
+            Text("Reveal: hold \(hotkey)")
+                .accessibilityLabel("Reveal available: hold \(hotkey)")
+        } else {
+            Text("Reveal unavailable")
+                .accessibilityLabel("Reveal unavailable")
+        }
         Divider()
         Button("Settings…") {
             openSettings()

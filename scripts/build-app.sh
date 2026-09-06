@@ -18,6 +18,12 @@ if [ -n "${VERSION:-}" ]; then
 fi
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 [ -d App/Resources ] && cp -R App/Resources/. "$APP/Contents/Resources/"
+# String Catalog (M4-T05): xcstringstool turns the catalog into en.lproj/ar.lproj/Localizable.strings, which is what
+# Text("…") and String(localized:) read from the main bundle; the .xcstrings source itself is not a runtime resource.
+# xcstringstool exits non-zero on a malformed catalog, and set -e turns that into a failed build.
+xcrun xcstringstool compile App/Resources/Localizable.xcstrings --output-directory "$APP/Contents/Resources"
+rm -f "$APP/Contents/Resources/Localizable.xcstrings"
+[ -f "$APP/Contents/Resources/ar.lproj/Localizable.strings" ] || { echo "FAIL: ar.lproj/Localizable.strings missing"; exit 1; }
 # Shipped CoreML models (M1-T05 classifier, M1-T06b person detector): compile each .mlpackage into the bundle.
 for m in Models/dist/*.mlpackage; do
   [ -d "$m" ] && xcrun coremlcompiler compile "$m" "$APP/Contents/Resources" >/dev/null

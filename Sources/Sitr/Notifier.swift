@@ -17,21 +17,24 @@ import os
 
     init() {}
 
-    /// Health transition → at most one notification. `.ok` announces a recovery only (never at launch).
-    // ponytail: strings are literals until the String Catalog (M4-T05); M4-T07 owns the degraded rules and the ≥ 5 min
-    // spacing between repeats of the same transition.
+    /// Health transition → at most one notification. `.ok` announces a recovery only (never at launch). Texts come from
+    /// the String Catalog (M4-T05).
+    // ponytail: M4-T07 owns the degraded rules and the ≥ 5 min spacing between repeats of the same transition.
     func healthChanged(to health: Health) {
         guard health != lastHealth else { return }
         let previous = lastHealth
         lastHealth = health
         switch health {
         case .needsPermission:
-            post(title: "Sitr protection is off",
-                 body: "Screen Recording permission is missing or screen capture stopped. Nothing is covered until it resumes.")
+            post(title: String(localized: "Sitr protection is off", comment: "Notification title"),
+                 body: String(localized: "Screen Recording permission is missing or screen capture stopped. Nothing is covered until it resumes.",
+                              comment: "Notification body"))
         case .degraded:
-            post(title: "Sitr protection is degraded", body: "Detection is running slowly; covers may lag.")
+            post(title: String(localized: "Sitr protection is degraded", comment: "Notification title"),
+                 body: String(localized: "Detection is running slowly; covers may lag.", comment: "Notification body"))
         case .ok where previous != .ok:
-            post(title: "Sitr protection restored", body: "Screen capture is running again and people on screen are covered.")
+            post(title: String(localized: "Sitr protection restored", comment: "Notification title"),
+                 body: String(localized: "Screen capture is running again and people on screen are covered.", comment: "Notification body"))
         case .ok:
             break
         }

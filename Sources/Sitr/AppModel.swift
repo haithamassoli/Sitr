@@ -15,13 +15,16 @@ import SitrCore
         case protected, disabled, needsPermission, degraded
         case paused(until: Date)
 
+        /// FR7 status line, from the String Catalog (M4-T05). The pause time is formatted per locale before it is inserted.
         var text: String {
             switch self {
-            case .protected: "Protected"
-            case .paused(let until): "Paused until \(until.formatted(date: .omitted, time: .shortened))"
-            case .disabled: "Disabled"
-            case .needsPermission: "Needs Screen Recording permission"
-            case .degraded: "Degraded"
+            case .protected: return String(localized: "Protected", comment: "Menu bar status line: protection active")
+            case .paused(let until):
+                let time = until.formatted(date: .omitted, time: .shortened)
+                return String(localized: "Paused until \(time)", comment: "Menu bar status line; %@ is a short time such as 3:45 PM")
+            case .disabled: return String(localized: "Disabled", comment: "Menu bar status line: protection disabled by the user")
+            case .needsPermission: return String(localized: "Needs Screen Recording permission", comment: "Menu bar status line")
+            case .degraded: return String(localized: "Degraded", comment: "Menu bar status line: detection is slow, covers may lag")
             }
         }
 

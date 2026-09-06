@@ -1,0 +1,2322 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ has no bundle identifier, so no rule can be stored for it." : {
+      "comment" : "Error under the overrides table; %@ is the chosen file name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يحمل %@ معرّف حزمة، لذا لا يمكن حفظ قاعدة له."
+          }
+        }
+      }
+    },
+    "%@ is %@, a system shortcut." : {
+      "comment" : "Shortcut recorder rejection; %1$@ the combo such as ⌘Q, %2$@ its system use such as Quit",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ اختصار للنظام (%2$@)."
+          }
+        }
+      }
+    },
+    "%@ is also used by %@." : {
+      "comment" : "Shortcut conflict warning; %1$@ the combo, %2$@ the other software",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ يستخدمه أيضًا %2$@."
+          }
+        }
+      }
+    },
+    "1 hour" : {
+      "comment" : "Menu bar › Pause Protection submenu",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ساعة واحدة"
+          }
+        }
+      }
+    },
+    "15 minutes" : {
+      "comment" : "Menu bar › Pause Protection submenu",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "١٥ دقيقة"
+          }
+        }
+      }
+    },
+    "8 frames per second instead of 15 while the Mac is in Low Power Mode" : {
+      "comment" : "Accessibility hint, General › Low Power toggle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "٨ إطارات في الثانية بدلًا من ١٥ عندما يكون جهاز Mac في نمط الطاقة المنخفضة"
+          }
+        }
+      }
+    },
+    "A drawn sample scene, covered by the same renderer the overlay uses." : {
+      "comment" : "Appearance › Preview footer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مشهد نموذجي مرسوم، مغطّى بنفس المحرّك الذي تستخدمه طبقة التغطية."
+          }
+        }
+      }
+    },
+    "About" : {
+      "comment" : "Settings tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حول"
+          }
+        }
+      }
+    },
+    "Add" : {
+      "comment" : "Protection › overrides table, Add menu",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة"
+          }
+        }
+      }
+    },
+    "Add app override" : {
+      "comment" : "Accessibility label of the Add menu, Protection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة استثناء لتطبيق"
+          }
+        }
+      }
+    },
+    "Add at least one modifier key (⌃, ⌥, ⇧ or ⌘)." : {
+      "comment" : "Shortcut recorder rejection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضف مفتاح تعديل واحدًا على الأقل (⌃ أو ⌥ أو ⇧ أو ⌘)."
+          }
+        }
+      }
+    },
+    "Allow Screen Recording" : {
+      "comment" : "Onboarding step 2 title and button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "السماح بتسجيل الشاشة"
+          }
+        }
+      }
+    },
+    "Allow Screen Recording first, or choose Skip for now" : {
+      "comment" : "Accessibility hint on the disabled Continue button, onboarding step 2",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسمح بتسجيل الشاشة أولًا، أو اختر «التخطي الآن»"
+          }
+        }
+      }
+    },
+    "Also covers people whose category is unknown" : {
+      "comment" : "Accessibility hint, Strict Mode toggle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يغطي أيضًا الأشخاص الذين فئتهم غير معروفة"
+          }
+        }
+      }
+    },
+    "Also hides people whose category is unknown: facing away, face hidden or too small, or the classifier unsure. Everyone always includes them." : {
+      "comment" : "Onboarding step 3, under the Strict Mode switch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يخفي أيضًا الأشخاص الذين فئتهم غير معروفة: من يولّي ظهره، أو وجهه مخفي أو صغير جدًا، أو المصنّف غير متأكد منه. خيار «الجميع» يشملهم دائمًا."
+          }
+        }
+      }
+    },
+    "Always on while Everyone is selected" : {
+      "comment" : "Accessibility hint, Strict Mode toggle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مفعّل دائمًا عند اختيار «الجميع»"
+          }
+        }
+      }
+    },
+    "App" : {
+      "comment" : "Protection › overrides table column",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التطبيق"
+          }
+        }
+      }
+    },
+    "App overrides" : {
+      "comment" : "Protection › section header and table label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استثناءات التطبيقات"
+          }
+        }
+      }
+    },
+    "Appearance" : {
+      "comment" : "Settings tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المظهر"
+          }
+        }
+      }
+    },
+    "Applies at once, no relaunch" : {
+      "comment" : "Accessibility hint, Reset to Default",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُطبَّق فورًا دون إعادة تشغيل"
+          }
+        }
+      }
+    },
+    "Approve Sitr in System Settings › Login Items." : {
+      "comment" : "General › Launch at login, when macOS requires approval",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وافق على Sitr في إعدادات النظام › عناصر تسجيل الدخول."
+          }
+        }
+      }
+    },
+    "Back" : {
+      "comment" : "Onboarding button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رجوع"
+          }
+        }
+      }
+    },
+    "Blur" : {
+      "comment" : "Per-app rule mode: detect, then cover",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التمويه"
+          }
+        }
+      }
+    },
+    "Blur Strength" : {
+      "comment" : "Appearance slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شدة التمويه"
+          }
+        }
+      }
+    },
+    "Blur Unknown (Strict Mode)" : {
+      "comment" : "Toggle title, Protection and onboarding step 3",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تمويه غير المعروف (الوضع الصارم)"
+          }
+        }
+      }
+    },
+    "Blur Unknown, Strict Mode" : {
+      "comment" : "Accessibility label of the Strict Mode toggle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تمويه غير المعروف، الوضع الصارم"
+          }
+        }
+      }
+    },
+    "Body Padding" : {
+      "comment" : "Appearance slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هامش الجسم"
+          }
+        }
+      }
+    },
+    "Browsers" : {
+      "comment" : "Onboarding step 4, preset table group",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المتصفحات"
+          }
+        }
+      }
+    },
+    "Captures at 8 frames per second instead of 15 while the Mac is in Low Power Mode." : {
+      "comment" : "General › Low Power footer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يلتقط الشاشة بمعدل ٨ إطارات في الثانية بدلًا من ١٥ عندما يكون جهاز Mac في نمط الطاقة المنخفضة."
+          }
+        }
+      }
+    },
+    "Change the shortcut in Settings › Shortcuts. Sitr lives in the menu bar: pause, disable, or open Settings from there." : {
+      "comment" : "Onboarding step 5",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمكنك تغيير الاختصار من الإعدادات › الاختصارات. يقيم Sitr في شريط القائمة: من هناك يمكنك إيقاف الحماية مؤقتًا أو تعطيلها أو فتح الإعدادات."
+          }
+        }
+      }
+    },
+    "Changes apply to the covers on screen immediately. Defaults: Gaussian, 70%, 15%. Solid ignores Blur Strength." : {
+      "comment" : "Appearance footer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُطبَّق التغييرات على الأغطية الظاهرة على الشاشة فورًا. الإعدادات الافتراضية: غاوسي، ٧٠٪، ١٥٪. النمط المصمت يتجاهل شدة التمويه."
+          }
+        }
+      }
+    },
+    "Check for Updates" : {
+      "comment" : "Accessibility label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحقق من وجود تحديثات"
+          }
+        }
+      }
+    },
+    "Check for Updates…" : {
+      "comment" : "Menu bar item and About button; opens GitHub Releases",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحقق من وجود تحديثات…"
+          }
+        }
+      }
+    },
+    "Choose an app to add an override for." : {
+      "comment" : "Open panel prompt, Protection › Add › Other…",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر تطبيقًا لإضافة استثناء له."
+          }
+        }
+      }
+    },
+    "Choose who should be hidden first" : {
+      "comment" : "Accessibility hint on the disabled Continue button, onboarding step 3",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر أولًا مَن يجب إخفاؤه"
+          }
+        }
+      }
+    },
+    "Close Window" : {
+      "comment" : "System shortcut name (⌘W)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إغلاق النافذة"
+          }
+        }
+      }
+    },
+    "Communication" : {
+      "comment" : "Onboarding step 4, preset table group",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التواصل"
+          }
+        }
+      }
+    },
+    "Configure myself" : {
+      "comment" : "Onboarding step 4 button: skip the preset and open Settings › Protection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سأضبطها بنفسي"
+          }
+        }
+      }
+    },
+    "Continue" : {
+      "comment" : "Onboarding primary button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متابعة"
+          }
+        }
+      }
+    },
+    "Continues without Screen Recording. Sitr covers nothing until it is allowed." : {
+      "comment" : "Accessibility hint, Skip for now",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتابع دون تسجيل الشاشة. لا يغطي Sitr أي شيء حتى يُسمح به."
+          }
+        }
+      }
+    },
+    "Copied" : {
+      "comment" : "About › Copy button after a click",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم النسخ"
+          }
+        }
+      }
+    },
+    "Copy" : {
+      "comment" : "About › Copy button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نسخ"
+          }
+        }
+      }
+    },
+    "Copy the verification command" : {
+      "comment" : "Accessibility label, About › Copy",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نسخ أمر التحقق"
+          }
+        }
+      }
+    },
+    "Cover style" : {
+      "comment" : "Accessibility label of the Appearance style picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نمط الغطاء"
+          }
+        }
+      }
+    },
+    "Covers come back at once" : {
+      "comment" : "Accessibility hint, Resume Protection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعود الأغطية فورًا"
+          }
+        }
+      }
+    },
+    "Curtain" : {
+      "comment" : "Per-app rule mode: cover changes at once, uncover what is verified safe",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الستارة"
+          }
+        }
+      }
+    },
+    "Curtain covers changed regions the moment they appear and uncovers what is verified safe: the mode for apps where people show up without warning. Every other app stays Off (the Default Rule) until you change it in Settings › Protection." : {
+      "comment" : "Onboarding step 4",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغطي الستارة المناطق المتغيّرة لحظة ظهورها وتكشف ما يثبت أنه آمن: إنها الوضع المناسب للتطبيقات التي يظهر فيها الأشخاص دون سابق إنذار. تبقى بقية التطبيقات على وضع الإيقاف (القاعدة الافتراضية) حتى تغيّر ذلك من الإعدادات › الحماية."
+          }
+        }
+      }
+    },
+    "Default Rule" : {
+      "comment" : "Protection picker: mode for apps without an override",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "القاعدة الافتراضية"
+          }
+        }
+      }
+    },
+    "Degraded" : {
+      "comment" : "Menu bar status line: detection is slow, covers may lag",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أداء الحماية منخفض"
+          }
+        }
+      }
+    },
+    "Detection is running slowly; covers may lag." : {
+      "comment" : "Notification body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاكتشاف يعمل ببطء؛ قد تتأخر الأغطية."
+          }
+        }
+      }
+    },
+    "Disable Protection" : {
+      "comment" : "Menu bar item",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعطيل الحماية"
+          }
+        }
+      }
+    },
+    "Disabled" : {
+      "comment" : "Menu bar status line: protection disabled by the user",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحماية معطّلة"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "comment" : "Onboarding primary button on the permission-only reopen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم"
+          }
+        }
+      }
+    },
+    "Enable Protection" : {
+      "comment" : "Menu bar item, replaces Disable Protection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تفعيل الحماية"
+          }
+        }
+      }
+    },
+    "Everyone" : {
+      "comment" : "Hidden set choice: all persons including Unknown",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجميع"
+          }
+        }
+      }
+    },
+    "Everything happens on this Mac. Sitr has no network access, so nothing leaves your Mac: no pixels, no logs, no telemetry. Verify it any time:" : {
+      "comment" : "Onboarding step 1, above the codesign command",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كل شيء يحدث على جهاز Mac هذا. لا يملك Sitr أي وصول إلى الشبكة، فلا يخرج شيء من جهازك: لا بكسلات ولا سجلات ولا بيانات قياس. يمكنك التحقق من ذلك في أي وقت:"
+          }
+        }
+      }
+    },
+    "Finish" : {
+      "comment" : "Onboarding primary button on the last step",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إتمام"
+          }
+        }
+      }
+    },
+    "For apps without an override. Off: never captured. Blur: detect, then cover. Curtain: cover changes at once, uncover what is verified safe." : {
+      "comment" : "Protection › Default Rule footer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "للتطبيقات التي لا استثناء لها. إيقاف: لا يُلتقط أبدًا. التمويه: اكتشاف ثم تغطية. الستارة: تغطية التغييرات فورًا وكشف ما يثبت أنه آمن."
+          }
+        }
+      }
+    },
+    "Force Quit" : {
+      "comment" : "System shortcut name (⌘⌥⎋)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإنهاء الإجباري"
+          }
+        }
+      }
+    },
+    "Full notices: THIRD_PARTY_NOTICES.md" : {
+      "comment" : "About › Models link",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإشعارات الكاملة: THIRD_PARTY_NOTICES.md"
+          }
+        }
+      }
+    },
+    "GPL-3.0" : {
+      "comment" : "License name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GPL-3.0"
+          }
+        }
+      }
+    },
+    "Gaussian" : {
+      "comment" : "Cover style: Gaussian blur",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غاوسي"
+          }
+        }
+      }
+    },
+    "Gaussian blurs, Pixelate blocks, Solid paints an opaque color" : {
+      "comment" : "Accessibility hint of the Appearance style picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غاوسي يموّه الصورة، وبكسلة تحوّلها إلى مربعات، ومصمت يطليها بلون معتم"
+          }
+        }
+      }
+    },
+    "Gender classifier: dima806/fairface_gender_image_detection (ViT-B/16) — Apache-2.0; trained on FairFace, CC BY 4.0." : {
+      "comment" : "About › Models",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مصنّف الجنس: dima806/fairface_gender_image_detection (ViT-B/16) — Apache-2.0؛ مدرَّب على FairFace بترخيص CC BY 4.0."
+          }
+        }
+      }
+    },
+    "General" : {
+      "comment" : "Settings tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عام"
+          }
+        }
+      }
+    },
+    "Help" : {
+      "comment" : "Key name: the Help key on extended keyboards",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مساعدة"
+          }
+        }
+      }
+    },
+    "Hidden set" : {
+      "comment" : "Accessibility label of the Hide picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الفئة المحجوبة"
+          }
+        }
+      }
+    },
+    "Hide" : {
+      "comment" : "Protection picker label (Hide: Women / Men / Everyone) and the ⌘H system shortcut name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إخفاء"
+          }
+        }
+      }
+    },
+    "Hides people on screen, entirely on this Mac." : {
+      "comment" : "About, one-line description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يخفي الأشخاص على الشاشة، بالكامل على جهاز Mac هذا."
+          }
+        }
+      }
+    },
+    "Hold %@ to reveal what is under the covers; release to cover again. As a safety, covers come back after 30 seconds of holding." : {
+      "comment" : "Onboarding step 5; %@ is the shortcut such as ⌃⌥Space",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اضغط باستمرار على %@ لكشف ما تحت الأغطية، وأفلته لتعود التغطية. للأمان، تعود الأغطية بعد ٣٠ ثانية من الضغط المستمر."
+          }
+        }
+      }
+    },
+    "Hold it to see what is under the covers; release to cover again. Click the field, then press the new keys. ⎋ cancels." : {
+      "comment" : "Shortcuts › under the recorder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اضغط عليه باستمرار لرؤية ما تحت الأغطية، وأفلته لتعود التغطية. انقر الحقل ثم اضغط المفاتيح الجديدة. ⎋ للإلغاء."
+          }
+        }
+      }
+    },
+    "Input source switching" : {
+      "comment" : "Who else uses ⌃Space",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تبديل مصدر الإدخال"
+          }
+        }
+      }
+    },
+    "Key %lld" : {
+      "comment" : "Key name fallback; %lld is the virtual key code",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المفتاح %lld"
+          }
+        }
+      }
+    },
+    "Keypad %@" : {
+      "comment" : "Numeric keypad key; %@ is the digit or symbol",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لوحة الأرقام %@"
+          }
+        }
+      }
+    },
+    "Known conflicts" : {
+      "comment" : "Shortcuts › section header",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعارضات معروفة"
+          }
+        }
+      }
+    },
+    "Language" : {
+      "comment" : "General picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اللغة"
+          }
+        }
+      }
+    },
+    "Launch at login" : {
+      "comment" : "Toggle, General and onboarding step 5",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التشغيل عند تسجيل الدخول"
+          }
+        }
+      }
+    },
+    "Leaves every app Off and opens Settings, Protection, when setup finishes" : {
+      "comment" : "Accessibility hint, Configure myself",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يترك كل التطبيقات على وضع الإيقاف ويفتح الإعدادات › الحماية عند انتهاء الإعداد"
+          }
+        }
+      }
+    },
+    "License" : {
+      "comment" : "About row label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الترخيص"
+          }
+        }
+      }
+    },
+    "Lock Screen" : {
+      "comment" : "System shortcut name (⌃⌘Q)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قفل الشاشة"
+          }
+        }
+      }
+    },
+    "Log Out" : {
+      "comment" : "System shortcut name (⌘⇧Q)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسجيل الخروج"
+          }
+        }
+      }
+    },
+    "Look for com.apple.security.app-sandbox set to true and no com.apple.security.network keys: Sitr cannot open a network connection." : {
+      "comment" : "About › Verify privacy, under the codesign command",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابحث عن com.apple.security.app-sandbox بقيمة true وتأكد من غياب أي مفاتيح com.apple.security.network: لا يستطيع Sitr فتح أي اتصال بالشبكة."
+          }
+        }
+      }
+    },
+    "Men" : {
+      "comment" : "Hidden set choice",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الرجال"
+          }
+        }
+      }
+    },
+    "Minimize" : {
+      "comment" : "System shortcut name (⌘M)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التصغير"
+          }
+        }
+      }
+    },
+    "Mode" : {
+      "comment" : "Protection › overrides table column and row picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الوضع"
+          }
+        }
+      }
+    },
+    "Mode for %@" : {
+      "comment" : "Accessibility label of a row's mode picker; %@ is the app name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وضع %@"
+          }
+        }
+      }
+    },
+    "Mode for every app without an override. Off means never captured." : {
+      "comment" : "Accessibility hint, Default Rule picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الوضع لكل تطبيق ليس له استثناء. الإيقاف يعني عدم الالتقاط أبدًا."
+          }
+        }
+      }
+    },
+    "Models" : {
+      "comment" : "About › section header (the two Core ML models)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النماذج"
+          }
+        }
+      }
+    },
+    "Needs Screen Recording permission" : {
+      "comment" : "Menu bar status line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يلزم إذن تسجيل الشاشة"
+          }
+        }
+      }
+    },
+    "Not allowed yet. Until it is, Sitr covers nothing and shows a warning icon in the menu bar." : {
+      "comment" : "Onboarding step 2 status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غير مسموح به بعد. إلى أن يُسمح به، لا يغطي Sitr أي شيء ويعرض أيقونة تحذير في شريط القائمة."
+          }
+        }
+      }
+    },
+    "Not installed" : {
+      "comment" : "Protection › overrides table, under an app that is not on this Mac",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غير مثبَّت"
+          }
+        }
+      }
+    },
+    "Off" : {
+      "comment" : "Per-app rule mode: the app is never captured",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف"
+          }
+        }
+      }
+    },
+    "Open Login Items" : {
+      "comment" : "General › Launch at login button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح عناصر تسجيل الدخول"
+          }
+        }
+      }
+    },
+    "Open Login Items in System Settings" : {
+      "comment" : "Accessibility label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح عناصر تسجيل الدخول في إعدادات النظام"
+          }
+        }
+      }
+    },
+    "Open System Settings" : {
+      "comment" : "Onboarding step 2 button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح إعدادات النظام"
+          }
+        }
+      }
+    },
+    "Open THIRD_PARTY_NOTICES.md on GitHub" : {
+      "comment" : "Accessibility label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح THIRD_PARTY_NOTICES.md على GitHub"
+          }
+        }
+      }
+    },
+    "Open the Sitr source code on GitHub" : {
+      "comment" : "Accessibility label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح الكود المصدري لـ Sitr على GitHub"
+          }
+        }
+      }
+    },
+    "Opens Privacy & Security, Screen & System Audio Recording" : {
+      "comment" : "Accessibility hint, Open System Settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يفتح الخصوصية والأمن › تسجيل الشاشة وصوت النظام"
+          }
+        }
+      }
+    },
+    "Opens the releases page on GitHub in your browser" : {
+      "comment" : "Accessibility hint, Check for Updates",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يفتح صفحة الإصدارات على GitHub في المتصفح"
+          }
+        }
+      }
+    },
+    "Option alone types special characters and is unreliable since macOS 15; add ⌃ or ⌘." : {
+      "comment" : "Shortcut recorder rejection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مفتاح Option وحده يكتب رموزًا خاصة وأصبح غير موثوق منذ macOS 15؛ أضف ⌃ أو ⌘."
+          }
+        }
+      }
+    },
+    "Other…" : {
+      "comment" : "Protection › Add menu: pick an .app file",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تطبيق آخر…"
+          }
+        }
+      }
+    },
+    "Paste it in Terminal to check the entitlements of the installed app" : {
+      "comment" : "Accessibility hint, About › Copy",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الصقه في الطرفية (Terminal) للتحقق من صلاحيات التطبيق المثبَّت"
+          }
+        }
+      }
+    },
+    "Pause Protection" : {
+      "comment" : "Menu bar submenu",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف الحماية مؤقتًا"
+          }
+        }
+      }
+    },
+    "Pause Protection for 1 hour" : {
+      "comment" : "Accessibility label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف الحماية مؤقتًا لساعة واحدة"
+          }
+        }
+      }
+    },
+    "Pause Protection for 15 minutes" : {
+      "comment" : "Accessibility label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف الحماية مؤقتًا لمدة ١٥ دقيقة"
+          }
+        }
+      }
+    },
+    "Paused until %@" : {
+      "comment" : "Menu bar status line; %@ is a short time such as 3:45 PM",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحماية متوقفة مؤقتًا حتى %@"
+          }
+        }
+      }
+    },
+    "Person detector: YOLOX-S by Megvii, Inc. — Apache-2.0." : {
+      "comment" : "About › Models",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كاشف الأشخاص: YOLOX-S من Megvii, Inc. — Apache-2.0."
+          }
+        }
+      }
+    },
+    "Pick a running app, or Other to choose an app file" : {
+      "comment" : "Accessibility hint, Add menu",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر تطبيقًا قيد التشغيل، أو «تطبيق آخر» لاختيار ملف تطبيق"
+          }
+        }
+      }
+    },
+    "Pixelate" : {
+      "comment" : "Cover style: pixelation blocks",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بكسلة"
+          }
+        }
+      }
+    },
+    "Press shortcut…" : {
+      "comment" : "Shortcut recorder field while it waits for keys",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اضغط الاختصار…"
+          }
+        }
+      }
+    },
+    "Press to record, then press the new key combination." : {
+      "comment" : "Accessibility help of the shortcut recorder field",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اضغط للتسجيل، ثم اضغط تركيبة المفاتيح الجديدة."
+          }
+        }
+      }
+    },
+    "Preview" : {
+      "comment" : "Appearance › section header",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "معاينة"
+          }
+        }
+      }
+    },
+    "Preview of a cover over a sample scene" : {
+      "comment" : "Accessibility label, Appearance preview",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "معاينة غطاء فوق مشهد نموذجي"
+          }
+        }
+      }
+    },
+    "Protected" : {
+      "comment" : "Menu bar status line: protection active",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحماية مفعّلة"
+          }
+        }
+      }
+    },
+    "Protection" : {
+      "comment" : "Settings tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحماية"
+          }
+        }
+      }
+    },
+    "Quit" : {
+      "comment" : "System shortcut name (⌘Q), fills '%@ is %@, a system shortcut.'",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإنهاء"
+          }
+        }
+      }
+    },
+    "Quit Sitr" : {
+      "comment" : "Menu bar item",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إنهاء Sitr"
+          }
+        }
+      }
+    },
+    "Quits and reopens Sitr in the new language" : {
+      "comment" : "Accessibility hint, Relaunch now",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ينهي Sitr ويعيد فتحه باللغة الجديدة"
+          }
+        }
+      }
+    },
+    "Recommended Protection" : {
+      "comment" : "Onboarding step 4 title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحماية الموصى بها"
+          }
+        }
+      }
+    },
+    "Recommended on" : {
+      "comment" : "Accessibility hint for the Strict Mode toggle in onboarding",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يوصى بتفعيله"
+          }
+        }
+      }
+    },
+    "Recommended rules" : {
+      "comment" : "Accessibility label of the preset table, onboarding step 4",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "القواعد الموصى بها"
+          }
+        }
+      }
+    },
+    "Recommended settings applied" : {
+      "comment" : "Protection, next to the disabled preset button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم تطبيق الإعدادات الموصى بها"
+          }
+        }
+      }
+    },
+    "Recommended: Safari, Chrome, Arc, Telegram, WhatsApp and Discord as Curtain; the Default Rule stays. Select rows and press ⌫ to remove them." : {
+      "comment" : "Protection › App overrides footer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الموصى به: Safari وChrome وArc وTelegram وWhatsApp وDiscord بوضع الستارة، مع بقاء القاعدة الافتراضية كما هي. حدد الصفوف واضغط ⌫ لإزالتها."
+          }
+        }
+      }
+    },
+    "Reduce frame rate in Low Power Mode" : {
+      "comment" : "General toggle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تقليل معدل الإطارات في نمط الطاقة المنخفضة"
+          }
+        }
+      }
+    },
+    "Relaunch Sitr now" : {
+      "comment" : "Accessibility label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تشغيل Sitr الآن"
+          }
+        }
+      }
+    },
+    "Relaunch now" : {
+      "comment" : "General › Language, button after a language change",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة التشغيل الآن"
+          }
+        }
+      }
+    },
+    "Remove %@" : {
+      "comment" : "Accessibility label of a row's ⊖ button; %@ is the app name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إزالة %@"
+          }
+        }
+      }
+    },
+    "Removes all covers and resumes on its own" : {
+      "comment" : "Accessibility hint, Pause Protection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يزيل كل الأغطية ثم يستأنف الحماية تلقائيًا"
+          }
+        }
+      }
+    },
+    "Removes all covers until you enable protection again" : {
+      "comment" : "Accessibility hint, Disable Protection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يزيل كل الأغطية حتى تفعّل الحماية مجددًا"
+          }
+        }
+      }
+    },
+    "Required. Everyone includes people Sitr cannot classify." : {
+      "comment" : "Accessibility hint of the hidden set picker, onboarding step 3",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مطلوب. «الجميع» يشمل الأشخاص الذين لا يستطيع Sitr تصنيفهم."
+          }
+        }
+      }
+    },
+    "Reset shortcut to default, Control Option Space" : {
+      "comment" : "Accessibility label, Shortcuts › Reset to Default",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين الاختصار إلى الافتراضي، Control Option مسافة"
+          }
+        }
+      }
+    },
+    "Reset to Default" : {
+      "comment" : "Shortcuts button (⌃⌥Space)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة التعيين إلى الافتراضي"
+          }
+        }
+      }
+    },
+    "Resume Protection" : {
+      "comment" : "Menu bar item while paused",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استئناف الحماية"
+          }
+        }
+      }
+    },
+    "Returns to the previous step" : {
+      "comment" : "Accessibility hint, Back",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعود إلى الخطوة السابقة"
+          }
+        }
+      }
+    },
+    "Reveal Hold" : {
+      "comment" : "Shortcuts › section header: hold a key to see under the covers",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الكشف المؤقت"
+          }
+        }
+      }
+    },
+    "Reveal Hold shortcut" : {
+      "comment" : "Accessibility label of the shortcut recorder field",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختصار الكشف المؤقت"
+          }
+        }
+      }
+    },
+    "Reveal available: hold %@" : {
+      "comment" : "Accessibility label of the menu bar reveal line; %@ is the shortcut",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الكشف المؤقت متاح: اضغط باستمرار على %@"
+          }
+        }
+      }
+    },
+    "Reveal unavailable" : {
+      "comment" : "Menu bar line while paused, disabled, or without permission",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الكشف المؤقت غير متاح"
+          }
+        }
+      }
+    },
+    "Reveal: hold %@" : {
+      "comment" : "Menu bar line; %@ is the shortcut such as ⌃⌥Space",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الكشف المؤقت: اضغط باستمرار على %@"
+          }
+        }
+      }
+    },
+    "Safari, Chrome, Arc" : {
+      "comment" : "Onboarding step 4, preset table",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safari وChrome وArc"
+          }
+        }
+      }
+    },
+    "Screen Recording is allowed." : {
+      "comment" : "Onboarding step 2 status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسجيل الشاشة مسموح به."
+          }
+        }
+      }
+    },
+    "Screen Recording permission is missing or screen capture stopped. Nothing is covered until it resumes." : {
+      "comment" : "Notification body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إذن تسجيل الشاشة مفقود أو توقف التقاط الشاشة. لا يُغطَّى أي شيء حتى يُستأنف."
+          }
+        }
+      }
+    },
+    "Screen capture is running again and people on screen are covered." : {
+      "comment" : "Notification body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عاد التقاط الشاشة إلى العمل، والأشخاص على الشاشة مغطّون."
+          }
+        }
+      }
+    },
+    "Screen sharing and screenshots" : {
+      "comment" : "About › section header",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مشاركة الشاشة ولقطات الشاشة"
+          }
+        }
+      }
+    },
+    "Screenshot" : {
+      "comment" : "System shortcut name (⌘⇧3/4/5)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لقطة الشاشة"
+          }
+        }
+      }
+    },
+    "Sets Safari, Chrome, Arc, Telegram, WhatsApp and Discord to Curtain" : {
+      "comment" : "Accessibility hint, Use recommended settings (Protection)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يضبط Safari وChrome وArc وTelegram وWhatsApp وDiscord على وضع الستارة"
+          }
+        }
+      }
+    },
+    "Sets Safari, Chrome, Arc, Telegram, WhatsApp and Discord to Curtain; the Default Rule stays Off" : {
+      "comment" : "Accessibility hint, Use recommended settings (onboarding)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يضبط Safari وChrome وArc وTelegram وWhatsApp وDiscord على وضع الستارة، وتبقى القاعدة الافتراضية على الإيقاف"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "comment" : "Accessibility label of the Settings… item and the ⌘, system shortcut name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإعدادات"
+          }
+        }
+      }
+    },
+    "Settings…" : {
+      "comment" : "Menu bar item",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإعدادات…"
+          }
+        }
+      }
+    },
+    "Sharing your entire screen usually shows the covers to the viewers. Sharing a single window does not include the overlay, so covers are not guaranteed there. Screenshots include the covers." : {
+      "comment" : "About › Screen sharing and screenshots (PRD FR11)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عند مشاركة الشاشة بالكامل يرى المشاهدون الأغطية عادةً. أما مشاركة نافذة واحدة فلا تتضمن طبقة التغطية، لذا لا تُضمن الأغطية فيها. لقطات الشاشة تتضمن الأغطية."
+          }
+        }
+      }
+    },
+    "Shift alone would swallow capital letters; add ⌃, ⌥ or ⌘." : {
+      "comment" : "Shortcut recorder rejection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مفتاح Shift وحده سيمنع كتابة الأحرف الكبيرة؛ أضف ⌃ أو ⌥ أو ⌘."
+          }
+        }
+      }
+    },
+    "Shortcut" : {
+      "comment" : "Shortcuts › row label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاختصار"
+          }
+        }
+      }
+    },
+    "Shortcuts" : {
+      "comment" : "Settings tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاختصارات"
+          }
+        }
+      }
+    },
+    "Shortcuts with Option but neither ⌃ nor ⌘ can collide with typing special characters." : {
+      "comment" : "Shortcut conflict warning",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاختصارات التي تتضمن Option دون ⌃ أو ⌘ قد تتعارض مع كتابة الرموز الخاصة."
+          }
+        }
+      }
+    },
+    "Shows the macOS permission dialog" : {
+      "comment" : "Accessibility hint, Allow Screen Recording",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعرض مربع حوار الإذن في macOS"
+          }
+        }
+      }
+    },
+    "Siri (hold) and the ChatGPT app" : {
+      "comment" : "Who else uses ⌥Space",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siri (بالضغط المستمر) وتطبيق ChatGPT"
+          }
+        }
+      }
+    },
+    "Sitr" : {
+      "comment" : "App name, stays in Latin script",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitr"
+          }
+        }
+      }
+    },
+    "Sitr Setup" : {
+      "comment" : "Onboarding window title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعداد Sitr"
+          }
+        }
+      }
+    },
+    "Sitr can only cover what it can see, and macOS requires Screen Recording permission for that. The screen is analyzed on this Mac and never stored." : {
+      "comment" : "Onboarding step 2",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يستطيع Sitr تغطية إلا ما يراه، ويتطلب macOS إذن تسجيل الشاشة لذلك. تُحلَّل الشاشة على جهاز Mac هذا ولا تُخزَّن أبدًا."
+          }
+        }
+      }
+    },
+    "Sitr hides people on your screen as they appear — women, men, or everyone — in every app: browsers, chats, photos, video, calls." : {
+      "comment" : "Onboarding step 1",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يخفي Sitr الأشخاص على شاشتك لحظة ظهورهم — النساء أو الرجال أو الجميع — في كل التطبيقات: المتصفحات والمحادثات والصور والفيديو والمكالمات."
+          }
+        }
+      }
+    },
+    "Sitr needs your attention" : {
+      "comment" : "Onboarding caption when reopened for a lost permission",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitr يحتاج إلى انتباهك"
+          }
+        }
+      }
+    },
+    "Sitr protection is degraded" : {
+      "comment" : "Notification title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أداء حماية Sitr منخفض"
+          }
+        }
+      }
+    },
+    "Sitr protection is off" : {
+      "comment" : "Notification title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حماية Sitr متوقفة"
+          }
+        }
+      }
+    },
+    "Sitr protection restored" : {
+      "comment" : "Notification title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استُعيدت حماية Sitr"
+          }
+        }
+      }
+    },
+    "Sitr starts protecting as soon as you log in." : {
+      "comment" : "Onboarding step 5, under Launch at login",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يبدأ Sitr الحماية فور تسجيل دخولك."
+          }
+        }
+      }
+    },
+    "Sitr: %@" : {
+      "comment" : "Accessibility label of the menu bar icon; %@ is the status line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitr: %@"
+          }
+        }
+      }
+    },
+    "Skip for now" : {
+      "comment" : "Onboarding step 2 button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التخطي الآن"
+          }
+        }
+      }
+    },
+    "Solid" : {
+      "comment" : "Cover style: opaque color",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مصمت"
+          }
+        }
+      }
+    },
+    "Source on GitHub" : {
+      "comment" : "About link",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المصدر على GitHub"
+          }
+        }
+      }
+    },
+    "Space" : {
+      "comment" : "Key name in a shortcut such as ⌃⌥Space",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مسافة"
+          }
+        }
+      }
+    },
+    "Spotlight" : {
+      "comment" : "Who else uses ⌘Space",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotlight"
+          }
+        }
+      }
+    },
+    "Status: %@" : {
+      "comment" : "Accessibility label of the menu bar status line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحالة: %@"
+          }
+        }
+      }
+    },
+    "Step %lld of %lld" : {
+      "comment" : "Onboarding caption",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الخطوة %1$lld من %2$lld"
+          }
+        }
+      }
+    },
+    "Style" : {
+      "comment" : "Appearance picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النمط"
+          }
+        }
+      }
+    },
+    "System" : {
+      "comment" : "Language picker: follow the system language order",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النظام"
+          }
+        }
+      }
+    },
+    "System follows the language order in System Settings › General › Language & Region." : {
+      "comment" : "General › Language footer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتبع خيار «النظام» ترتيب اللغات في إعدادات النظام › عام › اللغة والمنطقة."
+          }
+        }
+      }
+    },
+    "Telegram, WhatsApp, Discord" : {
+      "comment" : "Onboarding step 4, preset table",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telegram وWhatsApp وDiscord"
+          }
+        }
+      }
+    },
+    "The new language applies after a relaunch." : {
+      "comment" : "General › Language",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُطبَّق اللغة الجديدة بعد إعادة التشغيل."
+          }
+        }
+      }
+    },
+    "Typing special characters; regressed in macOS 15.0" : {
+      "comment" : "Shortcuts › Known conflicts, the ⌥ + key row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كتابة الرموز الخاصة؛ تراجع سلوكه في macOS 15.0"
+          }
+        }
+      }
+    },
+    "Unknown: facing away, face hidden or too small, or the classifier is unsure." : {
+      "comment" : "Protection footer under the Strict Mode toggle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غير معروف: من يولّي ظهره، أو وجهه مخفي أو صغير جدًا، أو المصنّف غير متأكد."
+          }
+        }
+      }
+    },
+    "Use recommended settings" : {
+      "comment" : "Button, Protection and onboarding step 4",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استخدام الإعدادات الموصى بها"
+          }
+        }
+      }
+    },
+    "Verification command: %@" : {
+      "comment" : "Accessibility label of the codesign command",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أمر التحقق: %@"
+          }
+        }
+      }
+    },
+    "Verify privacy" : {
+      "comment" : "About › section header",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحقق من الخصوصية"
+          }
+        }
+      }
+    },
+    "Version %@ (%@)" : {
+      "comment" : "About; %1$@ the short version, %2$@ the build number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإصدار %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "Welcome to Sitr" : {
+      "comment" : "Onboarding step 1 title; the only place the Arabic name appears",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مرحبًا بك في Sitr «ستر»"
+          }
+        }
+      }
+    },
+    "Who gets covered. Everyone includes people Sitr cannot classify." : {
+      "comment" : "Accessibility hint of the Hide picker, Protection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مَن يُغطَّى. «الجميع» يشمل الأشخاص الذين لا يستطيع Sitr تصنيفهم."
+          }
+        }
+      }
+    },
+    "Who should be hidden?" : {
+      "comment" : "Onboarding step 3 title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مَن يجب إخفاؤه؟"
+          }
+        }
+      }
+    },
+    "Women" : {
+      "comment" : "Hidden set choice",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النساء"
+          }
+        }
+      }
+    },
+    "You're all set" : {
+      "comment" : "Onboarding step 5 title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كل شيء جاهز"
+          }
+        }
+      }
+    },
+    "macOS 15.1 and later asks you to re-approve this permission about once a month. When the grant lapses, Sitr shows the warning icon and brings this step back." : {
+      "comment" : "Onboarding step 2 note",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يطلب macOS 15.1 والأحدث إعادة الموافقة على هذا الإذن مرة كل شهر تقريبًا. عند انقضاء الإذن، يعرض Sitr أيقونة التحذير ويعيد هذه الخطوة."
+          }
+        }
+      }
+    },
+    "macOS did not register %@ (error %lld); choose another shortcut." : {
+      "comment" : "Shortcuts error; %1$@ the combo, %2$lld the OSStatus",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يسجّل macOS الاختصار %1$@ (الخطأ %2$lld)؛ اختر اختصارًا آخر."
+          }
+        }
+      }
+    },
+    "the app switcher" : {
+      "comment" : "System shortcut name (⌘⇥)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مبدّل التطبيقات"
+          }
+        }
+      }
+    },
+    "⌥ + key" : {
+      "comment" : "Shortcuts › Known conflicts row label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌥ + مفتاح"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

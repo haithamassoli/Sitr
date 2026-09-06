@@ -38,8 +38,9 @@ struct ShortcutsTab: View {
                     Label(note, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.callout)
                 }
                 if model.hotkey.registrationStatus != noErr {
-                    Label("macOS did not register \(combo.displayString) (error \(model.hotkey.registrationStatus)); choose another shortcut.",
-                          systemImage: "exclamationmark.triangle")
+                    let shortcut = combo.displayString
+                    let status = Int(model.hotkey.registrationStatus)
+                    Label("macOS did not register \(shortcut) (error \(status)); choose another shortcut.", systemImage: "exclamationmark.triangle")
                         .foregroundStyle(.red)
                         .font(.callout)
                 }
@@ -86,8 +87,8 @@ final class RecorderView: NSView {
         super.init(frame: NSRect(x: 0, y: 0, width: 170, height: 24))
         setAccessibilityElement(true)
         setAccessibilityRole(.button)
-        setAccessibilityLabel("Reveal Hold shortcut")
-        setAccessibilityHelp("Press to record, then press the new key combination.")
+        setAccessibilityLabel(String(localized: "Reveal Hold shortcut", comment: "Accessibility label of the shortcut recorder field"))
+        setAccessibilityHelp(String(localized: "Press to record, then press the new key combination.", comment: "Accessibility help of the shortcut recorder field"))
     }
 
     @available(*, unavailable) required init?(coder: NSCoder) { nil }
@@ -149,7 +150,8 @@ final class RecorderView: NSView {
         path.fill()
         (recording ? NSColor.controlAccentColor : NSColor.separatorColor).setStroke()
         path.stroke()
-        let text = recording ? "Press shortcut…" : combo.displayString
+        // The combo carries its own LTR isolate when the key name is Arabic (KeyCombo.displayString), so natural direction is right.
+        let text = recording ? String(localized: "Press shortcut…", comment: "Shortcut recorder field while it waits for keys") : combo.displayString
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: NSFont.systemFontSize),
             .foregroundColor: recording ? NSColor.secondaryLabelColor : NSColor.labelColor,

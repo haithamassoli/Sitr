@@ -1,5 +1,6 @@
 // M4-T01 onboarding (PRD FR8, five steps) and its M4-T11 accessibility. `OnboardingFlow` is the pure state (unit-tested),
-// `OnboardingWindow` the one NSWindow + NSHostingView, `OnboardingView` the SwiftUI pages. Strings are literals (M4-T05).
+// `OnboardingWindow` the one NSWindow + NSHostingView, `OnboardingView` the SwiftUI pages. Every literal is a String Catalog
+// key (M4-T05); computed texts go through `String(localized:)`.
 import AppKit
 import ServiceManagement
 import SitrCore
@@ -138,7 +139,7 @@ enum OnboardingWindow {
         let window = NSWindow(
             contentRect: NSRect(origin: .zero, size: OnboardingView.size), styleMask: [.titled, .closable], backing: .buffered, defer: false)
         window.contentView = NSHostingView(rootView: OnboardingView(model: model, permission: permission, flow: flow))
-        window.title = "Sitr Setup"
+        window.title = String(localized: "Sitr Setup", comment: "Onboarding window title (hidden, read by accessibility)")
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true
@@ -182,10 +183,17 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(flow.permissionOnly ? "Sitr needs your attention" : "Step \(flow.step.rawValue) of \(flow.stepCount)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .padding(.bottom, 12)
+            Group {
+                if flow.permissionOnly {
+                    Text("Sitr needs your attention")
+                } else {
+                    let step = flow.step.rawValue, count = flow.stepCount
+                    Text("Step \(step) of \(count)")
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .padding(.bottom, 12)
             content
             Spacer(minLength: 12)
             buttons
@@ -205,7 +213,7 @@ struct OnboardingView: View {
     @ViewBuilder private var content: some View {
         switch flow.step {
         case .welcome:
-            page("eye.slash", "Welcome to Sitr") {
+            page("eye.slash", Text("Welcome to Sitr")) {
                 Text("Sitr hides people on your screen as they appear — women, men, or everyone — in every app: browsers, chats, photos, video, calls.")
                 Text("Everything happens on this Mac. Sitr has no network access, so nothing leaves your Mac: no pixels, no logs, no telemetry. Verify it any time:")
                 Text(AboutTab.verifyCommand)
@@ -214,10 +222,11 @@ struct OnboardingView: View {
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 6))
+                    .environment(\.layoutDirection, .leftToRight)  // a shell command stays LTR and left-aligned inside the RTL layout
                     .accessibilityLabel("Verification command: \(AboutTab.verifyCommand)")
             }
         case .permission:
-            page("rectangle.dashed.badge.record", "Allow Screen Recording") {
+            page("rectangle.dashed.badge.record", Text("Allow Screen Recording")) {
                 Text("Sitr can only cover what it can see, and macOS requires Screen Recording permission for that. The screen is analyzed on this Mac and never stored.")
                 if flow.permissionGranted {
                     Label("Screen Recording is allowed.", systemImage: "checkmark.circle.fill")
@@ -237,7 +246,7 @@ struct OnboardingView: View {
                     .foregroundStyle(.secondary)
             }
         case .hiddenSet:
-            page("person.2", "Who should be hidden?") {
+            page("person.2", Text("Who should be hidden?")) {
                 Picker("Hide", selection: $flow.hiddenSet) {
                     Text("Women").tag(HiddenSet?.some(.women))
                     Text("Men").tag(HiddenSet?.some(.men))
@@ -261,12 +270,15 @@ struct OnboardingView: View {
                         .toggleStyle(.switch)
                         .disabled(flow.strictLocked)
                         .accessibilityLabel("Blur Unknown, Strict Mode")
-                        .accessibilityHint(flow.strictLocked ? "Always on while Everyone is selected" : "Recommended on")
+                        .accessibilityHint(
+                            flow.strictLocked
+                                ? String(localized: "Always on while Everyone is selected", comment: "Accessibility hint for the Strict Mode toggle")
+                                : String(localized: "Recommended on", comment: "Accessibility hint for the Strict Mode toggle in onboarding"))
                 }
                 .padding(.top, 6)
             }
         case .recommended:
-            page("checkmark.shield", "Recommended Protection") {
+            page("checkmark.shield", Text("Recommended Protection")) {
                 Text("Curtain covers changed regions the moment they appear and uncovers what is verified safe: the mode for apps where people show up without warning. Every other app stays Off (the Default Rule) until you change it in Settings › Protection.")
                 Grid(alignment: .leading, horizontalSpacing: 28, verticalSpacing: 8) {
                     GridRow {
@@ -288,8 +300,9 @@ struct OnboardingView: View {
                 .accessibilityLabel("Recommended rules")
             }
         case .done:
-            page("keyboard", "You're all set") {
-                Text("Hold \(model.preferences.hotkey.displayString) to reveal what is under the covers; release to cover again. As a safety, covers come back after 30 seconds of holding.")
+            let hotkey = model.preferences.hotkey.displayString
+            page("keyboard", Text("You're all set")) {
+                Text("Hold \(hotkey) to reveal what is under the covers; release to cover again. As a safety, covers come back after 30 seconds of holding.")
                 Text("Change the shortcut in Settings › Shortcuts. Sitr lives in the menu bar: pause, disable, or open Settings from there.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -311,14 +324,15 @@ struct OnboardingView: View {
         }
     }
 
-    private func page(_ symbol: String, _ title: String, @ViewBuilder body: () -> some View) -> some View {
+    /// `title` is a `Text` so the call sites carry the literal (the String Catalog gate reads `Text("…")`).
+    private func page(_ symbol: String, _ title: Text, @ViewBuilder body: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
                     .font(.system(size: 30))
                     .foregroundStyle(.tint)
                     .accessibilityHidden(true)
-                Text(title)
+                title
                     .font(.title.bold())
                     .accessibilityAddTraits(.isHeader)
             }
@@ -351,7 +365,7 @@ struct OnboardingView: View {
                     .focused($focus, equals: .primary)
                     .accessibilityHint("Sets Safari, Chrome, Arc, Telegram, WhatsApp and Discord to Curtain; the Default Rule stays Off")
             } else {
-                Button(flow.isLast ? (flow.permissionOnly ? "Done" : "Finish") : "Continue") { advance() }
+                Button(primaryTitle) { advance() }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!flow.canContinue)
@@ -361,10 +375,18 @@ struct OnboardingView: View {
         }
     }
 
+    /// Continue on the way through, Finish on the last step, Done for the permission-only reopen.
+    private var primaryTitle: String {
+        guard flow.isLast else { return String(localized: "Continue", comment: "Onboarding primary button") }
+        return flow.permissionOnly
+            ? String(localized: "Done", comment: "Onboarding primary button on the permission-only reopen")
+            : String(localized: "Finish", comment: "Onboarding primary button on the last step")
+    }
+
     private var continueHint: String {
         switch flow.step {
-        case .permission: "Allow Screen Recording first, or choose Skip for now"
-        case .hiddenSet: "Choose who should be hidden first"
+        case .permission: String(localized: "Allow Screen Recording first, or choose Skip for now", comment: "Accessibility hint on the disabled Continue button")
+        case .hiddenSet: String(localized: "Choose who should be hidden first", comment: "Accessibility hint on the disabled Continue button")
         default: ""
         }
     }

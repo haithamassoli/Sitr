@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Settings window (PRD FR9), one file per tab. Strings are literals until the String Catalog lands (M4-T05).
+/// Settings window (PRD FR9), one file per tab. Tab titles are String Catalog keys (M4-T05).
 /// `SITR_OPEN_SETTINGS=<tab>` (dev smoke runs, docs/m4/settings.md) selects the initial tab; `MenuBarLabel` opens the window.
 struct SettingsView: View {
     nonisolated enum Tab: String, CaseIterable {
