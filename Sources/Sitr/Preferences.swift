@@ -2,6 +2,23 @@ import Foundation
 import Observation
 import SitrCore
 
+/// General › Language (M4-T04, FR12): the standard `AppleLanguages` override in the app's own defaults domain; the process
+/// reads it at launch, hence the "Relaunch now" button. `system` removes the override.
+nonisolated enum AppLanguage: String, CaseIterable, Sendable {
+    case system, english = "en", arabic = "ar"
+
+    /// Value for `AppleLanguages`; nil = remove the key so the system language list applies again.
+    var appleLanguages: [String]? { self == .system ? nil : [rawValue] }
+
+    var title: String {
+        switch self {
+        case .system: "System"
+        case .english: "English"
+        case .arabic: "العربية"
+        }
+    }
+}
+
 /// Settings that survive relaunch, one `UserDefaults` key each. `@Observable` so the menu and Settings follow changes.
 @Observable final class Preferences {
     // ponytail: Everyone + Strict is an M2 placeholder, the PRD has no default hidden set; M4-T01 onboarding forces
@@ -13,6 +30,19 @@ import SitrCore
     var coverStyle: CoverStyle { didSet { defaults.set(coverStyle.rawValue, forKey: "coverStyle") } }
     var blurStrength: Double { didSet { defaults.set(blurStrength, forKey: "blurStrength") } }
     var bodyPadding: Double { didSet { defaults.set(bodyPadding, forKey: "bodyPadding") } }
+    /// General (M4-T04). `language` also writes / removes `AppleLanguages` in the same domain.
+    var language: AppLanguage {
+        didSet {
+            defaults.set(language.rawValue, forKey: "language")
+            if let languages = language.appleLanguages {
+                defaults.set(languages, forKey: "AppleLanguages")
+            } else {
+                defaults.removeObject(forKey: "AppleLanguages")
+            }
+        }
+    }
+    /// "Reduce frame rate in Low Power Mode" (default on). The capture side that honours it is M4-T06.
+    var lowPowerReducesFrameRate: Bool { didSet { defaults.set(lowPowerReducesFrameRate, forKey: "lowPowerReducesFrameRate") } }
 
     private let defaults: UserDefaults
 
@@ -24,6 +54,8 @@ import SitrCore
         coverStyle = defaults.string(forKey: "coverStyle").flatMap(CoverStyle.init(rawValue:)) ?? .gaussian
         blurStrength = defaults.object(forKey: "blurStrength") as? Double ?? 0.7
         bodyPadding = defaults.object(forKey: "bodyPadding") as? Double ?? 0.15
+        language = defaults.string(forKey: "language").flatMap(AppLanguage.init(rawValue:)) ?? .system
+        lowPowerReducesFrameRate = defaults.object(forKey: "lowPowerReducesFrameRate") as? Bool ?? true
     }
 
     private func store(_ value: some Encodable, key: String) {

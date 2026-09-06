@@ -47,6 +47,8 @@ import SitrCore
 
     let preferences: Preferences
     let hotkey: HotkeyManager
+    /// `rules.json` (M3-T01) in Application Support; inside the sandbox that is the app container's copy.
+    let rulesStore: RulesStore
 
     var policy: Policy {
         didSet { if policy != oldValue { onPolicyChanged?(policy) } }
@@ -73,11 +75,13 @@ import SitrCore
     @ObservationIgnored private var ticker: Task<Void, Never>?
     @ObservationIgnored private let log = Logger(subsystem: "com.goldentik.Sitr", category: "model")
 
-    init(preferences: Preferences = Preferences()) {
+    init(preferences: Preferences = Preferences(), rulesStore: RulesStore = RulesStore(directory: AppModel.rulesDirectory)) {
         self.preferences = preferences
-        // ponytail: M2 = Entire Mac Blur; M4-T01 onboarding switches the default to Off and loads RulesStore.
-        policy = Policy(hiddenSet: preferences.hiddenSet, strictMode: preferences.strictMode,
-                        rules: Rules(defaultMode: .blur))
+        self.rulesStore = rulesStore
+        // ponytail: M2 = Entire Mac Blur; M4-T01 onboarding switches the default to Off. Until then a missing rules.json
+        // seeds Blur in memory only (nothing is written), so onboarding can still tell a first launch from a saved choice.
+        let rules = FileManager.default.fileExists(atPath: rulesStore.fileURL.path) ? rulesStore.load() : Rules(defaultMode: .blur)
+        policy = Policy(hiddenSet: preferences.hiddenSet, strictMode: preferences.strictMode, rules: rules)
         hotkey = HotkeyManager(combo: preferences.hotkey)
         hotkey.onPress = { [weak self] in self?.hotkeyPressed() }
         hotkey.onRelease = { [weak self] in self?.hotkeyReleased() }
@@ -141,6 +145,25 @@ import SitrCore
     func setHotkey(_ combo: KeyCombo) {
         hotkey.rebind(combo)
         preferences.hotkey = combo
+    }
+
+    /// `~/Library/Application Support/Sitr` (the container's, when sandboxed).
+    static var rulesDirectory: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appending(path: "Sitr")
+    }
+
+    /// M3-T08: edits the rules in place, pushes them to the pipelines through `onPolicyChanged`, and saves `rules.json`.
+    /// The capture filter that stops capturing Off apps is M3-T03; until it lands, Off only removes covers.
+    func updateRules(_ edit: (inout Rules) -> Void) {
+        var rules = policy.rules
+        edit(&rules)
+        guard rules != policy.rules else { return }
+        policy.rules = rules
+        do {
+            try rulesStore.save(rules)
+        } catch {
+            log.error("rules save failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     static func checkForUpdates() { NSWorkspace.shared.open(releasesURL) }
