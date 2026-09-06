@@ -22,9 +22,18 @@ final class CaptureSession {
     /// Restarts scheduled after an error since the session was created.
     private(set) var restarts = 0
     /// Capture rate, applied live (`updateConfiguration`). Curtain mode (M3) and Low Power (M4) change it at runtime.
-    var fps: Int = 15 { didSet { if fps != oldValue { applyConfiguration() } } }
+    var fps: Int = CaptureSession.devOverride("SITR_FPS", default: 15) { didSet { if fps != oldValue { applyConfiguration() } } }
     /// Long side of the output buffer in pixels (PRD: detection input ≤ 1280), applied live.
-    var captureLongSide: Int = 1280 { didSet { if captureLongSide != oldValue { applyConfiguration() } } }
+    var captureLongSide: Int = CaptureSession.devOverride("SITR_CAPTURE_SIDE", default: 1280) {
+        didSet { if captureLongSide != oldValue { applyConfiguration() } }
+    }
+
+    // ponytail: dev-only starting values from the environment (`SITR_FPS`, `SITR_CAPTURE_SIDE`) so scripts/measure-system.sh
+    // (M1-T08) can compare 15 vs 30 fps and 1280 vs 1920 without a UI knob; Curtain (M3) / Low Power (M4) set the properties
+    // at runtime and win. Upgrade path: delete this once the product has its own setting, nothing else reads the environment.
+    private nonisolated static func devOverride(_ name: String, default value: Int) -> Int {
+        ProcessInfo.processInfo.environment[name].flatMap(Int.init) ?? value
+    }
     /// Counters from the callback: complete / idle / other frames, dirty rect total, last buffer size and attachments.
     var stats: CaptureStats { sink.stats.withLock { $0 } }
 

@@ -94,13 +94,26 @@ Unknown rate per tag:
 | sitr_mnv3 | 86.6 % | 26.2 % | 6.0 % | 88.8 % | 80.1 % | 23.8 % / 33.5 % |
 
 ### ms per crop — `sitr-spike classifier --bench`, release build, batch 1, 20 warm + 200 timed, pre-sized 224x224 BGRA buffer (model time only, no resize)
-Noisy: several runs are shown because the numbers moved between runs on a busy machine. Re-measure in the quiet phase.
+
+**Quiet phase, shipped model** (2026-09-06, nothing else of ours running, load1 2.6–2.8, `.build/release/sitr-spike classifier
+--bench Models/dist/GenderClassifier.mlpackage`, three processes):
+
+| Model | `.all` p50 / p95 | `.cpuAndNeuralEngine` p50 / p95 |
+|---|---|---|
+| dima806_vitb16_int8 (shipped), ANE model alone in the process | – | **5.74 / 6.98** |
+| dima806_vitb16_int8 (shipped), default run (`.all` loaded first, then ANE) | 6.40 / 8.15; 6.42 / 8.16 | 12.24 / 17.56; 9.64 / 17.29 |
+
+The ANE number depends on what else is loaded in the process: alone it is 5.7 / 7.0 ms; as the second model after `.all` it
+is 9.6–12.2 ms p50 with a 17 ms p95. The app loads the detector and the classifier on the ANE together, so its own
+`classify_ms` (5–8 ms per crop including crop + resize, docs/spike/system.md) is the number that counts.
+
+Preliminary (2026-09-05, busy machine; several runs each because the numbers moved between runs; superseded for the shipped model):
 
 | Model | `.all` p50 / p95 | `.cpuAndNeuralEngine` p50 / p95 |
 |---|---|---|
 | crangana_resnet50 | 2.55 / 12.92; 4.12 / 11.95 | 4.59 / 24.12; 4.62 / 24.37 |
 | dima806_vitb16 (fp16) | 9.87 / 21.77; 17.24 / 39.25; 17.17 / 21.08 | 9.63 / 20.33; 16.99 / 18.00; 10.75 / 17.18 |
-| dima806_vitb16_int8 (shipped) | 17.52 / 18.99; 6.11 / 7.04 | **8.43 / 9.91**; 9.55 / 17.15 |
+| dima806_vitb16_int8 (shipped) | 17.52 / 18.99; 6.11 / 7.04 | 8.43 / 9.91; 9.55 / 17.15 |
 | createml_fairface (360x360) | 6.09 / 6.44; 9.92 / 10.98 | 6.10 / 6.73; 6.20 / 6.69 |
 | sitr_mnv3 | 1.26 / 1.88 | **0.76 / 0.87** |
 
@@ -117,8 +130,9 @@ Summary lines are parseable: `classifier_ms model=<name> units=<all|cpuAndNeural
 - Misclassification among non-Unknown: 5.6 % (Commons) / 3.7 % (FairFace). The PRD's ≤ 2 % "hidden-category person shown"
   is a pipeline number (tracker stickiness over frames, faces ≥ 32 px); the classifier alone does not reach it on single
   crops. M2-T07/M4-T08 must confirm it end to end, or raise the threshold (0.90 would trade Unknown for misclassification).
-- Speed: ANE p50 8.4–9.6 ms on M3 — inside the ≤ ~10 ms/crop target but with no margin; `.all` sometimes schedules the ViT
-  partly on the GPU and doubles the latency, so the app must set `.cpuAndNeuralEngine`. Re-measure quietly.
+- Speed: ANE p50 5.7 / p95 7.0 ms on a quiet M3 (model alone; 8.4–9.6 ms preliminary) — inside the ≤ ~10 ms/crop target;
+  `.all` sometimes schedules the ViT partly on the GPU and doubled the latency in the preliminary runs, so the app sets
+  `.cpuAndNeuralEngine`. With the detector loaded in the same process the crop costs 5–8 ms in the app (docs/spike/system.md).
 - **Size flag: 86 MB exceeds the 60 MB guideline** (fp16 would be 172 MB). int8 costs nothing in accuracy (identical on
   both sets). Cheaper models did not make the accuracy bar: ResNet-50 (47 MB) is at 89.5 % with 15 % Unknown; the Create
   ML scene-print head (7 KB) is at 88 % with 18 % Unknown; the MobileNetV3 fine-tune (8.5 MB, 0.8 ms) reached only

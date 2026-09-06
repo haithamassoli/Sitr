@@ -35,7 +35,8 @@ enum Selftest {
             Harness.run("failstate", deadline: 90) { try await failstateTest() }
         case "stimulus":
             let seconds = option(args, "--seconds", default: 30.0)
-            Harness.run("stimulus", deadline: seconds + 15) { try await stimulusOnly(seconds: seconds) }
+            let mode = option(args, "--mode") ?? "drift"
+            Harness.run("stimulus", deadline: seconds + 15) { try await stimulusOnly(seconds: seconds, mode: mode) }
         default:
             let env = ProcessInfo.processInfo.environment
             print("bundle_id=\(Bundle.main.bundleIdentifier ?? "nil")")
@@ -801,18 +802,40 @@ private func failstateTest() async throws -> Bool {
     return ok
 }
 
-/// Dev stimulus for a manual run of the real app from another shell: the person photo drifting for `seconds` (frames keep flowing),
+/// Dev stimulus for a manual run of the real app from another shell: two person photos moving for `seconds` (frames keep flowing),
 /// then exit. No pipeline here — the app under test is the other process, which is why its own-process exclusion does not hide it.
+/// `--mode` (M1-T08, scripts/measure-system.sh): `drift` (default) a slow drift at 15 Hz; `video` continuous 30 fps motion like a
+/// video with people; `browsing` page-like bursts — a redraw (photo off/on) then 1 s of 60 Hz scrolling motion, 4 s static.
 @MainActor
-private func stimulusOnly(seconds: Double) async throws -> Bool {
+private func stimulusOnly(seconds: Double, mode: String) async throws -> Bool {
     guard let screen = NSScreen.screens.first else { throw SelftestError("no screen") }
     let stim = try Stimulus(display: screen.frame.size, motion: true)
     stim.show(true)
-    print("stimulus panel=\(rectString(stim.rect)) seconds=\(Int(seconds))")
+    print("stimulus panel=\(rectString(stim.rect)) seconds=\(Int(seconds)) mode=\(mode)")
     let start = CACurrentMediaTime()
+    var scrolled = 0.0  // browsing: motion time advances only while the "page" scrolls
     while CACurrentMediaTime() - start < seconds {
-        stim.move(t: (CACurrentMediaTime() - start) * 0.25)  // slow drift: a few points per frame
-        try await Task.sleep(for: .milliseconds(66))
+        let t = CACurrentMediaTime() - start
+        switch mode {
+        case "video":
+            stim.move(t: t)  // the motion selftest's video: both photos on their Lissajous paths at 30 fps
+            try await Task.sleep(for: .milliseconds(33))
+        case "browsing":
+            // ponytail: fixed 5 s cycle (redraw, 1 s scroll burst at 60 Hz, 4 s reading pause) instead of a recorded browsing trace.
+            let phase = t.truncatingRemainder(dividingBy: 5)
+            if phase < 0.05 { stim.show(false) }  // page load: the photo column redraws
+            if phase < 1 {
+                stim.show(true)
+                scrolled += 2.0 / 60  // 2× speed: ~300 pt of travel per burst
+                stim.move(t: scrolled)
+                try await Task.sleep(for: .milliseconds(16))
+            } else {
+                try await Task.sleep(for: .milliseconds(100))
+            }
+        default:
+            stim.move(t: t * 0.25)  // slow drift: a few points per frame
+            try await Task.sleep(for: .milliseconds(66))
+        }
     }
     stim.show(false)
     return true
