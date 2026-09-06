@@ -1,0 +1,12611 @@
+{
+ "set": "recall-coco",
+ "source": "COCO val2017 person annotations (CC BY 4.0); images filtered to COCO license ids 4, 5, 7; converted from Bench/recall/manifest.json (Bench/build_manifest.py), attributions in Bench/ATTRIBUTIONS.md",
+ "images_dir": "../data/recall",
+ "tags": {
+  "small": "box height < 80 px at original size",
+  "crowd": "iscrowd = 1",
+  "back": "keypoints: both shoulders visible, nose and both eyes not visible",
+  "partial": "box touches the image border on >= 1 side"
+ },
+ "images": [
+  {
+   "file": "000000000785.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000000785.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 425,
+   "persons": [
+    {
+     "box": [
+      280.79,
+      44.73,
+      218.7,
+      346.68
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000000872.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000000872.jpg",
+   "license": "CC BY 2.0",
+   "width": 621,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      145.26,
+      100.67,
+      291.95,
+      457.35
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      163.73,
+      126.42,
+      265.69,
+      480.4
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000000885.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000000885.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      277.31,
+      189.99,
+      140.09,
+      208.22
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      281.02,
+      89.81,
+      111.83,
+      169.55
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      595.68,
+      25.78,
+      43.37,
+      227.48
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      434.7,
+      0.33,
+      32.79,
+      12.67
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      287.39,
+      0.19,
+      44.65,
+      11.46
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      541.88,
+      1.73,
+      65.84,
+      10.12
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      1.11,
+      0.56,
+      58.94,
+      8.89
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      499.47,
+      0.76,
+      75.17,
+      13.38
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000001000.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000001000.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      115.16,
+      152.13,
+      83.23,
+      228.41
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      405.93,
+      120.42,
+      37.13,
+      45.52
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      265.33,
+      95.86,
+      88.92,
+      315.88
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      209.23,
+      174.64,
+      99.63,
+      249.08
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      504.67,
+      191.95,
+      135.33,
+      288.05
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      410.2,
+      208.53,
+      114.9,
+      271.47
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      380.85,
+      159.91,
+      88.44,
+      319.25
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      330.07,
+      154.25,
+      83.05,
+      313.88
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      410.75,
+      107.03,
+      88.09,
+      121.16
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      183.4,
+      121.34,
+      95.77,
+      272.75
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      52.14,
+      185.12,
+      59.26,
+      212.53
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      349.49,
+      118.71,
+      52.64,
+      41.13
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000001268.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000001268.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      23.27,
+      213.41,
+      53.53,
+      69.47
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      501.68,
+      77.66,
+      138.32,
+      343.71
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      402.34,
+      205.02,
+      65.26,
+      88.45
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      209.18,
+      24.95,
+      80.6
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000001296.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000001296.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 427,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      7.16,
+      1.57,
+      419.84,
+      634.27
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      262.64,
+      25.32,
+      146.96,
+      213.33
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000002153.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000002153.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      283.4,
+      274.77,
+      182.91,
+      170.27
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      371.62,
+      207.81,
+      62.3,
+      197.28
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      174.64,
+      0.0,
+      64.68,
+      119.95
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      275.4,
+      302.2,
+      103.79,
+      134.55
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000002473.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000002473.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      243.73,
+      93.08,
+      130.49,
+      150.65
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      436.85,
+      280.58,
+      61.6,
+      99.86
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      119.06,
+      341.19,
+      23.97,
+      44.09
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      32.39,
+      328.76,
+      25.77,
+      26.41
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000003553.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000003553.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      153.26,
+      0.72,
+      266.99,
+      307.48
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000005001.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000005001.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      10.79,
+      32.63,
+      58.24,
+      169.35
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      225.44,
+      255.64,
+      127.28,
+      224.36
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      77.25,
+      244.56,
+      113.3,
+      235.26
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      41.08,
+      95.68,
+      107.03,
+      378.37
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      119.23,
+      81.44,
+      69.26,
+      188.17
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      50.81,
+      58.55,
+      84.68,
+      83.97
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      171.19,
+      31.06,
+      80.38,
+      154.48
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      297.02,
+      50.13,
+      58.4,
+      87.23
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      211.45,
+      88.41,
+      123.67,
+      193.01
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      354.88,
+      91.69,
+      162.87,
+      378.6
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      434.75,
+      40.93,
+      70.86,
+      119.68
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      424.99,
+      22.65,
+      44.22,
+      71.19
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      208.12,
+      61.3,
+      89.39,
+      148.7
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      523,
+      26,
+      116,
+      288
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000007281.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000007281.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 361,
+   "persons": [
+    {
+     "box": [
+      344.85,
+      132.99,
+      128.41,
+      166.36
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      465.33,
+      122.24,
+      62.17,
+      73.68
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      551.1,
+      193.24,
+      17.6,
+      28.77
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      572.72,
+      201.91,
+      7.4,
+      10.88
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      592.33,
+      203.68,
+      9.09,
+      13.51
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      255.86,
+      199.85,
+      5.78,
+      6.73
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      601.22,
+      203.33,
+      5.92,
+      11.63
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      634.84,
+      209.66,
+      3.75,
+      5.86
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      225.63,
+      34.15,
+      45.53
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      534.6,
+      209.47,
+      3.73,
+      4.46
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000007511.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000007511.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      386.16,
+      240.54,
+      122.96,
+      231.91
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      269.44,
+      272.78,
+      13.19,
+      32.45
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      385.74,
+      274.12,
+      5.95,
+      7.97
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      614.16,
+      297.67,
+      15.94,
+      11.44
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      523.46,
+      276.22,
+      8.34,
+      21.23
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      605.67,
+      296.63,
+      9.95,
+      12.01
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      623.14,
+      280.75,
+      6.4,
+      15.18
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      610.59,
+      277.12,
+      6.18,
+      8.89
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      602.26,
+      276.75,
+      8.2,
+      12.71
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      511.12,
+      286.87,
+      8.92,
+      12.7
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      592.74,
+      272.63,
+      5.0,
+      15.46
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      238.78,
+      281.73,
+      13.64,
+      24.59
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      596.38,
+      293.13,
+      10.49,
+      14.91
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      337,
+      272,
+      267,
+      28
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "crowd"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000008021.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000008021.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      3.24,
+      255.14,
+      305.95,
+      223.78
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      435.33,
+      285.21,
+      204.67,
+      194.79
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      244.3,
+      101.17,
+      196.96,
+      266.9
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000008690.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000008690.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      136.7,
+      18.6,
+      214.82,
+      378.24
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      285.84,
+      73.35,
+      230.83,
+      323.59
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      74.25,
+      10.38,
+      101.69,
+      291.63
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      379.69,
+      390.29,
+      257.79,
+      84.14
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000008844.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000008844.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 426,
+   "persons": [
+    {
+     "box": [
+      356.43,
+      58.23,
+      224.91,
+      219.19
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      340.56,
+      186.5,
+      27.95,
+      61.7
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      292.79,
+      184.36,
+      42.6,
+      44.43
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000009483.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000009483.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      36.44,
+      62.46,
+      140.7,
+      417.54
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000010707.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000010707.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      228.16,
+      147.57,
+      168.97,
+      309.95
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      347.01,
+      187.53,
+      125.44,
+      264.78
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      422.83,
+      2.16,
+      177.98,
+      471.37
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000011149.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000011149.jpg",
+   "license": "CC BY 2.0",
+   "width": 500,
+   "height": 375,
+   "persons": [
+    {
+     "box": [
+      0.0,
+      3.8,
+      75.17,
+      117.4
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      417.13,
+      1.54,
+      82.87,
+      314.33
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000011511.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000011511.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 464,
+   "persons": [
+    {
+     "box": [
+      90.35,
+      38.6,
+      39.71,
+      151.42
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      139.53,
+      32.22,
+      50.38,
+      140.24
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      35.39,
+      44.5,
+      50.22,
+      145.84
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      1.27,
+      51.73,
+      61.55,
+      162.56
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000012120.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000012120.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 428,
+   "persons": [
+    {
+     "box": [
+      3.85,
+      235.64,
+      57.71,
+      75.98
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      89.83,
+      112.51,
+      29.49,
+      65.73
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      568.44,
+      84.77,
+      18.15,
+      35.47
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      555.55,
+      90.73,
+      16.57,
+      25.6
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      532.99,
+      86.41,
+      26.43,
+      30.75
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      512.37,
+      76.58,
+      25.03,
+      23.65
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      447.6,
+      77.33,
+      20.94,
+      28.05
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      482.8,
+      92.69,
+      21.75,
+      32.74
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      518.92,
+      96.31,
+      16.86,
+      19.0
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      632.46,
+      103.91,
+      7.54,
+      20.9
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      496.57,
+      75.94,
+      13.61,
+      26.43
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      512.36,
+      124.05,
+      19.6,
+      18.11
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      482.26,
+      208.19,
+      64.79,
+      116.09
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      1,
+      0,
+      638,
+      289
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000012280.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000012280.jpg",
+   "license": "CC BY 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      143.13,
+      241.34,
+      50.06,
+      128.62
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      339.75,
+      250.26,
+      14.23,
+      62.62
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      307.47,
+      280.65,
+      10.79,
+      17.54
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000013291.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000013291.jpg",
+   "license": "CC BY 2.0",
+   "width": 500,
+   "height": 335,
+   "persons": [
+    {
+     "box": [
+      288.33,
+      138.57,
+      210.78,
+      161.85
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      238.23,
+      135.43,
+      80.81,
+      147.12
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      41.4,
+      66.25,
+      124.97,
+      232.62
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      159.23,
+      136.61,
+      85.28,
+      130.52
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000013348.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000013348.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      349.82,
+      270.26,
+      6.3,
+      20.77
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      17.11,
+      280.38,
+      9.12,
+      12.97
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      117.32,
+      270.57,
+      11.79,
+      19.23
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      173.15,
+      240.08,
+      6.96,
+      11.48
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      124.96,
+      250.69,
+      4.11,
+      5.63
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      148.94,
+      244.69,
+      11.13,
+      10.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000013659.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000013659.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      152.06,
+      217.16,
+      227.68,
+      261.86
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      406.65,
+      9.71,
+      85.22,
+      141.3
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      331.36,
+      94.09,
+      130.34,
+      171.29
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      519.05,
+      75.64,
+      119.54,
+      163.98
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      480.14,
+      75.24,
+      38.49,
+      79.22
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000013774.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000013774.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      270.37,
+      281.95,
+      31.24,
+      86.32
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000014439.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000014439.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 404,
+   "persons": [
+    {
+     "box": [
+      413.08,
+      89.88,
+      94.42,
+      198.82
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      268.64,
+      89.82,
+      29.97,
+      79.13
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      279.52,
+      79.88,
+      18.48,
+      32.71
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      363.69,
+      57.51,
+      19.33,
+      56.26
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      328.34,
+      38.55,
+      18.77,
+      41.19
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      378.2,
+      40.08,
+      17.88,
+      42.87
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      505.5,
+      114.08,
+      92.38,
+      157.64
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      578.64,
+      112.47,
+      35.12,
+      86.13
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      25.16,
+      116.99,
+      40.38,
+      37.77
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      187.53,
+      44.57,
+      13.18,
+      16.61
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      169.82,
+      47.27,
+      8.39,
+      14.14
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      164.83,
+      82.07,
+      34.0,
+      84.91
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      103.9,
+      45.12,
+      24.28,
+      48.56
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      155,
+      7,
+      447,
+      170
+     ],
+     "category": null,
+     "tags": [
+      "crowd"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000014473.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000014473.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      320.19,
+      271.2,
+      15.36,
+      42.4
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      277.01,
+      269.4,
+      20.54,
+      38.29
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      201.34,
+      258.58,
+      19.22,
+      36.7
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      155.85,
+      253.72,
+      16.82,
+      33.64
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      119.8,
+      245.57,
+      17.57,
+      35.15
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      77.84,
+      245.76,
+      16.65,
+      27.33
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      25.96,
+      225.26,
+      13.18,
+      35.79
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000018491.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000018491.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      243.01,
+      184.65,
+      125.8,
+      120.6
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      301.3,
+      186.15,
+      120.9,
+      126.66
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      330.11,
+      69.96,
+      60.81,
+      137.59
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      274.91,
+      68.91,
+      56.59,
+      147.5
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      177.68,
+      77.51,
+      31.52,
+      74.51
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      69.7,
+      95.37,
+      53.1,
+      122.1
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      58.77,
+      61.57,
+      36.28,
+      58.18
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      122.79,
+      26.65,
+      41.35,
+      99.82
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      13.04,
+      81.09,
+      31.77,
+      66.56
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0.39,
+      82.91,
+      11.95,
+      64.84
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000018837.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000018837.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      327.57,
+      14.59,
+      139.46,
+      143.79
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      294.3,
+      21.62,
+      48.17,
+      101.51
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      371.98,
+      286.74,
+      82.55,
+      193.26
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      17.07,
+      235.11,
+      17.62,
+      27.66
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      304.66,
+      193.68,
+      23.48,
+      47.29
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      115.32,
+      172.01,
+      48.63,
+      60.72
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000019402.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000019402.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      260.54,
+      0.54,
+      377.3,
+      474.6
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      52.85,
+      403.42,
+      427.15
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000019432.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000019432.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      55.26,
+      26.82,
+      153.86,
+      404.15
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000019924.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000019924.jpg",
+   "license": "CC BY 2.0",
+   "width": 458,
+   "height": 500,
+   "persons": [
+    {
+     "box": [
+      14.61,
+      29.21,
+      434.83,
+      465.17
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000021167.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000021167.jpg",
+   "license": "CC BY 2.0",
+   "width": 426,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      21.52,
+      114.73,
+      202.34,
+      510.85
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      187.98,
+      38.89,
+      238.02,
+      601.11
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000021903.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000021903.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      334.38,
+      224.36,
+      216.81,
+      250.25
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      615.62,
+      239.77,
+      24.38,
+      92.57
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000022479.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000022479.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 605,
+   "persons": [
+    {
+     "box": [
+      34.96,
+      1.3,
+      403.0,
+      455.95
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000022705.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000022705.jpg",
+   "license": "CC BY 2.0",
+   "width": 482,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      143.5,
+      83.4,
+      219.55,
+      525.2
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000023899.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000023899.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 425,
+   "persons": [
+    {
+     "box": [
+      1.91,
+      32.47,
+      609.79,
+      386.8
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      214.89,
+      145.17,
+      182.41,
+      200.56
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      476.57,
+      107.92,
+      163.43,
+      239.72
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000025057.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000025057.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      97.1,
+      244.49,
+      45.74,
+      81.02
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      127.99,
+      6.25,
+      300.9,
+      416.49
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000025181.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000025181.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      97.7,
+      228.15,
+      12.35,
+      20.77
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      52.3,
+      221.21,
+      14.22,
+      35.8
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      104.43,
+      231.09,
+      4.78,
+      8.99
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000025394.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000025394.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      41.99,
+      133.51,
+      245.85,
+      418.79
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      366.6,
+      477.53,
+      113.4,
+      78.49
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      435.54,
+      258.83,
+      44.46,
+      151.98
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000028993.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000028993.jpg",
+   "license": "CC BY 2.0",
+   "width": 612,
+   "height": 612,
+   "persons": [
+    {
+     "box": [
+      146.21,
+      243.66,
+      10.1,
+      28.22
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      62.43,
+      245.58,
+      10.76,
+      28.0
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      92.12,
+      250.47,
+      7.68,
+      21.88
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      98.97,
+      248.26,
+      8.74,
+      23.86
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      114.45,
+      247.4,
+      7.32,
+      24.75
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      134.2,
+      244.98,
+      11.49,
+      27.13
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      29.35,
+      239.8,
+      13.73,
+      36.78
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      54.26,
+      253.06,
+      8.23,
+      18.69
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      125.29,
+      247.8,
+      7.18,
+      24.24
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000030504.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000030504.jpg",
+   "license": "CC BY 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      189.03,
+      109.81,
+      205.8,
+      381.17
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000031322.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000031322.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      476.1,
+      14.7,
+      4.92,
+      12.72
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      480.68,
+      15.28,
+      6.67,
+      12.61
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000032038.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000032038.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 333,
+   "height": 500,
+   "persons": [
+    {
+     "box": [
+      0.0,
+      1.17,
+      97.32,
+      138.78
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000032887.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000032887.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      373.29,
+      119.19,
+      125.84,
+      345.34
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      96.78,
+      48.23,
+      62.44,
+      147.21
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000032941.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000032941.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 458,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      100.67,
+      192.33,
+      9.46,
+      28.13
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      386.69,
+      191.06,
+      6.24,
+      18.97
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      369.43,
+      191.25,
+      6.36,
+      10.88
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000033368.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000033368.jpg",
+   "license": "CC BY 2.0",
+   "width": 427,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      158.2,
+      41.71,
+      100.68,
+      392.63
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000035062.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000035062.jpg",
+   "license": "CC BY 2.0",
+   "width": 425,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      155.75,
+      68.69,
+      44.16,
+      38.22
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000035682.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000035682.jpg",
+   "license": "CC BY 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      96.36,
+      2.97,
+      257.44,
+      306.34
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      400.99,
+      105.84,
+      67.38,
+      121.0
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      18.92,
+      69.91,
+      54.1,
+      63.56
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      443.66,
+      108.91,
+      36.34,
+      95.17
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000037689.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000037689.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 426,
+   "persons": [
+    {
+     "box": [
+      64.02,
+      131.15,
+      14.18,
+      36.86
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      329.74,
+      138.09,
+      37.47,
+      33.71
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      215.92,
+      63.61,
+      55.91,
+      42.06
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      200.88,
+      219.55,
+      10.86,
+      25.57
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      39.7,
+      141.18,
+      20.45,
+      24.61
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      276.88,
+      262.0,
+      7.97,
+      21.99
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      316.4,
+      281.96,
+      4.5,
+      20.13
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      306.24,
+      273.42,
+      6.65,
+      25.69
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      292.44,
+      272.12,
+      9.89,
+      21.41
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      285.3,
+      263.57,
+      10.44,
+      27.32
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      189.2,
+      211.01,
+      6.63,
+      23.77
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      92.19,
+      146.75,
+      16.14,
+      34.47
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      170.85,
+      205.31,
+      8.59,
+      19.5
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0,
+      5,
+      581,
+      296
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000037751.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000037751.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      279.17,
+      197.55,
+      57.23,
+      102.9
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000038210.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000038210.jpg",
+   "license": "CC BY 2.0",
+   "width": 428,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      69.53,
+      266.63,
+      138.06,
+      272.89
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      24.33,
+      332.01,
+      19.62,
+      44.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000039551.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000039551.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      119.25,
+      53.86,
+      196.19,
+      284.66
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000040036.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000040036.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      306.1,
+      26.87,
+      107.47,
+      194.79
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000040757.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000040757.jpg",
+   "license": "CC BY 2.0",
+   "width": 425,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      1.29,
+      262.21,
+      399.97,
+      269.84
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000042102.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000042102.jpg",
+   "license": "CC BY 2.0",
+   "width": 246,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      20.13,
+      6.66,
+      220.17,
+      621.83
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000042528.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000042528.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 495,
+   "persons": [
+    {
+     "box": [
+      2.22,
+      192.44,
+      513.91,
+      294.77
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000043314.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000043314.jpg",
+   "license": "CC BY 2.0",
+   "width": 500,
+   "height": 376,
+   "persons": [
+    {
+     "box": [
+      199.9,
+      98.18,
+      134.9,
+      107.03
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      198.01,
+      100.8,
+      135.62,
+      104.68
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      54.02,
+      155.16,
+      12.13,
+      21.51
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000043435.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000043435.jpg",
+   "license": "CC BY 2.0",
+   "width": 638,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      462.97,
+      219.19,
+      20.71,
+      49.59
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      183.18,
+      428.68,
+      35.86,
+      44.38
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000045070.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000045070.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 596,
+   "persons": [
+    {
+     "box": [
+      109.58,
+      40.02,
+      326.06,
+      446.33
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000047571.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000047571.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 639,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      179.65,
+      115.37,
+      75.01,
+      163.78
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      123.77,
+      130.85,
+      58.88,
+      87.59
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000049259.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000049259.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 427,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      165.3,
+      56.78,
+      120.4,
+      78.9
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000049759.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000049759.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 457,
+   "persons": [
+    {
+     "box": [
+      210.46,
+      167.13,
+      32.1,
+      110.28
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      424.98,
+      167.27,
+      23.06,
+      85.43
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      405.65,
+      170.25,
+      25.95,
+      76.09
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      471.5,
+      158.03,
+      118.18,
+      298.97
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      354.69,
+      167.03,
+      19.29,
+      72.04
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      379.62,
+      170.04,
+      19.03,
+      74.68
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      458.59,
+      170.87,
+      24.78,
+      89.95
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      550.7,
+      173.37,
+      35.5,
+      109.93
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      365.37,
+      171.02,
+      15.01,
+      58.34
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      332.03,
+      166.91,
+      37.35,
+      96.45
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      176.12,
+      171.5,
+      34.43,
+      71.41
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      30.44,
+      170.31,
+      31.05,
+      83.76
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      155.6,
+      174.5,
+      21.37,
+      57.58
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      45,
+      167,
+      519,
+      65
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "crowd"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000050638.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000050638.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 393,
+   "persons": [
+    {
+     "box": [
+      344.43,
+      65.35,
+      128.94,
+      317.05
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000050811.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000050811.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 605,
+   "persons": [
+    {
+     "box": [
+      72.22,
+      66.09,
+      393.79,
+      425.13
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000051938.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000051938.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      505.79,
+      207.91,
+      4.46,
+      12.91
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      278.29,
+      158.56,
+      51.78,
+      119.73
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      412.04,
+      218.98,
+      11.34,
+      15.21
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      361.75,
+      224.14,
+      17.62,
+      35.72
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      405.69,
+      222.37,
+      10.82,
+      27.31
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      528.85,
+      200.75,
+      7.79,
+      16.47
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      496.43,
+      209.82,
+      5.68,
+      11.87
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      270.52,
+      240.52,
+      7.55,
+      21.78
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      399.11,
+      200.95,
+      6.61,
+      20.46
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      340.97,
+      229.6,
+      5.93,
+      13.22
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      511.41,
+      204.73,
+      6.68,
+      10.93
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000052996.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000052996.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 426,
+   "persons": [
+    {
+     "box": [
+      69.41,
+      129.07,
+      89.5,
+      158.67
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      161.78,
+      98.6,
+      87.12,
+      192.42
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      520.99,
+      120.41,
+      112.25,
+      300.31
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      610.41,
+      143.16,
+      29.59,
+      80.69
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      434.62,
+      123.49,
+      120.62,
+      302.51
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      560.12,
+      101.52,
+      62.93,
+      104.44
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      0.0,
+      112.86,
+      91.84,
+      174.83
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000053909.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000053909.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      2.88,
+      142.38,
+      477.12,
+      488.99
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000054164.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000054164.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      182.04,
+      105.7,
+      148.63,
+      238.75
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000054605.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000054605.jpg",
+   "license": "CC BY 2.0",
+   "width": 612,
+   "height": 612,
+   "persons": [
+    {
+     "box": [
+      488.05,
+      0.0,
+      50.48,
+      102.81
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      526.73,
+      0.0,
+      83.89,
+      255.8
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      0.0,
+      301.0,
+      211.5
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      247.98,
+      3.18,
+      71.53,
+      71.53
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000054931.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000054931.jpg",
+   "license": "CC BY 2.0",
+   "width": 427,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      197.03,
+      154.89,
+      185.53,
+      468.85
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000055002.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000055002.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 500,
+   "height": 375,
+   "persons": [
+    {
+     "box": [
+      155.09,
+      323.57,
+      160.69,
+      51.3
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000060899.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000060899.jpg",
+   "license": "CC BY 2.0",
+   "width": 360,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      99.24,
+      143.82,
+      139.5,
+      375.37
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000061584.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000061584.jpg",
+   "license": "CC BY 2.0",
+   "width": 500,
+   "height": 375,
+   "persons": [
+    {
+     "box": [
+      234.37,
+      96.54,
+      80.83,
+      185.16
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      233.55,
+      102.06,
+      55.32,
+      50.13
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000063047.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000063047.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 561,
+   "persons": [
+    {
+     "box": [
+      61.17,
+      217.72,
+      327.77,
+      336.18
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      446.28,
+      307.6,
+      20.17,
+      107.16
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      464.45,
+      313.57,
+      22.86,
+      91.44
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      496.73,
+      306.22,
+      30.43,
+      101.53
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      482.74,
+      322.89,
+      9.55,
+      74.52
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      493.16,
+      305.22,
+      35.74,
+      89.81
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000064084.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000064084.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 436,
+   "persons": [
+    {
+     "box": [
+      491.91,
+      0.07,
+      147.52,
+      58.22
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000064898.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000064898.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      416.9,
+      237.13,
+      107.69,
+      65.38
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      343.44,
+      204.39,
+      54.99,
+      51.42
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000065350.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000065350.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      221.48,
+      41.34,
+      188.04,
+      220.22
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      462.71,
+      30.61,
+      169.35,
+      235.73
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      528.73,
+      71.53,
+      108.43,
+      187.11
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000065798.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000065798.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      477.5,
+      274.77,
+      48.48,
+      109.74
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      275.98,
+      250.52,
+      43.37,
+      66.33
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      372.91,
+      213.55,
+      13.77,
+      10.71
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      194.67,
+      249.03,
+      25.2,
+      67.7
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      216.43,
+      272.35,
+      29.93,
+      43.9
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      200.71,
+      241.68,
+      19.79,
+      17.62
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      419.82,
+      256.79,
+      24.13,
+      28.48
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      391.6,
+      231.62,
+      16.23,
+      21.23
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      266.06,
+      217.43,
+      15.98,
+      15.61
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      447.38,
+      211.78,
+      14.44,
+      8.44
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      354.16,
+      177.91,
+      14.92,
+      15.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      312.71,
+      215.97,
+      11.51,
+      10.07
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      456.61,
+      254.28,
+      19.45,
+      29.57
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0,
+      32,
+      639,
+      261
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000066038.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000066038.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      322.87,
+      234.56,
+      29.53,
+      116.9
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      125.44,
+      246.54,
+      91.97,
+      23.53
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      219.55,
+      204.87,
+      52.87,
+      97.4
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      369.62,
+      253.85,
+      120.15,
+      30.2
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      269.23,
+      244.32,
+      60.03,
+      102.57
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      161.14,
+      246.27,
+      72.38,
+      28.46
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000066231.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000066231.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      333.71,
+      137.52,
+      111.56,
+      288.52
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      451.33,
+      157.44,
+      47.86,
+      150.2
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      300.18,
+      144.23,
+      36.99,
+      60.03
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      526.41,
+      183.0,
+      10.16,
+      19.2
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      144.89,
+      144.96,
+      57.58,
+      119.94
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      1.92,
+      196.71,
+      79.64,
+      213.02
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      245.28,
+      144.3,
+      40.82,
+      60.53
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      427.25,
+      185.34,
+      14.52,
+      12.85
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      7.84,
+      169.5,
+      42.81,
+      78.28
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000067534.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000067534.jpg",
+   "license": "CC BY 2.0",
+   "width": 306,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      2.88,
+      0.0,
+      292.62,
+      640.0
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000073946.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000073946.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 428,
+   "persons": [
+    {
+     "box": [
+      99.51,
+      92.51,
+      175.84,
+      329.45
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      316.12,
+      390.38,
+      76.01,
+      37.62
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      360.36,
+      68.75,
+      279.64,
+      353.71
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000074200.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000074200.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      1.08,
+      1.08,
+      56.09,
+      114.34
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      446.19,
+      385.46,
+      16.5,
+      36.45
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      477.62,
+      383.48,
+      13.66,
+      39.11
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      402.28,
+      342.91,
+      13.91,
+      28.25
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      418.97,
+      347.65,
+      10.6,
+      25.56
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      389.54,
+      347.92,
+      15.23,
+      18.34
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000074733.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000074733.jpg",
+   "license": "CC BY 2.0",
+   "width": 612,
+   "height": 612,
+   "persons": [
+    {
+     "box": [
+      0.76,
+      0.0,
+      160.67,
+      74.23
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      236.98,
+      80.02,
+      79.65,
+      47.58
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000075612.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000075612.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      94.92,
+      188.76,
+      162.88,
+      284.77
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      201.53,
+      205.15,
+      113.86,
+      200.68
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      311.14,
+      171.14,
+      71.61,
+      294.22
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      380.63,
+      190.95,
+      63.87,
+      231.12
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      422.22,
+      195.82,
+      41.36,
+      197.88
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      139.86,
+      162.53,
+      38.95,
+      29.06
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      250.76,
+      181.36,
+      60.39,
+      240.52
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      362.0,
+      183.14,
+      41.33,
+      119.4
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      244.83,
+      168.12,
+      39.42,
+      57.7
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      82.79,
+      221.69,
+      47.38,
+      84.93
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      182.84,
+      173.15,
+      38.63,
+      80.75
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      2.54,
+      245.59,
+      80.32,
+      81.69
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000076416.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000076416.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      71.6,
+      269.55,
+      17.57,
+      34.97
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      470.14,
+      264.94,
+      39.93,
+      41.64
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      263.93,
+      12.86,
+      18.74
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      83.7,
+      268.04,
+      7.45,
+      15.24
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000076547.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000076547.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      415.11,
+      204.57,
+      172.01,
+      258.54
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000077460.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000077460.jpg",
+   "license": "CC BY 2.0",
+   "width": 428,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      272.59,
+      563.81,
+      11.85,
+      37.25
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      184.69,
+      565.38,
+      2.65,
+      6.85
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      235.3,
+      561.14,
+      9.34,
+      15.04
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      98.75,
+      556.28,
+      17.78,
+      52.6
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      116.63,
+      556.89,
+      6.52,
+      9.57
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      123.7,
+      554.39,
+      6.28,
+      11.78
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      146.59,
+      554.86,
+      5.45,
+      13.63
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      156.96,
+      553.95,
+      6.54,
+      18.23
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      171.64,
+      557.77,
+      5.69,
+      13.63
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      192.45,
+      555.63,
+      5.81,
+      20.75
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      221.04,
+      562.92,
+      9.25,
+      13.46
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      67.32,
+      549.68,
+      22.59,
+      51.74
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      313.88,
+      564.53,
+      5.27,
+      17.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0,
+      532,
+      427,
+      70
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000078170.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000078170.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      4.33,
+      248.13,
+      231.16,
+      300.49
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      498.67,
+      203.85,
+      128.79,
+      225.6
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000078565.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000078565.jpg",
+   "license": "No known copyright restrictions",
+   "width": 640,
+   "height": 499,
+   "persons": [
+    {
+     "box": [
+      412.09,
+      265.76,
+      24.14,
+      79.69
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      469.1,
+      286.35,
+      21.33,
+      57.21
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      293.73,
+      251.87,
+      7.45,
+      37.28
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      496.79,
+      262.64,
+      19.32,
+      75.02
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      571.69,
+      244.39,
+      9.4,
+      23.34
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      350.76,
+      249.64,
+      13.32,
+      34.34
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      332.53,
+      247.49,
+      9.98,
+      32.64
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      238.16,
+      245.92,
+      9.23,
+      18.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      488.09,
+      276.28,
+      16.36,
+      65.68
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      540.28,
+      242.88,
+      27.7,
+      26.73
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      478.19,
+      249.45,
+      9.19,
+      14.52
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      314.96,
+      251.1,
+      10.77,
+      31.48
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      344.81,
+      252.55,
+      6.36,
+      23.87
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      96,
+      222,
+      525,
+      64
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "crowd"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000079014.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000079014.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 291,
+   "height": 455,
+   "persons": [
+    {
+     "box": [
+      0.0,
+      89.47,
+      290.4,
+      356.24
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000079031.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000079031.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      61.51,
+      0.36,
+      269.8,
+      369.69
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000080153.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000080153.jpg",
+   "license": "CC BY 2.0",
+   "width": 428,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      187.62,
+      127.92,
+      117.66,
+      287.5
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000080671.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000080671.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      219.71,
+      117.18,
+      202.51,
+      252.19
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000080932.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000080932.jpg",
+   "license": "CC BY 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      64.83,
+      141.38,
+      300.69,
+      321.38
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      247.93,
+      35.32,
+      177.3,
+      350.27
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000081988.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000081988.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      268.67,
+      129.54,
+      248.53,
+      237.01
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      320.18,
+      274.65,
+      87.85,
+      122.27
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      470.43,
+      313.91,
+      119.79,
+      88.12
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      174.64,
+      293.62,
+      72.92,
+      94.04
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      47.12,
+      283.63,
+      111.82,
+      108.64
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000082696.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000082696.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 427,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      0.84,
+      4.61,
+      111.67,
+      141.75
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000083540.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000083540.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 443,
+   "persons": [
+    {
+     "box": [
+      334.29,
+      241.84,
+      46.79,
+      175.21
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000084170.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000084170.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      336.68,
+      227.7,
+      18.81,
+      37.99
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      254.92,
+      225.78,
+      39.64,
+      34.66
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000084477.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000084477.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      283.28,
+      215.2,
+      16.75,
+      25.77
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000085157.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000085157.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      230.31,
+      113.13,
+      113.01,
+      148.52
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      411.75,
+      88.22,
+      227.5,
+      351.06
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      98.38,
+      258.38,
+      381.62
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      139.15,
+      124.04,
+      78.74,
+      160.72
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      304.64,
+      114.77,
+      240.56,
+      357.47
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      485.95,
+      93.21,
+      126.72,
+      158.19
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      0.93,
+      107.27,
+      48.5,
+      80.7
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000085376.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000085376.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      0.0,
+      307.37,
+      18.48,
+      58.06
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000085772.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000085772.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      50.63,
+      68.87,
+      327.65,
+      352.49
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000086755.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000086755.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      324.26,
+      220.27,
+      70.31,
+      106.25
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      331.32,
+      203.46,
+      35.64,
+      98.11
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000086956.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000086956.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      214.29,
+      325.03,
+      185.53,
+      306.34
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      40.93,
+      141.1,
+      186.06,
+      374.63
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      247.2,
+      131.62,
+      232.8,
+      507.7
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000088485.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000088485.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      188.07,
+      0.0,
+      233.17,
+      422.2
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000089078.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000089078.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 479,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      146.7,
+      14.38,
+      221.48,
+      573.84
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000090284.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000090284.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 639,
+   "persons": [
+    {
+     "box": [
+      67.19,
+      143.09,
+      518.92,
+      421.71
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000090891.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000090891.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 431,
+   "persons": [
+    {
+     "box": [
+      244.07,
+      181.36,
+      124.94,
+      230.51
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      425.19,
+      184.99,
+      113.32,
+      184.02
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      517.67,
+      141.46,
+      93.92,
+      235.81
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      143.8,
+      187.86,
+      91.25,
+      183.77
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      51.08,
+      105.36,
+      112.81,
+      320.32
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000090956.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000090956.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      227.47,
+      167.08,
+      80.09,
+      80.59
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000091406.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000091406.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 424,
+   "persons": [
+    {
+     "box": [
+      245.42,
+      48.23,
+      105.05,
+      252.1
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      315.62,
+      76.62,
+      116.94,
+      243.38
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      402.09,
+      29.78,
+      96.23,
+      300.13
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      470.54,
+      61.2,
+      114.93,
+      336.64
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000092053.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000092053.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      0.0,
+      181.27,
+      61.06,
+      107.62
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000094326.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000094326.jpg",
+   "license": "CC BY 2.0",
+   "width": 375,
+   "height": 500,
+   "persons": [
+    {
+     "box": [
+      38.12,
+      131.91,
+      170.4,
+      301.57
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000094751.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000094751.jpg",
+   "license": "CC BY 2.0",
+   "width": 375,
+   "height": 500,
+   "persons": [
+    {
+     "box": [
+      66.58,
+      252.61,
+      10.41,
+      16.65
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      107.49,
+      253.27,
+      7.04,
+      15.38
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      200.83,
+      253.7,
+      6.54,
+      13.64
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      247.51,
+      251.73,
+      7.58,
+      8.43
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      75.22,
+      252.52,
+      6.22,
+      14.5
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      56.55,
+      254.69,
+      7.27,
+      14.26
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      96.65,
+      253.07,
+      9.06,
+      13.19
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      309.57,
+      271.97,
+      8.88,
+      11.98
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      237.07,
+      250.13,
+      9.41,
+      8.99
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      272.97,
+      251.74,
+      6.18,
+      12.56
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      177.98,
+      254.32,
+      4.2,
+      13.86
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000094871.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000094871.jpg",
+   "license": "CC BY 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      280.48,
+      0.51,
+      96.02,
+      142.0
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      0.0,
+      49.58,
+      161.9
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      123.08,
+      0.0,
+      162.46,
+      391.38
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      369.62,
+      73.35,
+      107.86,
+      421.39
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000094944.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000094944.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      358.07,
+      224.03,
+      109.14,
+      180.95
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      176.08,
+      189.22,
+      26.54,
+      76.8
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      569.59,
+      230.56,
+      56.3,
+      64.11
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000096493.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000096493.jpg",
+   "license": "CC BY 2.0",
+   "width": 426,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      122.52,
+      2.16,
+      289.73,
+      393.52
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000097278.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000097278.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 457,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      84.86,
+      77.43,
+      245.47,
+      499.11
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000097679.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000097679.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      274.55,
+      220.36,
+      47.53,
+      35.86
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      217.86,
+      205.62,
+      23.87,
+      38.03
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000097924.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000097924.jpg",
+   "license": "CC BY 2.0",
+   "width": 600,
+   "height": 400,
+   "persons": [
+    {
+     "box": [
+      106.07,
+      124.94,
+      127.64,
+      230.12
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      298.88,
+      163.84,
+      123.49,
+      180.77
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      410.29,
+      191.09,
+      83.38,
+      129.22
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000098392.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000098392.jpg",
+   "license": "CC BY 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      326.33,
+      379.08,
+      32.27,
+      23.78
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      8.26,
+      524.34,
+      11.86,
+      42.79
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      301.38,
+      488.42,
+      19.19,
+      20.4
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000099054.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000099054.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 427,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      60.39,
+      549.43,
+      42.6,
+      53.11
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      261.37,
+      468.8,
+      15.8,
+      26.44
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      298.66,
+      492.89,
+      31.53,
+      76.4
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000100238.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000100238.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      194.8,
+      79.94,
+      230.42,
+      400.06
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      347.81,
+      0.81,
+      182.03,
+      473.5
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      489.73,
+      214.05,
+      132.97,
+      263.79
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      1.08,
+      33.32,
+      213.46,
+      438.82
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000100428.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000100428.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 491,
+   "persons": [
+    {
+     "box": [
+      261.5,
+      100.07,
+      358.59,
+      383.97
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      119.43,
+      85.7,
+      130.49,
+      399.22
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000100510.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000100510.jpg",
+   "license": "CC BY 2.0",
+   "width": 600,
+   "height": 400,
+   "persons": [
+    {
+     "box": [
+      180.25,
+      24.68,
+      84.93,
+      120.03
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      524.86,
+      140.99,
+      43.4,
+      91.54
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      0.0,
+      6.66,
+      17.95,
+      49.55
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000100624.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000100624.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      324.36,
+      108.36,
+      58.62,
+      133.18
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      32.62,
+      51.82,
+      289.79,
+      369.42
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      263.78,
+      83.44,
+      60.04,
+      162.61
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      535.47,
+      81.49,
+      41.51,
+      188.43
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000102805.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000102805.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 426,
+   "persons": [
+    {
+     "box": [
+      59.35,
+      75.63,
+      230.71,
+      339.84
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000105335.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000105335.jpg",
+   "license": "CC BY 2.0",
+   "width": 612,
+   "height": 612,
+   "persons": [
+    {
+     "box": [
+      174.27,
+      0.91,
+      422.64,
+      282.68
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      119.04,
+      560.58,
+      211.0,
+      51.42
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000107226.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000107226.jpg",
+   "license": "CC BY 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      346.09,
+      76.86,
+      133.91,
+      288.33
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      11.12,
+      155.31,
+      42.68,
+      61.9
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      137.28,
+      131.14,
+      171.17,
+      211.16
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      232.64,
+      127.44,
+      40.28,
+      38.28
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      326.27,
+      133.53,
+      23.78,
+      79.18
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      35.4,
+      148.56,
+      47.89,
+      66.89
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      103.32,
+      124.96,
+      58.21,
+      115.87
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      267.23,
+      137.74,
+      64.1,
+      188.25
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      344.23,
+      141.4,
+      26.26,
+      60.9
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      63.62,
+      111.22,
+      59.16,
+      105.67
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000107851.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000107851.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      391.48,
+      239.06,
+      12.97,
+      14.98
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      225.05,
+      236.0,
+      7.65,
+      12.71
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      317.18,
+      240.18,
+      44.92,
+      83.08
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      398.25,
+      251.49,
+      15.03,
+      33.43
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      241.34,
+      240.03,
+      6.67,
+      17.79
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      357.47,
+      240.54,
+      49.05,
+      90.67
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      216.24,
+      233.68,
+      10.95,
+      18.2
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      37.51,
+      227.14,
+      24.93,
+      39.74
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      16.33,
+      228.51,
+      14.78,
+      31.95
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      30.39,
+      229.92,
+      11.18,
+      20.21
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      414.14,
+      255.63,
+      22.68,
+      45.83
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      408.28,
+      252.63,
+      11.46,
+      17.18
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      231.36,
+      234.32,
+      8.64,
+      17.07
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      328,
+      238,
+      95,
+      28
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "crowd"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000110449.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000110449.jpg",
+   "license": "CC BY 2.0",
+   "width": 500,
+   "height": 375,
+   "persons": [
+    {
+     "box": [
+      146.96,
+      16.47,
+      353.04,
+      346.28
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      1.68,
+      14.8,
+      245.52,
+      287.55
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000110721.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000110721.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 418,
+   "persons": [
+    {
+     "box": [
+      223.41,
+      310.23,
+      22.4,
+      52.39
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000111207.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000111207.jpg",
+   "license": "CC BY 2.0",
+   "width": 478,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      156.24,
+      350.92,
+      96.2,
+      214.16
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      102.18,
+      30.33,
+      115.08,
+      263.7
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000114907.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000114907.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 425,
+   "persons": [
+    {
+     "box": [
+      315.69,
+      74.98,
+      115.96,
+      209.32
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      41.67,
+      127.18,
+      75.76,
+      179.8
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      0.0,
+      120.95,
+      76.7,
+      180.42
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      34.17,
+      334.51,
+      87.88,
+      90.49
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      271.24,
+      315.17,
+      98.37,
+      109.83
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      242.58,
+      264.55,
+      175.73,
+      154.72
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      507.13,
+      379.05,
+      72.01,
+      45.52
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      517.16,
+      290.04,
+      41.87,
+      59.93
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      346.69,
+      272.19,
+      83.09,
+      127.02
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      34.39,
+      258.09,
+      125.42,
+      110.66
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      79.77,
+      369.41,
+      82.03,
+      55.59
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      151.46,
+      357.74,
+      61.39,
+      67.26
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      125.84,
+      292.67,
+      68.79,
+      69.42
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      0,
+      153,
+      639,
+      271
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000117425.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000117425.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 426,
+   "persons": [
+    {
+     "box": [
+      276.04,
+      7.45,
+      297.05,
+      418.55
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      538.96,
+      0.96,
+      101.04,
+      416.42
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      40.95,
+      69.74,
+      167.96
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000117719.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000117719.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 425,
+   "persons": [
+    {
+     "box": [
+      415.04,
+      161.51,
+      224.96,
+      263.42
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000118367.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000118367.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      0.0,
+      64.77,
+      418.55,
+      329.27
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000119445.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000119445.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 426,
+   "persons": [
+    {
+     "box": [
+      184.22,
+      177.02,
+      164.06,
+      209.16
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      522.91,
+      227.87,
+      117.09,
+      172.7
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      442.05,
+      262.54,
+      121.9,
+      135.16
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000119516.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000119516.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      371.7,
+      207.65,
+      38.71,
+      144.31
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      624.5,
+      223.36,
+      14.37,
+      37.1
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000119995.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000119995.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 468,
+   "height": 500,
+   "persons": [
+    {
+     "box": [
+      39.15,
+      12.41,
+      218.12,
+      473.16
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      335.03,
+      32.33,
+      116.91,
+      203.14
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      431.38,
+      0.0,
+      36.62,
+      25.29
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      364.49,
+      0.0,
+      37.27,
+      15.88
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      297.1,
+      0.08,
+      68.67,
+      14.28
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000122046.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000122046.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 427,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      82.16,
+      191.71,
+      194.6,
+      415.14
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000122217.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000122217.jpg",
+   "license": "CC BY 2.0",
+   "width": 425,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      162.7,
+      294.91,
+      61.65,
+      75.26
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      85.72,
+      273.7,
+      55.09,
+      93.84
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000124798.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000124798.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      244.82,
+      267.85,
+      26.23,
+      27.14
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000126107.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000126107.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      572.48,
+      365.44,
+      11.6,
+      20.94
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      593.17,
+      359.13,
+      9.13,
+      13.96
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      522.5,
+      368.03,
+      7.71,
+      11.28
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      512.28,
+      356.21,
+      8.24,
+      22.8
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      568.79,
+      358.49,
+      9.82,
+      25.05
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      631.33,
+      363.86,
+      8.67,
+      30.37
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000126110.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000126110.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 320,
+   "height": 240,
+   "persons": [
+    {
+     "box": [
+      261.62,
+      104.32,
+      28.65,
+      87.57
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000127270.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000127270.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 328,
+   "height": 500,
+   "persons": [
+    {
+     "box": [
+      259.63,
+      0.07,
+      68.37,
+      88.16
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      43.5,
+      0.0,
+      75.24,
+      78.19
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      0.59,
+      0.03,
+      68.73,
+      90.95
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      182.11,
+      0.0,
+      89.24,
+      88.34
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      39.11,
+      48.82,
+      247.26,
+      443.74
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000128372.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000128372.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      379.02,
+      202.47,
+      67.17,
+      178.47
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      445.51,
+      222.34,
+      32.37,
+      97.83
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      538.23,
+      208.64,
+      40.53,
+      127.75
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      594.82,
+      229.62,
+      15.89,
+      53.03
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      611.15,
+      224.94,
+      17.61,
+      53.03
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      634.01,
+      230.07,
+      5.99,
+      53.02
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      433.36,
+      219.06,
+      22.93,
+      105.16
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      577.31,
+      232.86,
+      16.34,
+      48.23
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      188.25,
+      206.52,
+      28.04,
+      45.47
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000128654.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000128654.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 500,
+   "height": 384,
+   "persons": [
+    {
+     "box": [
+      70.76,
+      31.07,
+      407.3,
+      345.16
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000130586.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000130586.jpg",
+   "license": "CC BY 2.0",
+   "width": 427,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      103.36,
+      220.68,
+      222.35,
+      419.32
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000132796.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000132796.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 426,
+   "persons": [
+    {
+     "box": [
+      290.82,
+      68.16,
+      112.46,
+      331.71
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      401.11,
+      61.33,
+      147.42,
+      184.76
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      0.0,
+      145.65,
+      147.24,
+      184.65
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000134856.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000134856.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      304.8,
+      375.36,
+      7.14,
+      20.92
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      59.0,
+      371.56,
+      6.12,
+      12.01
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      166.02,
+      373.76,
+      7.78,
+      18.95
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000134886.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000134886.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      504.85,
+      375.74,
+      36.2,
+      62.75
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      550.17,
+      368.94,
+      24.14,
+      29.93
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      418.37,
+      382.15,
+      16.44,
+      32.87
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      609.9,
+      366.82,
+      13.43,
+      11.66
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      505.49,
+      391.01,
+      11.08,
+      18.54
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      581.33,
+      347.0,
+      22.21,
+      23.65
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      577.75,
+      367.51,
+      9.81,
+      14.5
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      455.12,
+      382.49,
+      10.85,
+      8.4
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      493.08,
+      408.6,
+      8.03,
+      21.2
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      600.49,
+      369.32,
+      11.33,
+      11.39
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000136915.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000136915.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      75.01,
+      77.9,
+      254.86,
+      344.29
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      412.61,
+      112.27,
+      166.96,
+      309.93
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      578.45,
+      288.32,
+      61.55,
+      138.68
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000137106.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000137106.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      0.96,
+      164.62,
+      491.14,
+      170.42
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000137294.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000137294.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      262.55,
+      145.57,
+      376.73,
+      281.43
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      440.87,
+      173.84,
+      55.62,
+      67.03
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000138979.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000138979.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 426,
+   "persons": [
+    {
+     "box": [
+      186.46,
+      186.12,
+      45.16,
+      46.77
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      76.6,
+      216.24,
+      48.34,
+      106.67
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      48.82,
+      225.92,
+      39.25,
+      149.34
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      292.24,
+      179.04,
+      49.73,
+      64.07
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      182.89,
+      204.41,
+      16.65,
+      17.58
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000139872.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000139872.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      0.0,
+      158.38,
+      99.46,
+      315.67
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      588.82,
+      343.22,
+      50.4,
+      136.63
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000140203.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000140203.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      508.8,
+      20.3,
+      80.69,
+      226.08
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      0.0,
+      118.11,
+      43.08,
+      292.31
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      7.6,
+      47.0,
+      19.67,
+      66.41
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      17.05,
+      18.84,
+      20.75,
+      65.65
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      229.09,
+      48.19,
+      25.23,
+      42.33
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      20.52,
+      29.07,
+      48.7
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000140270.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000140270.jpg",
+   "license": "CC BY 2.0",
+   "width": 600,
+   "height": 400,
+   "persons": [
+    {
+     "box": [
+      291.88,
+      61.56,
+      59.64,
+      161.63
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000140556.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000140556.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 457,
+   "persons": [
+    {
+     "box": [
+      135.14,
+      5.93,
+      204.26,
+      444.62
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      466.22,
+      16.51,
+      152.68,
+      434.46
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      56.48,
+      70.86,
+      116.05,
+      378.95
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      284.36,
+      74.36,
+      85.37,
+      238.49
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000140583.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000140583.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 478,
+   "persons": [
+    {
+     "box": [
+      317.7,
+      256.74,
+      20.92,
+      40.07
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      288.92,
+      262.53,
+      14.77,
+      38.05
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000142472.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000142472.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      379.04,
+      356.7,
+      26.89,
+      61.12
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      392.3,
+      363.1,
+      33.71,
+      62.16
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      534.3,
+      371.37,
+      5.78,
+      17.86
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      526.15,
+      362.65,
+      6.81,
+      25.03
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      539.99,
+      365.92,
+      8.74,
+      23.96
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      278.76,
+      338.28,
+      23.69,
+      30.39
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000142620.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000142620.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 426,
+   "persons": [
+    {
+     "box": [
+      269.96,
+      5.74,
+      359.95,
+      414.52
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000142971.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000142971.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      176.33,
+      73.42,
+      133.42,
+      154.43
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      93.9,
+      108.88,
+      146.7,
+      148.77
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      414.57,
+      211.24,
+      94.81,
+      86.88
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      307.86,
+      189.78,
+      123.36,
+      128.62
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000143572.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000143572.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 424,
+   "persons": [
+    {
+     "box": [
+      230.37,
+      170.04,
+      182.49,
+      253.66
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      405.14,
+      140.37,
+      27.6,
+      47.07
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      237.12,
+      137.66,
+      24.18,
+      26.92
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      202.86,
+      136.58,
+      22.01,
+      34.75
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      480.93,
+      219.99,
+      30.92,
+      24.9
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      181.62,
+      150.11,
+      27.84,
+      54.75
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      174.1,
+      130.03,
+      25.71,
+      35.91
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      237.93,
+      151.78,
+      26.65,
+      60.11
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      118.74,
+      142.06,
+      30.15,
+      53.43
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      153.81,
+      277.13,
+      52.02,
+      34.11
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      426.16,
+      151.18,
+      34.48,
+      59.03
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      427.16,
+      36.58,
+      21.5,
+      30.39
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      559.46,
+      50.66,
+      26.43,
+      36.34
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      55,
+      146,
+      535,
+      232
+     ],
+     "category": null,
+     "tags": [
+      "crowd"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000147415.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000147415.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      352.72,
+      4.58,
+      287.28,
+      468.14
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000147729.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000147729.jpg",
+   "license": "CC BY 2.0",
+   "width": 500,
+   "height": 375,
+   "persons": [
+    {
+     "box": [
+      0.0,
+      87.01,
+      310.67,
+      287.99
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      0.84,
+      77.53,
+      161.8,
+      235.95
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      306.74,
+      198.88,
+      185.39,
+      170.22
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      228.5,
+      91.8,
+      54.45,
+      68.97
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      285.85,
+      99.37,
+      82.92,
+      140.17
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      326.12,
+      64.63,
+      63.21,
+      81.74
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      467.7,
+      26.97,
+      32.3,
+      74.15
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      241.69,
+      118.66,
+      88.4,
+      191.48
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      341.32,
+      104.79,
+      136.02,
+      105.79
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000147740.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000147740.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      4.35,
+      145.12,
+      92.52,
+      205.72
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      66.84,
+      167.6,
+      61.41,
+      186.69
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      106.42,
+      220.98,
+      37.85,
+      132.04
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      382.66,
+      128.78,
+      42.11,
+      115.1
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      193.08,
+      293.39,
+      262.11,
+      179.06
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      375.93,
+      144.19,
+      19.07,
+      33.79
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      557.5,
+      83.13,
+      82.5,
+      387.5
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000148719.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000148719.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      1.73,
+      119.54,
+      41.5,
+      44.12
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000148739.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000148739.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 426,
+   "persons": [
+    {
+     "box": [
+      74.11,
+      120.38,
+      91.34,
+      120.36
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000150224.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000150224.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      205.34,
+      289.78,
+      85.4,
+      115.15
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      409.73,
+      267.71,
+      124.74,
+      109.39
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      346.03,
+      213.74,
+      78.08,
+      186.03
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      407.52,
+      241.72,
+      45.44,
+      109.74
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      378.44,
+      282.38,
+      98.04,
+      135.33
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      312.94,
+      336.57,
+      23.88,
+      25.6
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000151480.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000151480.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      169.6,
+      175.1,
+      53.78,
+      144.46
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      265.31,
+      184.98,
+      54.14,
+      144.14
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      384.13,
+      188.17,
+      50.54,
+      128.92
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      208.04,
+      173.28,
+      44.36,
+      148.6
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      410.21,
+      73.22,
+      28.83,
+      48.24
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      369.23,
+      27.1,
+      36.92,
+      95.28
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      311.67,
+      63.53,
+      28.81,
+      57.61
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      293.75,
+      181.37,
+      42.25,
+      133.01
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      250.84,
+      182.03,
+      35.63,
+      92.0
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      353.52,
+      42.43,
+      26.43,
+      80.14
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      240.74,
+      44.83,
+      21.07,
+      69.64
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000153229.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000153229.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 457,
+   "persons": [
+    {
+     "box": [
+      339.4,
+      147.26,
+      155.77,
+      297.1
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      518.76,
+      177.55,
+      61.75,
+      211.0
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      233.62,
+      30.74,
+      103.49,
+      361.71
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      517.03,
+      217.72,
+      122.97,
+      236.44
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      120.66,
+      223.77,
+      69.07,
+      169.84
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      118.18,
+      206.16,
+      83.15,
+      175.67
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      168.56,
+      33.24,
+      131.75,
+      371.53
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000157046.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000157046.jpg",
+   "license": "CC BY 2.0",
+   "width": 500,
+   "height": 375,
+   "persons": [
+    {
+     "box": [
+      1.69,
+      67.42,
+      88.48,
+      261.23
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      340.91,
+      197.73,
+      157.79,
+      170.45
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000157601.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000157601.jpg",
+   "license": "CC BY 2.0",
+   "width": 612,
+   "height": 612,
+   "persons": [
+    {
+     "box": [
+      0.0,
+      84.77,
+      330.81,
+      333.57
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000158945.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000158945.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 478,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      97.52,
+      42.83,
+      59.56,
+      184.29
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      393.14,
+      256.28,
+      34.31,
+      114.41
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000158956.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000158956.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 425,
+   "persons": [
+    {
+     "box": [
+      169.04,
+      39.16,
+      323.77,
+      379.15
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000160012.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000160012.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 461,
+   "persons": [
+    {
+     "box": [
+      155.73,
+      0.1,
+      383.65,
+      182.54
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000161875.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000161875.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 422,
+   "persons": [
+    {
+     "box": [
+      174.49,
+      72.73,
+      107.16,
+      312.94
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000161879.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000161879.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 569,
+   "persons": [
+    {
+     "box": [
+      54.1,
+      1.3,
+      182.44,
+      341.18
+     ],
+     "category": null,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "file": "000000161925.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000161925.jpg",
+   "license": "CC BY 2.0",
+   "width": 480,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      247.04,
+      92.82,
+      173.37,
+      540.32
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      100.59,
+      182.24,
+      532.38
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000183391.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000183391.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 632,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      70.85,
+      97.35,
+      34.64,
+      72.61
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      81.94,
+      120.39,
+      25.8,
+      50.32
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      32.62,
+      182.53,
+      49.97,
+      67.32
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      110.7,
+      191.63,
+      48.65,
+      52.45
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      298.06,
+      239.16,
+      48.2,
+      78.87
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      241.2,
+      215.36,
+      43.44,
+      58.24
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      231.88,
+      192.98,
+      40.42,
+      63.77
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      215.46,
+      162.15,
+      45.47,
+      68.59
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      210.89,
+      140.5,
+      41.07,
+      56.31
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      245.85,
+      316.62,
+      52.08,
+      59.61
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      261.65,
+      243.67,
+      42.03,
+      85.06
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      80.57,
+      250.27,
+      50.72,
+      49.85
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      210.53,
+      112.34,
+      277.78,
+      481.52
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      0,
+      0,
+      631,
+      380
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000184324.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000184324.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 425,
+   "persons": [
+    {
+     "box": [
+      438.54,
+      248.88,
+      17.24,
+      56.64
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      413.24,
+      251.54,
+      27.18,
+      59.66
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      364.02,
+      242.8,
+      26.92,
+      60.87
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      351.28,
+      233.29,
+      17.92,
+      54.51
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      336.24,
+      232.48,
+      13.68,
+      24.57
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      326.77,
+      232.71,
+      11.79,
+      18.77
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      9.53,
+      319.8,
+      95.29,
+      105.2
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      565.48,
+      251.28,
+      27.43,
+      69.39
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      31.17,
+      218.52,
+      52.65,
+      163.72
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      80.4,
+      240.96,
+      55.11,
+      146.64
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      33.79,
+      227.21,
+      14.14,
+      23.61
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      2.08,
+      221.27,
+      30.99,
+      111.11
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      235.02,
+      225.67,
+      12.22,
+      32.94
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      3,
+      199,
+      594,
+      225
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000188465.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000188465.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 454,
+   "persons": [
+    {
+     "box": [
+      232.06,
+      249.1,
+      95.81,
+      119.74
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      318.09,
+      172.94,
+      70.58,
+      98.26
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      362.64,
+      211.51,
+      46.53,
+      53.12
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      389.87,
+      183.89,
+      52.16,
+      78.69
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      175.72,
+      106.28,
+      35.53,
+      73.72
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      135.33,
+      134.34,
+      26.03,
+      35.71
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      94.48,
+      154.32,
+      25.79,
+      32.64
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      47.17,
+      171.37,
+      21.57,
+      33.69
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      455.26,
+      92.87,
+      35.66,
+      28.66
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      463.65,
+      112.88,
+      33.62,
+      30.21
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      291.7,
+      186.36,
+      21.32,
+      19.98
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      57.83,
+      132.9,
+      28.95,
+      27.83
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      117.82,
+      152.3,
+      32.42,
+      56.75
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0,
+      0,
+      639,
+      218
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000189775.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000189775.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      153.55,
+      109.34,
+      135.04,
+      236.93
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      311.77,
+      130.34,
+      42.97,
+      42.18
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      350.71,
+      124.16,
+      40.75,
+      47.64
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      397.56,
+      119.61,
+      38.65,
+      53.16
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      531.9,
+      110.31,
+      42.53,
+      47.5
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      551.99,
+      61.39,
+      33.93,
+      46.37
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      484.79,
+      115.15,
+      46.43,
+      60.71
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      85.62,
+      90.51,
+      44.69,
+      167.89
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      392.67,
+      108.42,
+      26.95,
+      40.27
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      415.84,
+      87.09,
+      35.24,
+      51.89
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      446.45,
+      105.33,
+      44.37,
+      45.5
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      520.48,
+      70.12,
+      28.8,
+      52.04
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      164.41,
+      76.1,
+      49.35,
+      83.7
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      0,
+      0,
+      639,
+      269
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000190676.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000190676.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 264,
+   "persons": [
+    {
+     "box": [
+      554.7,
+      30.26,
+      83.65,
+      228.99
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      315.08,
+      103.44,
+      12.59,
+      50.54
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      432.4,
+      99.6,
+      13.56,
+      41.52
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      539.97,
+      95.61,
+      22.34,
+      76.51
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      515.34,
+      94.16,
+      20.37,
+      61.29
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      466.11,
+      98.06,
+      13.88,
+      43.32
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      203.43,
+      113.43,
+      9.56,
+      25.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      213.57,
+      111.94,
+      9.7,
+      24.35
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      492.78,
+      98.82,
+      12.96,
+      46.82
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      507.97,
+      95.11,
+      13.97,
+      58.75
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      477.53,
+      97.57,
+      16.75,
+      47.68
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      567.11,
+      92.81,
+      21.98,
+      31.52
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      532.71,
+      91.81,
+      12.84,
+      67.35
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      100,
+      88,
+      484,
+      95
+     ],
+     "category": null,
+     "tags": [
+      "crowd"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000190923.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000190923.jpg",
+   "license": "CC BY 2.0",
+   "width": 375,
+   "height": 500,
+   "persons": [
+    {
+     "box": [
+      328.01,
+      296.88,
+      46.99,
+      203.12
+     ],
+     "category": null,
+     "tags": [
+      "back",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      225.84,
+      33.71,
+      161.8
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      317.99,
+      294.26,
+      10.22,
+      32.29
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      303.43,
+      289.99,
+      8.72,
+      33.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      297.46,
+      289.53,
+      7.87,
+      35.34
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      292.76,
+      287.01,
+      6.8,
+      35.26
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      331.31,
+      296.29,
+      13.63,
+      31.93
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      214.38,
+      272.8,
+      7.17,
+      27.67
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      207.37,
+      272.1,
+      5.54,
+      25.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      272.61,
+      281.64,
+      6.55,
+      32.43
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      202.75,
+      269.29,
+      6.79,
+      22.49
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      178.09,
+      263.56,
+      5.36,
+      18.01
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      164.33,
+      258.48,
+      6.17,
+      22.22
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      58,
+      236,
+      175,
+      70
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "crowd"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000203931.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000203931.jpg",
+   "license": "CC BY 2.0",
+   "width": 428,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      115.06,
+      182.65,
+      189.84,
+      412.77
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      237.59,
+      99.85,
+      29.71,
+      32.69
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      174.98,
+      105.13,
+      26.06,
+      26.97
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      134.17,
+      113.24,
+      28.41,
+      32.26
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      90.97,
+      107.28,
+      30.74,
+      52.24
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      71.92,
+      120.05,
+      30.94,
+      43.07
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      65.29,
+      64.77,
+      20.77,
+      35.47
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      17.38,
+      21.85,
+      41.91,
+      49.44
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      152.07,
+      29.85,
+      21.67,
+      23.33
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      253.11,
+      366.92,
+      56.97,
+      69.49
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      286.33,
+      133.94,
+      20.03,
+      27.88
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      306.71,
+      211.02,
+      25.76,
+      40.79
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      318.53,
+      236.39,
+      33.58,
+      47.07
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0,
+      0,
+      427,
+      451
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000207844.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000207844.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      509.73,
+      303.23,
+      86.54,
+      48.83
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      94.89,
+      328.2,
+      76.42,
+      82.43
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      342.99,
+      249.68,
+      23.8,
+      26.25
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      361.28,
+      221.44,
+      15.2,
+      48.06
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      337.15,
+      225.88,
+      20.28,
+      45.61
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      366.19,
+      246.97,
+      36.15,
+      34.74
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      421.37,
+      252.89,
+      17.31,
+      20.59
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      298.53,
+      235.79,
+      11.68,
+      34.41
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      223.07,
+      229.46,
+      14.14,
+      19.7
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      630.9,
+      267.01,
+      9.1,
+      17.7
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      541.09,
+      254.81,
+      3.74,
+      6.12
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      234.89,
+      244.28,
+      8.04,
+      9.07
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      209.85,
+      238.12,
+      10.36,
+      13.74
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      36,
+      227,
+      590,
+      181
+     ],
+     "category": null,
+     "tags": [
+      "crowd"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000229849.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000229849.jpg",
+   "license": "CC BY 2.0",
+   "width": 427,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      151.01,
+      152.45,
+      257.44,
+      376.81
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      385.98,
+      281.13,
+      38.57,
+      74.72
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      380.6,
+      238.59,
+      42.48,
+      48.92
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      332.69,
+      233.85,
+      57.33,
+      72.81
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      211.69,
+      245.39,
+      35.48,
+      48.54
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      138.62,
+      246.11,
+      71.13,
+      45.19
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      93.36,
+      311.89,
+      57.92,
+      67.6
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      93.88,
+      353.5,
+      56.74,
+      67.02
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      163.95,
+      378.24,
+      71.21,
+      42.43
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      360.12,
+      288.79,
+      47.64,
+      81.61
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      13.46,
+      354.88,
+      64.61,
+      64.61
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      43.5,
+      320.85,
+      53.5,
+      63.0
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      306.86,
+      99.92,
+      33.71,
+      51.14
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      1,
+      0,
+      425,
+      430
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000231508.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000231508.jpg",
+   "license": "CC BY 2.0",
+   "width": 335,
+   "height": 500,
+   "persons": [
+    {
+     "box": [
+      62.92,
+      215.73,
+      155.06,
+      178.65
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      248.73,
+      211.28,
+      47.45,
+      64.49
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      221.13,
+      218.6,
+      41.09,
+      56.84
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      234.26,
+      200.67,
+      29.19,
+      30.02
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      230.87,
+      187.48,
+      25.51,
+      40.16
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      68.84,
+      233.67,
+      41.41,
+      36.32
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      56.24,
+      247.34,
+      16.58,
+      20.07
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      30.27,
+      222.06,
+      13.35,
+      47.68
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      193.05,
+      147.87,
+      43.63,
+      53.95
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      198.9,
+      105.25,
+      17.41,
+      40.31
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      174.53,
+      101.13,
+      25.52,
+      56.81
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      153.41,
+      222.03,
+      32.18,
+      25.87
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      156.29,
+      105.95,
+      21.33,
+      54.14
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      1,
+      83,
+      333,
+      212
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000236426.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000236426.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 429,
+   "persons": [
+    {
+     "box": [
+      260.69,
+      64.2,
+      144.88,
+      217.04
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      21.35,
+      95.6,
+      101.08,
+      133.0
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      102.58,
+      37.95,
+      41.79,
+      26.63
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      156.94,
+      31.49,
+      37.63,
+      32.28
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      202.93,
+      28.65,
+      40.14,
+      35.44
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      253.73,
+      22.43,
+      39.02,
+      40.71
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      295.54,
+      0.18,
+      57.52,
+      62.55
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      152.54,
+      2.71,
+      47.82,
+      56.64
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      102.4,
+      3.48,
+      47.82,
+      59.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      51.18,
+      30.12,
+      44.8,
+      35.59
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      298.08,
+      29.18,
+      46.64,
+      34.9
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      50.05,
+      0.25,
+      54.48,
+      60.95
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      271.74,
+      12.58,
+      25.71,
+      49.92
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      1,
+      0,
+      638,
+      247
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000266892.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000266892.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 427,
+   "persons": [
+    {
+     "box": [
+      405.76,
+      173.47,
+      20.83,
+      17.82
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      189.18,
+      138.55,
+      24.8,
+      40.78
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      341.17,
+      139.23,
+      28.66,
+      44.12
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      360.33,
+      140.49,
+      24.98,
+      48.32
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      373.13,
+      135.42,
+      17.56,
+      39.26
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      387.24,
+      146.72,
+      26.18,
+      37.63
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      408.68,
+      145.02,
+      22.24,
+      46.04
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      428.57,
+      145.64,
+      23.97,
+      25.62
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      458.26,
+      151.47,
+      15.45,
+      30.54
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      472.4,
+      142.94,
+      17.63,
+      48.07
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      109.13,
+      161.81,
+      32.89,
+      29.0
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      31.67,
+      160.91,
+      33.58,
+      29.75
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      338.89,
+      170.22,
+      32.94,
+      20.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0,
+      86,
+      639,
+      303
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000279927.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000279927.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 640,
+   "height": 442,
+   "persons": [
+    {
+     "box": [
+      438.33,
+      324.75,
+      16.64,
+      17.78
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      476.7,
+      285.69,
+      8.88,
+      21.98
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      122.48,
+      216.23,
+      41.07,
+      144.83
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      404.14,
+      356.03,
+      15.95,
+      24.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      527.66,
+      310.19,
+      16.43,
+      22.38
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      588.72,
+      291.02,
+      14.89,
+      21.82
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      399.95,
+      248.03,
+      5.67,
+      7.32
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      73.89,
+      201.86,
+      53.28,
+      152.5
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      55.97,
+      218.47,
+      33.66,
+      114.64
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      158.59,
+      216.16,
+      42.57,
+      131.85
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      433.54,
+      284.32,
+      12.15,
+      26.71
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      189.71,
+      236.82,
+      68.4,
+      141.99
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      313.03,
+      256.79,
+      9.51,
+      10.74
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      1,
+      26,
+      638,
+      354
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000282298.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000282298.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 480,
+   "persons": [
+    {
+     "box": [
+      178.74,
+      259.92,
+      59.78,
+      218.7
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      252.91,
+      272.39,
+      53.58,
+      169.4
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      302.01,
+      271.34,
+      26.79,
+      71.26
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      404.16,
+      278.23,
+      27.74,
+      71.19
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      449.91,
+      273.19,
+      45.2,
+      119.31
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      525.3,
+      277.21,
+      46.39,
+      136.8
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      342.3,
+      266.38,
+      21.57,
+      93.54
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      1.0,
+      268.76,
+      62.22,
+      155.1
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      217.26,
+      263.0,
+      45.33,
+      146.28
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      98.59,
+      272.28,
+      52.68,
+      162.42
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      41.95,
+      268.27,
+      30.99,
+      57.46
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      363.08,
+      267.5,
+      68.9,
+      199.6
+     ],
+     "category": null,
+     "tags": [
+      "back"
+     ]
+    },
+    {
+     "box": [
+      354.74,
+      273.8,
+      21.93,
+      125.28
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      1,
+      253,
+      638,
+      226
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000303713.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000303713.jpg",
+   "license": "CC BY 2.0",
+   "width": 427,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      89.17,
+      326.47,
+      169.71,
+      306.34
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      24.36,
+      423.4,
+      28.23,
+      31.11
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      274.27,
+      420.85,
+      75.44,
+      102.54
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      340.51,
+      424.8,
+      49.57,
+      101.61
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      283.64,
+      362.86,
+      23.14,
+      31.54
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      52.97,
+      428.43,
+      67.32,
+      112.75
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      52.12,
+      320.49,
+      45.38,
+      49.9
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      258.62,
+      282.42,
+      23.66,
+      30.77
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      318.94,
+      197.17,
+      32.28,
+      30.11
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0.0,
+      419.98,
+      19.86,
+      35.92
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      291.53,
+      293.68,
+      44.24,
+      40.1
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      228.32,
+      375.66,
+      34.8,
+      44.66
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      128.46,
+      330.24,
+      27.56,
+      32.9
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      0,
+      42,
+      426,
+      430
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000309391.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000309391.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 384,
+   "persons": [
+    {
+     "box": [
+      79.58,
+      252.92,
+      24.11,
+      72.03
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "back"
+     ]
+    },
+    {
+     "box": [
+      126.16,
+      221.8,
+      15.36,
+      58.49
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      604.28,
+      269.66,
+      22.7,
+      86.89
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      429.87,
+      186.06,
+      16.63,
+      31.66
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      526.39,
+      127.6,
+      13.0,
+      22.04
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      19.88,
+      239.72,
+      23.16,
+      51.44
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      203.53,
+      222.21,
+      15.29,
+      46.38
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      378.82,
+      119.95,
+      12.08,
+      29.34
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      32.24,
+      257.73,
+      10.55,
+      43.4
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      18.41,
+      263.46,
+      15.01,
+      58.05
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      368.75,
+      127.82,
+      6.28,
+      18.97
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      545.49,
+      210.32,
+      7.03,
+      14.7
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      344.05,
+      215.97,
+      4.21,
+      3.72
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      163,
+      218,
+      9,
+      43
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "crowd"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000329323.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000329323.jpg",
+   "license": "CC BY-SA 2.0",
+   "width": 425,
+   "height": 640,
+   "persons": [
+    {
+     "box": [
+      41.91,
+      272.44,
+      180.11,
+      231.88
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      95.81,
+      44.3,
+      154.78,
+      235.57
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      48.6,
+      47.64,
+      48.02,
+      288.71
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      346.81,
+      85.0,
+      78.19,
+      205.87
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      300.85,
+      37.43,
+      56.49,
+      113.91
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      240.45,
+      54.94,
+      89.66,
+      90.92
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      1.44,
+      129.73,
+      108.11,
+      510.27
+     ],
+     "category": null,
+     "tags": [
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      71.89,
+      11.7,
+      90.49,
+      251.93
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      121.49,
+      441.66,
+      274.01,
+      197.28
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      10.05,
+      43.51,
+      65.39,
+      201.97
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      400.7,
+      79.86,
+      24.3,
+      69.73
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "partial"
+     ]
+    },
+    {
+     "box": [
+      225.8,
+      96.34,
+      84.4,
+      145.45
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      281.78,
+      140.62,
+      82.8,
+      127.77
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      0,
+      18,
+      424,
+      341
+     ],
+     "category": null,
+     "tags": [
+      "crowd",
+      "partial"
+     ]
+    }
+   ]
+  },
+  {
+   "file": "000000338219.jpg",
+   "url": "http://images.cocodataset.org/val2017/000000338219.jpg",
+   "license": "CC BY 2.0",
+   "width": 640,
+   "height": 566,
+   "persons": [
+    {
+     "box": [
+      163.97,
+      8.68,
+      96.42,
+      160.97
+     ],
+     "category": null,
+     "tags": []
+    },
+    {
+     "box": [
+      153.99,
+      138.66,
+      19.85,
+      33.09
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      31.81,
+      144.58,
+      12.33,
+      40.19
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      82.38,
+      144.82,
+      19.68,
+      25.15
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      103.28,
+      139.53,
+      15.3,
+      28.39
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      606.29,
+      162.72,
+      14.61,
+      12.26
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      117.42,
+      151.0,
+      13.49,
+      17.11
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      66.55,
+      149.44,
+      7.75,
+      29.59
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      147.62,
+      152.21,
+      8.53,
+      18.22
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      73.18,
+      150.05,
+      6.13,
+      36.37
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      167.98,
+      149.24,
+      10.78,
+      24.55
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      62.4,
+      153.28,
+      6.65,
+      17.17
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      123.45,
+      138.26,
+      28.13,
+      31.75
+     ],
+     "category": null,
+     "tags": [
+      "small"
+     ]
+    },
+    {
+     "box": [
+      3,
+      150,
+      425,
+      50
+     ],
+     "category": null,
+     "tags": [
+      "small",
+      "crowd"
+     ]
+    }
+   ]
+  }
+ ]
+}

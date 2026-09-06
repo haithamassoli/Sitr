@@ -4,9 +4,13 @@
   python3 Bench/download.py            # both sets
   python3 Bench/download.py --photos   # Wikimedia Commons CC0 photos -> Bench/data/photos/  (sitr-spike detect)
   python3 Bench/download.py --recall   # COCO val2017 images from Bench/recall/manifest.json -> Bench/data/recall/
+  python3 Bench/download.py --labels Bench/labels/faces-commons.json [--limit 20] [--timeout 20]
+                                       # images of a sitr-bench labels file -> its images_dir (Bench/data/faces/)
+A file that fails is reported and skipped (re-run to retry it); the exit code is 1 when any requested file is missing.
 """
 import argparse
 import json
+import sys
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -53,38 +57,60 @@ def photo_url(title, width=1600):
     return "https://commons.wikimedia.org/wiki/Special:FilePath/" + urllib.parse.quote(title[len("File:"):]) + f"?width={width}"
 
 
-def fetch(url, dest):
+def fetch(url, dest, timeout=120):
     if dest.exists():
         return False
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     part = dest.with_suffix(dest.suffix + ".part")
-    with urllib.request.urlopen(req, timeout=120) as r:
+    with urllib.request.urlopen(req, timeout=timeout) as r:
         part.write_bytes(r.read())
     part.rename(dest)
     return True
 
 
-def download_all(jobs, label):
+def download_all(jobs, label, timeout=120):
+    """Fetches every (url, dest); a failed file is printed and skipped. Returns the number of failures."""
+    def one(job):
+        try:
+            return fetch(*job, timeout=timeout)
+        except Exception as ex:  # ponytail: report and carry on so a flaky file does not lose the rest; re-run to retry
+            print(f"  failed {job[1].name}: {ex}")
+            return None
+
     with ThreadPoolExecutor(max_workers=8) as pool:
-        fetched = sum(pool.map(lambda j: fetch(*j), jobs))
-    print(f"{label}: {len(jobs)} files, {fetched} downloaded, {len(jobs) - fetched} already present")
+        results = list(pool.map(one, jobs))
+    fetched, failed = sum(r is True for r in results), sum(r is None for r in results)
+    print(f"{label}: {len(jobs)} files, {fetched} downloaded, {len(jobs) - fetched - failed} already present, {failed} failed")
+    return failed
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--photos", action="store_true")
     ap.add_argument("--recall", action="store_true")
+    ap.add_argument("--labels", metavar="LABELS.json", help="images of a Bench/labels file -> its images_dir (sitr-bench)")
+    ap.add_argument("--limit", type=int, help="with --labels: only the first N images (CI smoke)")
+    ap.add_argument("--timeout", type=float, default=120, help="seconds per file (default 120)")
     args = ap.parse_args()
-    both = not (args.photos or args.recall)
+    both = not (args.photos or args.recall or args.labels)
+    failed = 0
     if args.photos or both:
         out = DATA / "photos"
         out.mkdir(parents=True, exist_ok=True)
-        download_all([(photo_url(p["title"]), out / p["file"]) for p in PHOTOS], f"photos -> {out}")
+        failed += download_all([(photo_url(p["title"]), out / p["file"]) for p in PHOTOS], f"photos -> {out}", args.timeout)
     if args.recall or both:
         manifest = json.loads((BENCH / "recall" / "manifest.json").read_text())
         out = DATA / "recall"
         out.mkdir(parents=True, exist_ok=True)
-        download_all([(e["coco_url"], out / e["file_name"]) for e in manifest["images"]], f"recall -> {out}")
+        failed += download_all([(e["coco_url"], out / e["file_name"]) for e in manifest["images"]], f"recall -> {out}", args.timeout)
+    if args.labels:
+        labels_path = Path(args.labels)
+        labels = json.loads(labels_path.read_text())
+        out = (labels_path.parent / labels["images_dir"]).resolve()
+        out.mkdir(parents=True, exist_ok=True)
+        jobs = {e["file"]: (e["url"], out / e["file"]) for e in labels["images"][: args.limit]}  # low-light rows share a file
+        failed += download_all(list(jobs.values()), f"{labels_path.name} -> {out}", args.timeout)
+    sys.exit(1 if failed else 0)
 
 
 if __name__ == "__main__":
