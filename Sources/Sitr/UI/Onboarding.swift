@@ -152,7 +152,8 @@ enum OnboardingWindow {
             permissionGranted: devStep == nil && permission.state == .granted,
             step: devStep)
         let window = NSWindow(
-            contentRect: NSRect(origin: .zero, size: OnboardingView.size), styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            contentRect: NSRect(origin: .zero, size: OnboardingView.size), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+        window.minSize = CGSize(width: 560, height: 440)
         window.contentView = NSHostingView(rootView: OnboardingView(model: model, permission: permission, flow: flow))
         window.title = String(localized: "Sitr Setup", comment: "Onboarding window title (hidden, read by accessibility)")
         window.titleVisibility = .hidden
@@ -173,11 +174,13 @@ enum OnboardingWindow {
     static func close() { window?.close() }
 
     /// Finish, step 5: `SMAppService` registration; General › Launch at login shows the resulting status afterwards.
-    static func registerLaunchAtLogin() {
+    static func registerLaunchAtLogin(model: AppModel, register: () throws -> Void = { try SMAppService.mainApp.register() }) {
         guard devStep == nil else { return }
         do {
-            try SMAppService.mainApp.register()
+            try register()
+            model.loginProblem = nil
         } catch {
+            model.loginProblem = String(localized: "Launch at login could not be enabled. Try again in General settings.")
             log.error("launch at login: \(error.localizedDescription, privacy: .public)")
         }
     }
@@ -186,7 +189,7 @@ enum OnboardingWindow {
 /// The five pages, one bottom bar. Return = the default button; Esc is not bound (nothing skips the permission by accident).
 /// No animations (M4-T11).
 struct OnboardingView: View {
-    static let size = CGSize(width: 560, height: 400)
+    static let size = CGSize(width: 600, height: 520)
 
     let model: AppModel
     let permission: PermissionMonitor
@@ -209,14 +212,14 @@ struct OnboardingView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
             .padding(.bottom, 12)
-            content
+            ScrollView { content.frame(maxWidth: .infinity, alignment: .leading) }
             Spacer(minLength: 12)
             buttons
         }
         .padding(.horizontal, 32)
         .padding(.top, 6)
         .padding(.bottom, 22)
-        .frame(width: Self.size.width, height: Self.size.height)
+        .frame(minWidth: 560, idealWidth: Self.size.width, minHeight: 400, idealHeight: Self.size.height)
         .transaction { $0.animation = nil }
         .defaultFocus($focus, .primary)
         .onChange(of: flow.step) { _, step in focus = step == .hiddenSet ? .hiddenSet : .primary }
@@ -239,7 +242,7 @@ struct OnboardingView: View {
                     .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 6))
                     .environment(\.layoutDirection, .leftToRight)  // a shell command stays LTR and left-aligned inside the RTL layout
                     .accessibilityLabel("Verification command: \(AboutTab.verifyCommand)")
-                Text("Default settings: hide everyone, cover browsers and chat apps, start at login. Everything is changeable later in Settings.")
+                Text("Default settings: hide everyone in Safari, Chrome, Arc, Telegram, WhatsApp and Discord, and start at login. Other apps stay Off. Change these choices in Settings.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -250,7 +253,7 @@ struct OnboardingView: View {
                     Label("Screen Recording is allowed.", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                 } else {
-                    Label("Not allowed yet. Until it is, Sitr covers nothing and shows a warning icon in the menu bar.", systemImage: "exclamationmark.triangle.fill")
+                    Label("Screen Recording is not allowed. Detection is unavailable; existing Curtain rules keep those app windows covered.", systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
                     HStack {
                         Button("Allow Screen Recording") { permission.request() }
@@ -259,7 +262,7 @@ struct OnboardingView: View {
                             .accessibilityHint("Opens Privacy & Security, Screen & System Audio Recording")
                     }
                 }
-                Text("macOS 15.1 and later asks you to re-approve this permission about once a month. When the grant lapses, Sitr shows the warning icon and brings this step back.")
+                Text("macOS may ask you to allow Screen Recording again. If permission is lost, Sitr shows a warning and reopens this step.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -321,6 +324,10 @@ struct OnboardingView: View {
             let hotkey = model.preferences.hotkey.displayString
             page("keyboard", Text("You're all set")) {
                 Text("Hold \(hotkey) to reveal what is under the covers; release to cover again. As a safety, covers come back after 30 seconds of holding.")
+                CoverPreview(style: model.preferences.coverStyle, strength: model.preferences.blurStrength, padding: model.preferences.bodyPadding)
+                    .frame(width: 320, height: 200)
+                    .accessibilityLabel("Preview of a cover over a sample scene")
+                Text("Sample cover only. This preview does not test screen detection.").font(.caption).foregroundStyle(.secondary)
                 Text("Change the shortcut in Settings › Shortcuts. Sitr lives in the menu bar: pause, disable, or open Settings from there.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -445,10 +452,10 @@ struct OnboardingView: View {
 
     private func finish() {
         model.completeOnboarding(flow)
-        if flow.registersLaunchAtLogin { OnboardingWindow.registerLaunchAtLogin() }
+        if flow.registersLaunchAtLogin { OnboardingWindow.registerLaunchAtLogin(model: model) }
         OnboardingWindow.close()
-        if flow.opensSettingsOnFinish {
-            SettingsView.initialTab = .protection
+        if !flow.permissionOnly {
+            model.settingsTab = model.loginProblem == nil ? .protection : .general
             openSettings()
             NSApp.activate()
         }

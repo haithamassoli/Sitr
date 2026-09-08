@@ -15,6 +15,8 @@ jobs:
         run: swift build
       - name: Unit tests
         run: swift test
+      - name: Benchmark math selfcheck (no downloads)
+        run: swift run sitr-bench --selfcheck
       - name: Bench smoke (sitr-bench on 20 Commons faces)
         # Network trouble must not fail CI: the downloader skips files that fail (20 s each) and the step exits 0 when none
         # arrived. With images on disk the bench must process them: it exits 1 when it crashes or processes 0 images.
@@ -24,7 +26,6 @@ jobs:
             echo "::notice::bench smoke skipped (network)"
             exit 0
           fi
-          swift run sitr-bench --selfcheck
           swift run sitr-bench Bench/labels/faces-commons.json --limit 20
       - name: String Catalog gate (every UI literal has an Arabic translation)
         run: scripts/check-strings.sh

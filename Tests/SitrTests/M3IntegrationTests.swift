@@ -35,7 +35,9 @@ private func window(_ id: CGWindowID, _ bundle: String?, _ rect: CGRect, z: Int,
         let rules = Rules(defaultMode: .blur, overrides: [
             AppRule(bundleID: "com.apple.TextEdit", mode: .off), AppRule(bundleID: "com.apple.Safari", mode: .curtain),
         ])
-        #expect(FilterPlan.compute(rules: rules, apps: apps, ownPID: own) == .exclude([own, 200]))
+        #expect(FilterPlan.compute(rules: rules, apps: apps, ownPID: own) == .include([100, 300, 400]))
+        // The excluded app has not entered the shareable list yet: its eventual PID is still absent from inclusion.
+        #expect(FilterPlan.compute(rules: rules, apps: apps.filter { $0.pid != 200 }, ownPID: own) == .include([100, 300, 400]))
         #expect(FilterPlan.compute(rules: Rules(defaultMode: .curtain), apps: apps, ownPID: own) == .exclude([own]))
         // The own process is excluded even when it is not in the app list yet (nothing to exclude) — and never included.
         #expect(FilterPlan.compute(rules: Rules(defaultMode: .blur), apps: Array(apps.dropFirst()), ownPID: own) == .exclude([]))

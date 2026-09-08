@@ -27,7 +27,7 @@ private let statusMatrix:
     func policyStateMapsToStatusIconAndReveal(
         protection: ProtectionState, health: Health, status: AppModel.Status, icon: AppModel.IconState, reveal: Bool
     ) {
-        let policy = Policy(hiddenSet: .everyone, protection: protection, health: health)
+        let policy = Policy(hiddenSet: .everyone, protection: protection, health: health, rules: Rules(defaultMode: .blur))
         let mapped = AppModel.status(for: policy, now: 50, wallClock: wall)
         #expect(mapped == status, "\(protection) \(health)")
         #expect(mapped.iconState == icon)
@@ -48,7 +48,12 @@ private let statusMatrix:
     private let suite = "SitrTests.\(UUID().uuidString)"
     private var defaults: UserDefaults { UserDefaults(suiteName: suite)! }
 
-    private func makeModel() -> AppModel { AppModel(preferences: Preferences(defaults: defaults)) }
+    private func makeModel() -> AppModel {
+        let model = AppModel(preferences: Preferences(defaults: defaults), rulesStore: RulesStore(directory: FileManager.default.temporaryDirectory.appending(path: suite)))
+        model.policy.rules = Rules(defaultMode: .blur)
+        model.readiness = .ready
+        return model
+    }
 
     @Test func placeholderDefaultsAreEveryoneStrictProtected() {
         let model = makeModel()

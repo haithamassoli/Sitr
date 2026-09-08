@@ -19,6 +19,7 @@ import Testing
     private func makeRuntime(_ screens: [ScreenSnapshot]) -> (runtime: Runtime, suite: String) {
         let suite = "SitrTests.\(UUID().uuidString)"
         let runtime = Runtime(model: AppModel(preferences: Preferences(defaults: UserDefaults(suiteName: suite)!)))
+        runtime.model.policy.rules = Rules(defaultMode: .blur)
         runtime.displayManager.simulatedScreens = screens
         runtime.displayManager.start()
         runtime.reconcileNow()

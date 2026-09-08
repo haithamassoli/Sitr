@@ -124,8 +124,9 @@ nonisolated let perfLegacy = ProcessInfo.processInfo.environment["SITR_PERF_LEGA
 /// the answer is `false` — and so does one with no tracks yet.
 // M4-T09, first item of the spike report's fix list. Pure; unit-tested. Rects are in capture pixels, tracks in display points.
 nonisolated func nothingDetectableChanged(dirtyRects: [CGRect], pixelsPerPoint: Double, tracks: [CGRect],
-                                          minBody: Double = Category.minBodyHeight) -> Bool {
-    guard !dirtyRects.isEmpty, dirtyRects.allSatisfy({ $0.height < minBody && $0.width < minBody }) else { return false }
+                                          minBody: Double = Category.minBodyHeight, hasCurtain: Bool = false) -> Bool {
+    // Curtain pre-covers have already been applied; skipping verification would leave them on screen.
+    guard !hasCurtain, !dirtyRects.isEmpty, dirtyRects.allSatisfy({ $0.height < minBody && $0.width < minBody }) else { return false }
     let k = pixelsPerPoint > 0 ? pixelsPerPoint : 1
     return !tracks.contains { track in
         let box = CGRect(x: track.minX * k, y: track.minY * k, width: track.width * k, height: track.height * k)
@@ -140,8 +141,10 @@ nonisolated func nothingDetectableChanged(dirtyRects: [CGRect], pixelsPerPoint: 
 // M4-T09: `DetectFaceRectanglesRequest` was ~1.6 s of a 30 s browsing profile on its own Vision queue. Skipping it costs the
 // overlap it used to have with the person detector on the frames that still need it (they now run one after the other), which
 // is the price of never guessing about a face that could change a category.
-nonisolated func needsFaces(persons: [Rect], tracks: [Track], classifiedAt: [Int: Double], now: Double, refresh: Double) -> Bool {
-    persons.contains { p in
+nonisolated func needsFaces(persons: [Rect], tracks: [Track], classifiedAt: [Int: Double], now: Double, refresh: Double,
+                            hiddenSet: HiddenSet = .women) -> Bool {
+    guard hiddenSet != .everyone else { return false }
+    return persons.contains { p in
         guard let track = tracks.filter({ $0.rect.iou(p) >= Tracker.matchIoU }).max(by: { $0.rect.iou(p) < $1.rect.iou(p) }) else { return true }
         return track.category == .unknown || classifiedAt[track.id].map { now - $0 >= refresh } ?? true
     }
@@ -197,7 +200,7 @@ nonisolated func failClosedSpecs(windows: [WindowRect], rules: Rules, displayID:
 }
 
 /// Cover look (PRD FR3): style, Blur Strength 0…1 (default 0.7), Body Padding 0…0.5 (default 0.15). `Preferences` persists it.
-nonisolated struct CoverAppearance: Sendable {
+nonisolated struct CoverAppearance: Sendable, Equatable {
     var style: CoverStyle = .gaussian
     var strength = 0.7
     var padding = 0.15
@@ -275,13 +278,14 @@ actor Pipeline {
     private let frames: AsyncStream<Frame>
     private let panel: OverlayPanel
     private let renderer: CoverRenderer
-    private let detector: any PersonDetecting
+    private var detector: any PersonDetecting
     private let faces = FaceDetector()
-    private let classifier: any GenderClassifying
+    private var classifier: any GenderClassifying
 
     private nonisolated struct Settings: Sendable {
         var policy: Policy
         var appearance: CoverAppearance
+        var revision = 0
     }
     private let settings: Mutex<Settings>
     /// `WindowTracker` snapshot (every display; filtered per use), pushed by the Runtime at ≤ 10 Hz.
@@ -296,6 +300,7 @@ actor Pipeline {
     private var curtains: [String: Curtain] = [:]
     private var curtainWindowIDs: [String: Set<Int>] = [:]
     private var personSpecs: [CoverLayerSpec] = []
+    private var verifiedFrame: Frame?
     private var preSpecs: [CoverLayerSpec] = []
     /// M4-T09: last frame's rendered cover per track id, reused while the box and the pixels under it hold still
     /// (`coverCanReuse`). Pruned to the covers of the current frame, so it cannot grow and it pins no recycled surface.
@@ -319,7 +324,7 @@ actor Pipeline {
     private var round = 0
     private let startedAt = CACurrentMediaTime()
 
-    init(
+    @MainActor init(
         displayID: CGDirectDisplayID, frames: AsyncStream<Frame>, panel: OverlayPanel, renderer: CoverRenderer,
         policy: Policy, appearance: CoverAppearance,
         detector: any PersonDetecting = VisionPersonDetector(), classifier: any GenderClassifying = NoClassifier()
@@ -331,6 +336,14 @@ actor Pipeline {
         self.detector = detector
         self.classifier = classifier
         settings = Mutex(Settings(policy: policy, appearance: appearance))
+    }
+
+    func replaceModels(detector: any PersonDetecting, classifier: any GenderClassifying) async {
+        settings.withLock { $0.revision &+= 1 }
+        self.detector = detector
+        self.classifier = classifier
+        await clear()
+        await warmUp()
     }
 
     /// Current tracks (display points); the category selftest reads categories from here.
@@ -346,15 +359,26 @@ actor Pipeline {
     }
 
     /// Dynamic type names of the plug-ins, for the metrics header and the selftests.
-    nonisolated var modelsNote: String {
+    var modelsNote: String {
         "detector=\(String(describing: type(of: detector))) classifier=\(String(describing: type(of: classifier)))"
     }
 
     /// Latest policy (`AppModel.onPolicyChanged`), used from the next frame on. When it stops protecting (pause, disable,
     /// needs permission) the covers come down right away, frames or not.
     nonisolated func update(_ policy: Policy) {
-        settings.withLock { $0.policy = policy }
-        if !policy.isProtecting(at: CACurrentMediaTime()) { Task { await self.clear() } }
+        let reset = settings.withLock { current in
+            let reset = current.policy.rules != policy.rules || current.policy.hiddenSet != policy.hiddenSet
+                || current.policy.protection != policy.protection
+            current.policy = policy
+            current.revision &+= 1
+            return reset
+        }
+        if reset || !policy.isProtecting(at: CACurrentMediaTime()) { Task { await self.clear() } }
+    }
+
+    nonisolated func captureStopped() {
+        settings.withLock { $0.revision &+= 1 }
+        Task { await self.clear() }
     }
 
     nonisolated func update(_ appearance: CoverAppearance) {
@@ -412,13 +436,16 @@ actor Pipeline {
 
     /// Person covers, pre-covers and Curtain state go; fail-closed covers (if any) stay.
     private func clear() async {
+        tracker = Tracker()
+        lastSequence = nil
+        ownDamage = false
+        verifiedFrame = nil
         personSpecs = []
         preSpecs = []
         curtains = [:]
         curtainWindowIDs = [:]
         coverCache = [:]
         classifiedAt = [:]
-        appliedSpecs = []
         await applyAll()
     }
 
@@ -426,7 +453,7 @@ actor Pipeline {
     // M4-T09: a set identical to what is already on screen is not applied at all. The overlay panel is on the display the
     // stream captures, so every commit damages it and SCK answers with a `.complete` frame — an unconditional commit per frame
     // made the pipeline run on its own output at ~3× the rate the screen actually changed (docs/perf.md).
-    private func applyAll() async {
+    private func applyAll(ifCurrent: @Sendable () -> Bool = { true }) async {
         let specs = personSpecs + preSpecs + failClosed.withLock { $0 }
         guard !specs.isEmpty || appliedLayers > 0 else { return }
         if !perfLegacy, specs.count == appliedSpecs.count, zip(specs, appliedSpecs).allSatisfy({ $0.matches($1) }) {
@@ -434,7 +461,12 @@ actor Pipeline {
             ownDamage = false
             return
         }
-        await panel.apply(specs)
+        let applied = await MainActor.run {
+            guard ifCurrent() else { return false }
+            panel.apply(specs)
+            return true
+        }
+        guard applied else { return }
         appliedSpecs = specs
         appliedLayers = specs.count
         ownDamage = true
@@ -510,6 +542,10 @@ actor Pipeline {
             if gap > 0 { metrics.skipped += gap }
             lastSequence = frame.sequence
             let current = settings.withLock { $0 }
+            guard frame.isCurrent(), current.policy.processingEnabled(at: t0) else { continue }
+            let isCurrent: @Sendable () -> Bool = { [self] in
+                frame.isCurrent() && self.settings.withLock { $0.revision == current.revision }
+            }
             let snapshot = windows.withLock { $0 }
             let trustDirty = !ownDamage  // taken before this frame's own pre-cover commit (see step 4)
 
@@ -521,28 +557,22 @@ actor Pipeline {
             syncCurtains(curtainWindows, now: t0)
             var pre: [CoverLayerSpec] = []
             if !curtains.isEmpty {
-                // SCK reports `dirtyRects` against the previous frame it *emitted*, and the drop-oldest stream throws frames away
-                // while detection runs: after a sequence gap the changes in between are unknowable, so the whole window counts as
-                // dirty (Curtain covers what might have changed). Trusted motion still suppresses it, which is what keeps video
-                // watchable (FR4.3).
-                // ponytail: a whole-window pre-cover per skipped frame is coarse; upgrade path = accumulate dirty rects in the
-                // capture callback (CaptureSession, another owner's file) and hand the union to the frame the pipeline consumes.
-                var dirty = frame.dirtyRectsInDisplayPoints.map(Rect.init)
-                if gap > 0 {
-                    dirty += curtainWindows.map { Rect($0.rect) }
-                    metrics.gapCovers += 1
-                }
+                // Compare against the last verified capture, including across dropped frames. Overlay damage
+                // is absent from the pixels, so static browser chrome is not repeatedly pre-covered.
+                let dirty = frame.changedTiles(since: verifiedFrame).map { frame.pixelsToDisplayPoints(Rect($0)) }
+                if gap > 0 { metrics.gapCovers += 1 }
                 for key in curtains.keys { curtains[key]?.dirty(rects: dirty, seq: frame.sequence, now: t0) }
                 pre = preCoverSpecs(frame: frame, appearance: current.appearance, windows: snapshot, curtainWindows: curtainWindows)
             }
             if !pre.isEmpty || !preSpecs.isEmpty {
                 preSpecs = pre
-                await applyAll()
+                await applyAll(ifCurrent: isCurrent)
                 if !pre.isEmpty {
                     metrics.preApplies += 1
                     metrics.fastPath.append(CACurrentMediaTime() - frame.timestamp)
                 }
             }
+            guard isCurrent(), !Task.isCancelled else { continue }
             if let hook = preCoverHook.withLock({ $0 }) { await hook(pre, frame, CACurrentMediaTime()) }
 
             // 1. Persons and faces, concurrently, off this actor and off main (nonisolated async). One frame at a time: the
@@ -552,7 +582,7 @@ actor Pipeline {
             //    "idle user" case: a clock tick or a caret blink used to cost a full pipeline pass).
             if !perfLegacy, !tracker.tracks.isEmpty || !personSpecs.isEmpty, gap == 0,
                nothingDetectableChanged(dirtyRects: frame.dirtyRects, pixelsPerPoint: frame.pixelsPerPoint,
-                                        tracks: tracker.tracks.map { CGRect($0.rect) }) {
+                                        tracks: tracker.tracks.map { CGRect($0.rect) }, hasCurtain: !curtains.isEmpty) {
                 metrics.detectSkips += 1
                 continue
             }
@@ -565,7 +595,8 @@ actor Pipeline {
             // set of people did not change: only then can the face request be left out of the concurrent pair without ever
             // losing its overlap with the person detector on the frames that do want it.
             let expectFaces = perfLegacy || needsFaces(persons: tracker.tracks.map(\.rect), tracks: tracker.tracks,
-                                                       classifiedAt: classifiedAt, now: t0, refresh: Self.classifyRefresh)
+                                                       classifiedAt: classifiedAt, now: t0, refresh: Self.classifyRefresh,
+                                                       hiddenSet: current.policy.hiddenSet)
             let persons: [Detection], faceBoxes: [Detection], ranFaces: Bool
             do {
                 if expectFaces {
@@ -577,7 +608,8 @@ actor Pipeline {
                     persons = try await detector.detect(in: frame)
                     // The prediction missed — somebody new is on screen — so pay for the face request now, after the fact.
                     ranFaces = needsFaces(persons: persons.map { frame.pixelsToDisplayPoints($0.box) }, tracks: tracker.tracks,
-                                          classifiedAt: classifiedAt, now: t0, refresh: Self.classifyRefresh)
+                                          classifiedAt: classifiedAt, now: t0, refresh: Self.classifyRefresh,
+                                          hiddenSet: current.policy.hiddenSet)
                     faceBoxes = ranFaces ? try await faces.detect(in: frame.pixelBuffer) : []
                     if !ranFaces { metrics.faceSkips += 1 }
                 }
@@ -586,8 +618,10 @@ actor Pipeline {
                 // ponytail: a failed detection keeps the previous covers (fail safe) and is counted; M4-T07 turns sustained
                 // failures / slowness into `.degraded`.
                 metrics.errors += 1
+                if isCurrent() { DetectionMeter.shared.recordFailure(display: displayID, at: CACurrentMediaTime()) }
                 continue
             }
+            guard isCurrent(), !Task.isCancelled else { continue }
             let t1 = CACurrentMediaTime()
             metrics.detect.append(t1 - t0)
             DetectionMeter.shared.record(display: displayID, seconds: t1 - t0, at: t1)  // M4-T07 degraded state
@@ -606,6 +640,7 @@ actor Pipeline {
             let order = classificationOrder(classifiable: usable, sticky: sticky, fresh: fresh, round: round)
             round += 1
             let probabilities = order.isEmpty ? [] : await classifier.pWoman(faces: order.map { assigned[$0]!.box }, in: frame)
+            guard isCurrent(), !Task.isCancelled else { continue }
             let t2 = CACurrentMediaTime()
             if !order.isEmpty {
                 metrics.classify.append((t2 - t1) / Double(order.count))
@@ -632,7 +667,8 @@ actor Pipeline {
                     category = usable[i] ? (sticky[i] ?? .unknown) : .unknown  // capped out this frame, or nothing to classify (rule → Unknown)
                 }
                 let owner = snapshot.topmost(at: CGPoint(x: rects[i].midX, y: rects[i].midY), on: displayID)?.bundleID
-                observations.append(PersonObservation(rect: rects[i], category: category, pWoman: p, bundleID: owner))
+                observations.append(PersonObservation(rect: rects[i], category: category, pWoman: p, bundleID: owner,
+                                                      categoryVerified: ranFaces && (!usable[i] || order.contains(i))))
             }
 
             // 3. Track, then policy (merges overlapping hidden tracks itself).
@@ -693,7 +729,9 @@ actor Pipeline {
                 preSpecs = verifiedPre
             }
             personSpecs = specs
-            await applyAll()
+            verifiedFrame = curtains.isEmpty ? nil : frame
+            await applyAll(ifCurrent: isCurrent)
+            guard isCurrent(), !Task.isCancelled else { continue }
             let t5 = CACurrentMediaTime()
             metrics.commit.append(t5 - t4)
             metrics.e2e.append(t5 - frame.timestamp)
@@ -721,6 +759,7 @@ actor Pipeline {
         let frame = Frame(pixelBuffer: blank, displayID: displayID, sequence: 0, timestamp: CACurrentMediaTime(), dirtyRects: [],
                           contentRect: .zero, scaleFactor: 1, contentScale: 1, displaySize: CGSize(width: 64, height: 64))
         _ = try? await detector.detect(in: frame)
+        guard settings.withLock({ $0.policy.hiddenSet != .everyone }) else { return }
         _ = try? await faces.detect(in: blank)
         _ = await classifier.pWoman(faces: [Rect(x: 0, y: 0, width: 64, height: 64)], in: frame)
     }

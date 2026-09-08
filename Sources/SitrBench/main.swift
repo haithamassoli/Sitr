@@ -6,6 +6,7 @@
 // person they overlap most, GenderClassifier crops with the shipped rule, and the category rule decides. Metrics in Metrics.swift.
 // No screen pixels are involved (public benchmark photos); output is numbers only.
 import CoreImage
+import CryptoKit
 import CoreImage.CIFilterBuiltins
 import CoreML
 import CoreVideo
@@ -16,7 +17,7 @@ import SitrDetect
 
 let usage = """
 usage: sitr-bench <labels.json> [--images <dir>] [--models <dir>] [--threshold 0.80] [--limit N] [--lanczos-below X]
-                  [--json out.json] [--verbose]
+                  [--person-threshold 0.30] [--split all|tuning|validation] [--json out.json] [--verbose]
        sitr-bench --selfcheck
   labels     Bench/labels/recall-coco.json or Bench/labels/faces-commons.json (python3 Bench/convert_labels.py)
   --images   image folder; default: the labels file's images_dir (python3 Bench/download.py --labels <labels.json>)
@@ -115,7 +116,7 @@ func ms(_ d: Duration) -> Double { Double(d.components.seconds) * 1000 + Double(
 
 func run(_ args: [String], labelsPath: String) async throws {
     let labelsURL = URL(fileURLWithPath: labelsPath)
-    let labels = try JSONDecoder().decode(Labels.self, from: Data(contentsOf: labelsURL))
+    var labels = try JSONDecoder().decode(Labels.self, from: Data(contentsOf: labelsURL))
     let imagesDir = option("--images", in: args).map { URL(fileURLWithPath: $0) }
         ?? labelsURL.deletingLastPathComponent().appendingPathComponent(labels.imagesDir ?? ".").standardizedFileURL
     // ponytail: cwd-relative Models/dist, else the checkout's via #filePath (a developer's shell); a shipped bench would take --models only.
@@ -125,13 +126,21 @@ func run(_ args: [String], labelsPath: String) async throws {
             .appendingPathComponent("Models/dist")
     }
     guard let threshold = Double(option("--threshold", in: args) ?? "0.80"), threshold > 0.5, threshold <= 1 else { throw BenchError("--threshold must be in (0.5, 1]") }
+    guard let personThreshold = Float(option("--person-threshold", in: args) ?? "0.30"),
+          personThreshold > 0, personThreshold <= 1 else { throw BenchError("--person-threshold must be in (0, 1]") }
+    let split = option("--split", in: args) ?? "all"
+    guard ["all", "tuning", "validation"].contains(split) else { throw BenchError("--split must be all, tuning, or validation") }
+    if split != "all" {
+        labels.images = labels.images.filter { isTuningImage($0.file) == (split == "tuning") }
+        labels.set += "-" + split
+    }
     let limit = Int(option("--limit", in: args) ?? "") ?? Int.max
     let verbose = args.contains("--verbose")
     let longSide = 1280.0
 
     // Models as the app loads them: both on .cpuAndNeuralEngine (docs/m2/detect.md), detector threshold 0.30 / NMS 0.5.
     var t0 = ContinuousClock.now
-    var detector = try await CoreMLPersonDetector(contentsOf: try await compiledModel(modelsDir, "PersonDetector"), computeUnits: .cpuAndNeuralEngine)
+    var detector = try await CoreMLPersonDetector(contentsOf: try await compiledModel(modelsDir, "PersonDetector"), computeUnits: .cpuAndNeuralEngine, threshold: personThreshold)
     if let l = Double(option("--lanczos-below", in: args) ?? "") { detector.lanczosBelow = l }
     let classifier = try await GenderClassifier(contentsOf: try await compiledModel(modelsDir, "GenderClassifier"), computeUnits: .cpuAndNeuralEngine)
     let faces = FaceDetector()
@@ -213,7 +222,7 @@ func run(_ args: [String], labelsPath: String) async throws {
     report.classifierErrors = classifierErrors
     report.print()
     if let out = option("--json", in: args) {
-        try JSONSerialization.data(withJSONObject: report.json, options: [.prettyPrinted, .sortedKeys]).write(to: URL(fileURLWithPath: out))
+        try JSONSerialization.data(withJSONObject: report.json.merging(["person_threshold": Double(personThreshold), "split": split]) { _, value in value }, options: [.prettyPrinted, .sortedKeys]).write(to: URL(fileURLWithPath: out))
         print("wrote \(out)")
     }
     if missing > 0 { print("missing_images=\(missing) (python3 Bench/download.py --labels \(labelsPath))") }
@@ -227,7 +236,7 @@ if args.contains("--selfcheck") {
     selfcheck()
     exit(0)
 }
-let valueFlags: Set<String> = ["--images", "--models", "--threshold", "--limit", "--json", "--lanczos-below"]
+let valueFlags: Set<String> = ["--images", "--models", "--threshold", "--limit", "--json", "--lanczos-below", "--person-threshold", "--split"]
 var positional: [String] = []
 var i = 0
 while i < args.count {

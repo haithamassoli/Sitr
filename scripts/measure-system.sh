@@ -3,19 +3,21 @@
 # window in a second process (browsing | video) or nothing at all (static: the desktop is left alone, no window of ours is
 # opened), samples the Sitr process once a second with ps and prints: CPU mean / p95 (% of one core), RSS max, the pipeline's
 # per-stage p50/p95, the skipped-frame ratio and the thermal state.
-#   scripts/measure-system.sh <browsing|video|static> <seconds>
+#   scripts/measure-system.sh <browsing|video|static|paused|disabled> <seconds>
 #   SITR_CAPTURE_SIDE=1920 SITR_FPS=30 scripts/measure-system.sh video 120     # CaptureSession dev overrides pass through
 #   SITR_PERF_LEGACY=1 scripts/measure-system.sh browsing 120                  # M4-T09 A/B: the pre-M4-T09 per-frame behaviour
-# Needs scripts/build-app.sh --debug (build/Sitr.app; the stimulus runs from .build/debug/Sitr so it can read the fixtures).
+# Uses an isolated preferences/rules suite; video/browsing are invalid if no person covers were produced.
+# SITR_STYLE=gaussian|pixelate|solid, SITR_HIDDEN_SET=everyone|women|men, SITR_RULE_MODE=blur|curtain.
+# Needs scripts/build-app.sh (release app) and swift build (debug stimulus).
 # Screen Recording is inherited from the shell (docs/dev.md). Exits on its own, kills both processes on any exit; the logs
 # hold timings and counts only. GPU / ANE utilisation needs `sudo powermetrics --samplers gpu_power,ane_power`: pending.
 # ponytail: ps %cpu on macOS is a decaying average of the process (per core, so already "% of one core"); the exact mean comes
 # from the cputime delta over the same window. Steady state = samples from t ≥ 10 s (model load + ANE warm-up excluded).
 set -uo pipefail
 cd "$(dirname "$0")/.."
-MODE=${1:?usage: measure-system.sh <browsing|video|static> <seconds>}
-RUN_SECONDS=${2:?usage: measure-system.sh <browsing|video|static> <seconds>}
-case $MODE in browsing|video|static) ;; *) echo "unknown mode $MODE (browsing|video|static)"; exit 2;; esac
+MODE=${1:?usage: measure-system.sh <browsing|video|static|paused|disabled> <seconds>}
+RUN_SECONDS=${2:?usage: measure-system.sh <browsing|video|static|paused|disabled> <seconds>}
+case $MODE in browsing|video|static|paused|disabled) ;; *) echo "unknown mode $MODE (browsing|video|static)"; exit 2;; esac
 APP=build/Sitr.app/Contents/MacOS/Sitr
 STIM=.build/debug/Sitr
 [ -x "$APP" ] || { echo "missing $APP: run scripts/build-app.sh --debug"; exit 1; }
@@ -35,12 +37,20 @@ therm() { pmset -g therm | grep -E 'CPU_|No thermal' | sed -E 's/^[[:space:]]+//
 pct() { sort -n | awk -v p="$1" '{a[NR]=$1} END { if (NR == 0) { print "-"; exit } i = int((NR - 1) * p + 0.5) + 1; printf "%.1f\n", a[i] }'; }
 
 echo "system_run mode=$MODE seconds=$RUN_SECONDS build=$BUILD side=${SITR_CAPTURE_SIDE:-1280} fps=${SITR_FPS:-15} perf_legacy=${SITR_PERF_LEGACY:-0} load1_start=$(load1) therm_start=$(therm)"
-SITR_METRICS=1 SITR_DEV_BLUR=1 "$APP" --quit-after "$RUN_SECONDS" >"$OUT/app.log" 2>&1 &
+OPTIONS=(--selftest system --seconds "$RUN_SECONDS" --style "${SITR_STYLE:-gaussian}" --hide "${SITR_HIDDEN_SET:-everyone}" --rule "${SITR_RULE_MODE:-blur}")
+case $MODE in
+  browsing|video) OPTIONS+=(--require-covers);;
+  paused) OPTIONS+=(--paused);;
+  disabled) OPTIONS+=(--disabled);;
+esac
+SITR_METRICS=1 "$APP" "${OPTIONS[@]}" >"$OUT/app.log" 2>&1 &
 APP_PID=$!
 T0=$(date +%s)
 if [ "$MODE" != static ]; then
   sleep 3  # capture connects and the models load first; the stimulus quits ~2 s before the app
-  "$STIM" --selftest stimulus --mode "$MODE" --seconds $((RUN_SECONDS - 5)) >"$OUT/stim.log" 2>&1 &
+  STIM_MODE=$MODE
+  case $MODE in paused|disabled) STIM_MODE=video;; esac
+  "$STIM" --selftest stimulus --mode "$STIM_MODE" --seconds $((RUN_SECONDS - 5)) >"$OUT/stim.log" 2>&1 &
   STIM_PID=$!
 fi
 # One sample per second: t, %cpu, rss KB, cputime, load1, replayd %cpu (the ScreenCaptureKit server works for us but is not our
@@ -95,5 +105,6 @@ per() { awk -v a="${1:-0}" -v b="${OUTF:-0}" 'BEGIN { if (b > 0) printf "%.2f", 
 echo "system_frame mode=$MODE perf_legacy=${SITR_PERF_LEGACY:-0} frames_out=${OUTF:--} crops_per_frame=$(per "$CROPS") renders_per_frame=$(per "$RENDERS") reuses_per_frame=$(per "$REUSES") detect_skips=${DSKIP:--} face_skips=$(field face_skips) apply_skips=$(field apply_skips) applies=$(field applies) reuse_blocked=$(field reuse_blocked)"
 tail -2 "$OUT/windows"
 [ -f "$OUT/stim.log" ] && grep -E '^(stimulus|selftest_)' "$OUT/stim.log"
+grep -E '^(system_configuration|system_valid|selftest_system)' "$OUT/app.log"
 echo "system_logs dir=$OUT"
-[ "$APP_EXIT" = 0 ] && [ "$LEFT" = 0 ]
+[ "$APP_EXIT" = 0 ] && [ "$LEFT" = 0 ] && grep -q '^system_valid=true' "$OUT/app.log"

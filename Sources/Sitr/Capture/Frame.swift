@@ -1,6 +1,7 @@
 // M2-T05: one captured frame as a value. Pixels stay in memory; nothing here writes or logs them.
 import CoreMedia
 import CoreVideo
+import Darwin
 import ScreenCaptureKit
 import SitrCore
 
@@ -11,6 +12,8 @@ import SitrCore
 nonisolated struct Frame: @unchecked Sendable {
     let pixelBuffer: CVPixelBuffer
     let displayID: CGDirectDisplayID
+    /// A rule change, stop, or reconnect invalidates even frames already buffered by AsyncStream.
+    var isCurrent: @Sendable () -> Bool = { true }
     /// Monotonic per display for the life of its `CaptureSession` (survives stream restarts).
     let sequence: Int
     /// `CACurrentMediaTime()` at entry of the `SCStreamOutput` callback.
@@ -51,6 +54,35 @@ nonisolated struct Frame: @unchecked Sendable {
 
     /// `dirtyRects` mapped from buffer pixels to display-local points (what Curtain window tiling and the overlay want).
     var dirtyRectsInDisplayPoints: [CGRect] { dirtyRects.map { pixelsToDisplayPoints($0) } }
+
+    /// Exact changes since a verified frame. WindowServer damage also includes our excluded overlay;
+    /// comparing captured pixels prevents the Curtain from repeatedly covering its own redraws.
+    func changedTiles(since previous: Frame?) -> [CGRect] {
+        let full = [CGRect(x: 0, y: 0, width: width, height: height)]
+        guard let previous, previous.displayID == displayID, previous.displaySize == displaySize,
+              previous.width == width, previous.height == height,
+              CVPixelBufferGetPixelFormatType(pixelBuffer) == kCVPixelFormatType_32BGRA,
+              CVPixelBufferGetPixelFormatType(previous.pixelBuffer) == kCVPixelFormatType_32BGRA else { return full }
+        guard CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly) == kCVReturnSuccess else { return full }
+        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
+        guard CVPixelBufferLockBaseAddress(previous.pixelBuffer, .readOnly) == kCVReturnSuccess else { return full }
+        defer { CVPixelBufferUnlockBaseAddress(previous.pixelBuffer, .readOnly) }
+        guard let current = CVPixelBufferGetBaseAddress(pixelBuffer),
+              let old = CVPixelBufferGetBaseAddress(previous.pixelBuffer) else { return full }
+        let currentStride = CVPixelBufferGetBytesPerRow(pixelBuffer), oldStride = CVPixelBufferGetBytesPerRow(previous.pixelBuffer)
+        var changed: [CGRect] = []
+        for y in stride(from: 0, to: height, by: 64) {
+            for x in stride(from: 0, to: width, by: 64) {
+                let w = min(64, width - x), h = min(64, height - y)
+                if (y..<(y + h)).contains(where: { row in
+                    memcmp(current.advanced(by: row * currentStride + x * 4), old.advanced(by: row * oldStride + x * 4), w * 4) != 0
+                }) {
+                    changed.append(CGRect(x: x, y: y, width: w, height: h))
+                }
+            }
+        }
+        return changed
+    }
 }
 
 nonisolated extension Rect {

@@ -5,8 +5,12 @@
 // Classification numbers come from the matched GT: Unknown rate over every matched person, misclassification over the
 // labeled ones whose predicted category is not Unknown (the PRD's "hidden-category person shown due to misclassification").
 import Foundation
+import CryptoKit
 import SitrCore
 import enum SitrCore.Category
+
+/// A stable split by source filename keeps alternate versions of one photo in the same set.
+func isTuningImage(_ file: String) -> Bool { SHA256.hash(data: Data(file.utf8)).withUnsafeBytes { $0[0] } % 5 == 0 }
 
 /// Bench/labels/*.json (Bench/convert_labels.py).
 struct Labels: Decodable {
@@ -267,6 +271,9 @@ extension String {
 
 /// Runs the metric math on two synthetic frames and asserts the hand-computed numbers. Exits 1 on the first mismatch.
 func selfcheck() {
+    precondition(isTuningImage("image-0.jpg") == false)
+    precondition(isTuningImage("image-4.jpg") == true)
+
     var failures: [String] = []
     func expect(_ ok: Bool, _ what: String) { if !ok { failures.append(what) } }
 

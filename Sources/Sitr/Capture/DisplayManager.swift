@@ -6,6 +6,7 @@
 import AppKit
 import Observation
 import SitrCore
+import ScreenCaptureKit
 import os
 
 /// Everything Sitr keeps per display. The members are references; treat the struct as a handle.
@@ -53,6 +54,16 @@ final class DisplayManager {
 
     private(set) var displays: [ManagedDisplay] = []
     let permission: PermissionMonitor
+    var makeFilter: ((SCDisplay, SCShareableContent) throws -> SCContentFilter)?
+    var processingEnabled = true {
+        didSet {
+            guard processingEnabled != oldValue else { return }
+            for d in displays {
+                if processingEnabled && !suspended && captureAvailable { d.session.start() }
+                else { d.session.stop() }
+            }
+        }
+    }
     /// M4-T10 test / selftest seam: the screen list to reconcile against, instead of `NSScreen.screens`. Simulated
     /// displays get sessions that never talk to ScreenCaptureKit and panels that are never ordered on screen, so hot-plug,
     /// mirroring and twenty wake cycles cost nothing and disturb nothing. nil = the real hardware.
@@ -125,7 +136,7 @@ final class DisplayManager {
     func resumeCapture() {
         guard suspended else { return }
         suspended = false
-        guard captureAvailable else { return }
+        guard captureAvailable, processingEnabled else { return }
         for d in displays { d.session.start() }
         log.notice("displays resumed count=\(self.displays.count)")
     }
@@ -158,12 +169,13 @@ final class DisplayManager {
             guard let s = byID[id] else { continue }
             let simulated = simulatedScreens != nil
             let session = CaptureSession(displayID: id, permission: permission, simulated: simulated)
+            session.makeFilter = makeFilter
             session.displayIsPresent = { [weak self] in self?.knownIDs.contains(id) ?? false }
             let d = ManagedDisplay(id: id, frame: s.frame, scale: s.scale, session: session,
                                    panel: OverlayPanel(screenFrame: s.frame), renderer: CoverRenderer())
             if !simulated { d.panel.orderFrontRegardless() }  // a synthetic topology puts nothing on the user's screen
             displays.append(d)
-            if captureAvailable, !suspended { d.session.start() }
+            if captureAvailable, !suspended, processingEnabled { d.session.start() }
         }
         if !diff.add.isEmpty || !diff.remove.isEmpty {
             let line = "displays reconciled count=\(displays.count) added=\(diff.add) removed=\(diff.remove) "
@@ -220,7 +232,7 @@ final class DisplayManager {
         withObservationTracking { _ = permission.state } onChange: { [weak self] in
             Task { @MainActor in
                 guard let self, self.running else { return }
-                let granted = self.captureAvailable && !self.suspended
+                let granted = self.captureAvailable && !self.suspended && self.processingEnabled
                 for d in self.displays { granted ? d.session.start() : d.session.stop() }
                 self.observePermission()
             }

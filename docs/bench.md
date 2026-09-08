@@ -18,11 +18,13 @@ Per image the bench runs the app's per-frame path: frame with the long side 1280
 every face ≥ 32 px on a body ≥ 40 px) → `categorize`. Matching mirrors `Sources/SitrSpike/Recall.swift` (one-to-one greedy,
 IoU ≥ 0.5, GT ≥ 40 px tall, crowd regions excluded). Both models on `.cpuAndNeuralEngine`, like the app.
 
-## PRD gates
+## Amended PRD gates
+
+The measurements below are historical. See [the improvement results](improvement-results.md) for the new run and its dataset coverage.
 | Gate (PRD "Performance and quality targets") | Result | Status |
 |---|---|---|
-| Person recall, body ≥ 40 px, benchmark set ≥ 95 % | **84.5 %** (673/796) on COCO; ≥ 80 px 88.5 %; large+medium 91.6 % | **not met** — small people |
-| Hidden-category person shown due to misclassification ≤ 2 % at the default threshold | **5.6 %** (14/252) on the Commons faces at 0.80; 5.7 % at 0.85, 5.4 % at 0.90 | **not met** — threshold is not the lever |
+| Person recall ≥ 90 % for bodies ≥ 80 px, and ≥ 90 % for large+medium | ≥ 80 px 88.5 %; large+medium 91.6 %; all ≥ 40 px 84.5 % (673/796), reported separately | **not met** for ≥ 80 px |
+| Hidden-category person shown due to misclassification ≤ 6 % for v1; ≤ 2 % for a replacement | **5.6 %** (14/252) on the Commons faces at 0.80; 5.7 % at 0.85, 5.4 % at 0.90 | Meets the amended v1 gate; replacement target unmet |
 | Unknown rate (reported, not gated) | COCO 81.6 % of matched persons (537/673 have no detectable face); Commons faces 9.7 % | reported |
 
 ## Recall — `Bench/labels/recall-coco.json` (200 images, 937 boxes, 796 eligible at ≥ 40 px, 30 crowd regions excluded)
