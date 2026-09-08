@@ -8,21 +8,20 @@ struct SettingsView: View {
     }
 
     let model: AppModel
-    @State private var tab: Tab
 
     init(model: AppModel) {
         self.model = model
-        _tab = State(initialValue: Self.initialTab ?? .general)
+        if let initial = Self.initialTab { model.settingsTab = initial }
     }
 
     /// Value of `SITR_OPEN_SETTINGS`, when set ("1" opens General).
     static var requestedTab: String? { ProcessInfo.processInfo.environment["SITR_OPEN_SETTINGS"] }
-    /// Tab the window opens on, consumed by `onAppear`: `SITR_OPEN_SETTINGS` at launch; onboarding's "Configure myself"
-    /// sets `.protection` before calling `openSettings`.
+    /// Initial dev tab, consumed on appearance. Later navigation uses AppModel.settingsTab,
+    /// which also works when the settings window is already visible.
     static var initialTab: Tab? = Tab(rawValue: requestedTab ?? "")
 
     var body: some View {
-        TabView(selection: $tab) {
+        TabView(selection: Binding(get: { model.settingsTab }, set: { model.settingsTab = $0 })) {
             GeneralTab(model: model)
                 .tabItem { Label("General", systemImage: "gear") }
                 .tag(Tab.general)
@@ -39,11 +38,11 @@ struct SettingsView: View {
                 .tabItem { Label("About", systemImage: "info.circle") }
                 .tag(Tab.about)
         }
-        .frame(width: 560, height: 600)
+        .frame(minWidth: 560, idealWidth: 620, minHeight: 600, idealHeight: 680)
         .onAppear {
-            // The scene builds this view at launch; a tab requested later (onboarding's "Configure myself") lands here.
+            // Apply the dev-requested tab once; later navigation is shared through the model.
             if let requested = Self.initialTab {
-                tab = requested
+                model.settingsTab = requested
                 Self.initialTab = nil
             }
         }

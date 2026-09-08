@@ -58,15 +58,20 @@ public struct Policy: Hashable, Sendable {
     /// Strict Mode as applied: forced on when Everyone is selected (the UI shows it on and disabled).
     public var effectiveStrict: Bool { hiddenSet == .everyone || strictMode }
 
+    /// Processing follows the user's switch, even while capture is recovering from a lost grant.
+    public func processingEnabled(at now: Double) -> Bool {
+        switch protection {
+        case .active: true
+        case .paused(let until): until <= now
+        case .disabled: false
+        }
+    }
+
     /// True while covers are produced: protection active (or a pause that has elapsed) and capture permitted.
     /// Blur mode fails open (PRD FR10): without Screen Recording permission nothing is covered.
     public func isProtecting(at now: Double) -> Bool {
         guard health != .needsPermission else { return false }
-        switch protection {
-        case .active: return true
-        case .paused(let until): return until <= now
-        case .disabled: return false
-        }
+        return processingEnabled(at: now)
     }
 
     /// Whether a person of `category` belongs to the hidden set (Unknown only under `effectiveStrict`).

@@ -39,14 +39,14 @@ import os
         switch health {
         case .needsPermission:
             post(title: String(localized: "Sitr protection is off", comment: "Notification title"),
-                 body: String(localized: "Screen Recording permission is missing or screen capture stopped. Nothing is covered until it resumes.",
+                 body: String(localized: "Screen Recording permission is missing. Curtain apps stay covered; Blur apps are uncovered until capture resumes.",
                               comment: "Notification body"))
         case .degraded:
             post(title: String(localized: "Sitr protection is degraded", comment: "Notification title"),
-                 body: String(localized: "Detection is running slowly; covers may lag.", comment: "Notification body"))
+                 body: String(localized: "Capture or detection needs attention. Open Sitr for status and recovery actions.", comment: "Notification body"))
         case .ok where previous != .ok:
             post(title: String(localized: "Sitr protection restored", comment: "Notification title"),
-                 body: String(localized: "Screen capture is running again and people on screen are covered.", comment: "Notification body"))
+                 body: String(localized: "Screen capture is running again. Your protection rules apply.", comment: "Notification body"))
         case .ok:
             break
         }

@@ -64,3 +64,16 @@ one-to-one greedily by confidence at IoU ≥ 0.5, tallied when ≥ 40 px tall. D
 Output: a table plus one parseable line per number (`bench_images`, `bench_recall`, `bench_class`, `bench_thresholds`,
 `bench_ms`); `--json` writes the same numbers. CI runs `--selfcheck` and the first 20 Commons faces as a smoke test
 (`.github/workflows/ci.yml`); it skips with a notice when the images cannot be downloaded.
+
+## Fixed tuning/validation split
+
+`--split tuning` selects filenames whose first SHA-256 byte is divisible by five; `--split validation` selects the rest. Alternate versions of one source photo stay in the same partition. The current COCO manifest has 37 tuning images and 163 validation images. Keep this split fixed while evaluating changes.
+
+Use `--person-threshold 0.30` to vary the detector cutoff separately from `--threshold`, which controls classification/Unknown. Both the split and detector threshold are included in JSON output. These flags do not change the app's defaults.
+
+```sh
+swift run -c release sitr-bench Bench/labels/recall-coco.json --split tuning --person-threshold 0.25
+swift run -c release sitr-bench Bench/labels/recall-coco.json --split validation --person-threshold 0.25
+```
+
+Report incomplete downloads as partial evaluations. A successful CLI run with missing images does not establish the full-set quality gate.

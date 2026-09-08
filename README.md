@@ -1,4 +1,4 @@
-<img src="App/Icon/icon.png" width="128" alt="Sitr app icon: a pixelated eye">
+<img src="App/Icon/icon.png" width="128" alt="Sitr app icon: a veiled eye on an emerald background">
 
 # Sitr
 
@@ -94,6 +94,10 @@ Degraded. *Pause Protection* for 15 minutes or 1 hour removes all covers and res
 stays off until you enable it again. The icon is dimmed while paused or disabled and carries a warning badge when the
 permission is missing or detection is running slowly.
 
+Settings and the menu also show preparation, configured-app scope, capture recovery, and limited detection. A stopped stream with a valid permission gets a retry action; a missing grant opens Screen Recording settings. Pausing or disabling stops capture and inference, then resumes from a fresh frame.
+
+If saving rules fails, Settings keeps a retry message visible. Unreadable rules remain untouched until you retry reading or explicitly reset them; reset keeps a recovery copy. Appearance has a separate reset that preserves protection rules.
+
 ## Verify the privacy claim
 
 Run this in Terminal (Settings › About shows the same command with a Copy button):
@@ -135,12 +139,10 @@ covered in the capture as well.
 
 ## Performance
 
-Detection runs at up to 15 frames per second (8 in Low Power Mode when the Settings › General toggle is on), only on
-the displays and apps that need it, and skips frames in which nothing changed. The targets Sitr is built and measured
-against on an M1 with 8 GB are: person visible to covered in at most 150 ms (95th percentile) in Blur mode and 50 ms
-in Curtain mode; Reveal press or release within one frame; under 1 % CPU on a static screen, about 15 % of one
-performance core while browsing, about 25 % during 1080p video with people; under 300 MB of memory. Later chips do
-correspondingly better. A saturated GPU (games, video export) can delay covers, which the menu bar reports as Degraded.
+Capture normally runs at 15 frames per second, rising to 30 on displays with Curtain windows (capped at 8 in Low Power Mode when the Settings › General toggle is on), only on
+the displays and apps that need it, and skips frames in which nothing changed. The targets for an M1 with 8 GB are: person visible to covered in at most 150 ms (95th percentile) in Blur mode and 60 ms
+in Curtain mode at 30 fps capture; Reveal press or release within one frame; under 1 % CPU on a static screen, about 15 % of one
+performance core while browsing, about 25 % during 1080p video with people; under 300 MB of memory. Performance depends on the workload. These are targets; see [current validation](docs/improvement-results.md) for measurements and remaining gaps. A saturated GPU (games, video export) can delay covers, which the menu bar reports as Degraded.
 
 ## Build from source
 

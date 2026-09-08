@@ -26,7 +26,9 @@ nonisolated enum FilterPlan: Equatable, Sendable {
 
     /// `apps` = `SCShareableContent.applications` (pid + bundle id); `ownPID` is never included and always excluded.
     static func compute(rules: Rules, apps: [App], ownPID: pid_t) -> FilterPlan {
-        if rules.defaultMode == .off {
+        // With Off overrides, include known allowed apps: a newly launched excluded PID must
+        // never enter capture while the app/window list catches up.
+        if rules.defaultMode == .off || rules.overrides.contains(where: { $0.mode == .off }) {
             return .include(apps.filter { $0.pid != ownPID && rules.isMonitored($0.bundleID) }.map(\.pid))
         }
         return .exclude(apps.filter { $0.pid == ownPID || !rules.isMonitored($0.bundleID) }.map(\.pid))
@@ -37,7 +39,14 @@ nonisolated enum FilterPlan: Equatable, Sendable {
     /// Debounce for launch / terminate bursts and rapid rule edits.
     static let debounce: Duration = .milliseconds(300)
 
-    var rules: Rules { didSet { if rules != oldValue { schedule() } } }
+    var rules: Rules {
+        didSet {
+            guard rules != oldValue else { return }
+            for d in displays() { d.session.invalidateFilter() }
+            installed = [:]
+            refreshNow()
+        }
+    }
     /// Selftests only: keep capturing our own windows other than the overlay panels (the in-process stimulus). The app never sets it.
     var capturesOwnWindows = false { didSet { if capturesOwnWindows != oldValue { schedule() } } }
     /// Filters installed since creation, and the plan behind each display's current filter (selftests and logs).
@@ -112,32 +121,15 @@ nonisolated enum FilterPlan: Equatable, Sendable {
             return
         }
         guard !Task.isCancelled else { return }
-        let own = getpid()
-        let apps = content.applications.map { FilterPlan.App(pid: $0.processID, bundleID: $0.bundleIdentifier) }
-        let plan = FilterPlan.compute(rules: rules, apps: apps, ownPID: own)
-        let byPID = Dictionary(content.applications.map { ($0.processID, $0) }, uniquingKeysWith: { a, _ in a })
-        let managed = displays()
-        let panelIDs = Set(managed.map { CGWindowID($0.panel.windowNumber) })
-        // Selftest mode: our process stays excluded, but every own window that is not an overlay panel is excepted back in.
-        let ownWindows = capturesOwnWindows
-            ? content.windows.filter { $0.owningApplication?.processID == own && !panelIDs.contains($0.windowID) } : []
-        let panels = capturesOwnWindows ? content.windows.filter { panelIDs.contains($0.windowID) } : []
-        let signature = "\(plan) own=\(ownWindows.map(\.windowID).sorted()) panels=\(panels.map(\.windowID).sorted())"
-        for d in managed {
+        for d in displays() {
             guard let display = content.displays.first(where: { $0.displayID == d.id }) else { continue }
+            let (plan, signature, filter) = makeFilter(display: display, content: content)
             plans[d.id] = plan
             guard installed[d.id] != signature else { continue }
-            let filter: SCContentFilter
-            switch plan {
-            case .include(let pids):
-                var included = pids.compactMap { byPID[$0] }
-                if capturesOwnWindows, let me = byPID[own] { included.append(me) }
-                filter = SCContentFilter(display: display, including: included, exceptingWindows: panels)
-            case .exclude(let pids):
-                filter = SCContentFilter(display: display, excludingApplications: pids.compactMap { byPID[$0] }, exceptingWindows: ownWindows)
-            }
             do {
                 try await d.session.updateFilter(filter)
+                guard !Task.isCancelled else { return }
+                lastError = nil
                 installed[d.id] = signature
                 installs += 1
             } catch {
@@ -145,4 +137,27 @@ nonisolated enum FilterPlan: Equatable, Sendable {
             }
         }
     }
+    /// Used both before the first capture and for live changes, from the same rules snapshot.
+    func makeFilter(display: SCDisplay, content: SCShareableContent) -> (FilterPlan, String, SCContentFilter) {
+        let own = getpid()
+        let apps = content.applications.map { FilterPlan.App(pid: $0.processID, bundleID: $0.bundleIdentifier) }
+        let plan = FilterPlan.compute(rules: rules, apps: apps, ownPID: own)
+        let byPID = Dictionary(content.applications.map { ($0.processID, $0) }, uniquingKeysWith: { a, _ in a })
+        let panelIDs = Set(displays().map { CGWindowID($0.panel.windowNumber) })
+        let ownWindows = capturesOwnWindows
+            ? content.windows.filter { $0.owningApplication?.processID == own && !panelIDs.contains($0.windowID) } : []
+        let panels = capturesOwnWindows ? content.windows.filter { panelIDs.contains($0.windowID) } : []
+        let signature = "\(plan) own=\(ownWindows.map(\.windowID).sorted()) panels=\(panels.map(\.windowID).sorted())"
+        let filter: SCContentFilter
+        switch plan {
+        case .include(let pids):
+            var included = pids.compactMap { byPID[$0] }
+            if capturesOwnWindows, let me = byPID[own] { included.append(me) }
+            filter = SCContentFilter(display: display, including: included, exceptingWindows: panels)
+        case .exclude(let pids):
+            filter = SCContentFilter(display: display, excludingApplications: pids.compactMap { byPID[$0] }, exceptingWindows: ownWindows)
+        }
+        return (plan, signature, filter)
+    }
+
 }

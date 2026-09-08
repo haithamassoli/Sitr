@@ -174,4 +174,21 @@ private func person(x: Double, y: Double = 0, _ category: Category = .woman) -> 
         let tracks = tracker.update([observation, person(x: 300)], at: 3 * frame, sequence: 3)
         #expect(tracks.count == 2 && tracks[1].bundleID == nil)  // a new unattributed track takes the Default Rule
     }
+    @Test func cachedCategoriesDoNotEraseEvidenceOfASamePositionReplacement() {
+        var tracker = Tracker()
+        let rect = Rect(x: 10, y: 10, width: 80, height: 100)
+        tracker.update([PersonObservation(rect: rect, category: .woman)], at: 0, sequence: 0)
+        // One fresh classification a second; geometry continues at 15 fps between classifier calls.
+        for sequence in 1...45 {
+            let classified = sequence % 15 == 0
+            let tracks = tracker.update([PersonObservation(rect: rect, category: classified ? .man : .woman,
+                                                           categoryVerified: classified)],
+                                        at: Double(sequence) / 15, sequence: sequence)
+            #expect(tracks.count == 1 && tracks[0].id == 1)
+            #expect(tracks[0].category == (sequence == 45 ? .man : .woman))
+        }
+        #expect(tracker.update([], at: 4, sequence: 46).isEmpty)
+        #expect(tracker.update([PersonObservation(rect: rect, category: .unknown)], at: 4.1, sequence: 47)[0].category == .unknown)
+    }
+
 }

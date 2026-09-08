@@ -82,21 +82,23 @@ import Testing
         "{\"schemaVersion\": 1, \"defaultMode\": \"sepia\", \"overrides\": []}",  // unknown mode
         "not json",
     ])
-    func unreadableFileFallsBackToDefaultsAndKeepsItAsBackup(content: String) throws {
+    func unreadableFileFallsBackToDefaultsAndPreservesRecoveryCopies(content: String) throws {
         let store = makeStore()
         defer { try? FileManager.default.removeItem(at: store.directory) }
         try FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
-        try "stale".write(to: store.backupURL, atomically: true, encoding: .utf8)  // an older backup is replaced
+        try "older backup".write(to: store.backupURL, atomically: true, encoding: .utf8)
         try content.write(to: store.fileURL, atomically: true, encoding: .utf8)
+        #expect(throws: (any Error).self) { try store.loadChecked() }
         #expect(store.load() == Rules())
-        #expect(!FileManager.default.fileExists(atPath: store.fileURL.path))
-        let backup = try String(contentsOf: store.backupURL, encoding: .utf8)
-        #expect(backup == content)
-        #expect(store.load() == Rules())  // second load: file missing, backup untouched
-        try store.save(Rules(defaultMode: .curtain))  // saving works again and leaves the backup alone
-        #expect(store.load() == Rules(defaultMode: .curtain))
-        let backupAfterSave = try String(contentsOf: store.backupURL, encoding: .utf8)
-        #expect(backupAfterSave == content)
+        #expect(try String(contentsOf: store.fileURL, encoding: .utf8) == content)
+        try store.preserveForRecovery()
+        #expect(try String(contentsOf: store.backupURL, encoding: .utf8) == "older backup")
+        let backups = try FileManager.default.contentsOfDirectory(at: store.directory, includingPropertiesForKeys: nil)
+            .filter { $0.lastPathComponent.hasSuffix(".bak") && $0.lastPathComponent != store.backupURL.lastPathComponent }
+        #expect(backups.count == 1)
+        #expect(try String(contentsOf: #require(backups.first), encoding: .utf8) == content)
+        try store.save(Rules(defaultMode: .curtain))
+        #expect(try store.loadChecked() == Rules(defaultMode: .curtain))
     }
 
     private func makeStore() -> RulesStore {

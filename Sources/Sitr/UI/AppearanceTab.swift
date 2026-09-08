@@ -35,6 +35,7 @@ struct AppearanceTab: View {
                         .accessibilityValue(percent(preferences.bodyPadding))
                     Text(percent(preferences.bodyPadding)).monospacedDigit().frame(width: 40, alignment: .trailing)
                 }
+                Button("Reset Appearance") { model.resetAppearance() }
             } footer: {
                 Text("Changes apply to the covers on screen immediately. Defaults: Gaussian, 70%, 15%. Solid ignores Blur Strength.")
             }
@@ -65,6 +66,10 @@ struct CoverPreview: NSViewRepresentable {
 
     func makeNSView(context: Context) -> PreviewView { PreviewView() }
 
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: PreviewView, context: Context) -> CGSize? {
+        CGSize(width: proposal.width ?? SampleScene.size.width, height: proposal.height ?? SampleScene.size.height)
+    }
+
     func updateNSView(_ view: PreviewView, context: Context) {
         view.render(style: style, strength: strength, padding: padding)
     }
@@ -74,6 +79,8 @@ final class PreviewView: NSView {
     private let scene = SampleScene()
     private let renderer = CoverRenderer()
     private let cover = CALayer()
+    private var lastAppearance: CoverAppearance?
+    private(set) var renderCount = 0
     private var spec: CoverLayerSpec?  // last render; also keeps its surface out of the renderer's pool while on screen
 
     init() {
@@ -97,6 +104,10 @@ final class PreviewView: NSView {
     }
 
     func render(style: CoverStyle, strength: Double, padding: Double) {
+        let appearance = CoverAppearance(style: style, strength: strength, padding: padding)
+        guard lastAppearance != appearance else { return }
+        lastAppearance = appearance
+        renderCount += 1
         spec = renderer.render(id: 1, style: style, strength: strength, padding: padding, rect: SampleScene.personRect, frame: scene.frame)
         place()
     }

@@ -47,6 +47,8 @@ public struct Rules: Hashable, Sendable, Codable {
         overrides.first { $0.bundleID == bundleID }?.mode ?? defaultMode
     }
 
+    public var hasMonitoredApps: Bool { defaultMode != .off || overrides.contains { $0.mode != .off } }
+
     /// Whether the app is captured at all (mode is not Off).
     public func isMonitored(_ bundleID: String?) -> Bool {
         mode(for: bundleID) != .off
@@ -67,7 +69,7 @@ public struct Rules: Hashable, Sendable, Codable {
 }
 
 /// `rules.json` in an injected directory (the app passes Application Support). Atomic writes; unreadable content is
-/// kept aside as `rules.json.bak` and replaced by defaults, so a bad edit never blocks the app.
+/// left untouched until the user chooses recovery, so a failed load cannot silently erase protection rules.
 public struct RulesStore: Sendable {
     public static let fileName = "rules.json"
 
@@ -80,16 +82,27 @@ public struct RulesStore: Sendable {
     public var fileURL: URL { directory.appending(path: Self.fileName) }
     public var backupURL: URL { directory.appending(path: Self.fileName + ".bak") }
 
-    /// Missing file → `Rules()`. Undecodable or unknown `schemaVersion` → `Rules()`, with the file moved to
-    /// `rules.json.bak`.
-    public func load() -> Rules {
-        guard let data = try? Data(contentsOf: fileURL) else { return Rules() }
-        if let rules = try? JSONDecoder().decode(Rules.self, from: data), rules.schemaVersion == Rules.currentSchema {
-            return rules
-        }
-        try? FileManager.default.removeItem(at: backupURL)
-        try? FileManager.default.moveItem(at: fileURL, to: backupURL)
-        return Rules()
+    /// Compatibility for non-UI callers. Loading never overwrites or moves unreadable data.
+    public func load() -> Rules { (try? loadChecked()) ?? Rules() }
+
+    public func loadChecked(defaultRules: Rules = Rules()) throws -> Rules {
+        let data: Data
+        do { data = try Data(contentsOf: fileURL) }
+        catch CocoaError.fileReadNoSuchFile { return defaultRules }
+        let rules = try JSONDecoder().decode(Rules.self, from: data)
+        guard rules.schemaVersion == Rules.currentSchema,
+              Set(rules.overrides.map(\.bundleID)).count == rules.overrides.count,
+              rules.overrides.allSatisfy({ !$0.bundleID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty })
+        else { throw CocoaError(.fileReadCorruptFile) }
+        return rules
+    }
+
+    /// Called only for an explicit recovery/reset. Existing backups remain available.
+    public func preserveForRecovery() throws {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
+        let backup = FileManager.default.fileExists(atPath: backupURL.path)
+            ? directory.appending(path: "rules.\(UUID().uuidString).json.bak") : backupURL
+        try FileManager.default.copyItem(at: fileURL, to: backup)
     }
 
     /// Creates the directory if needed; the write is atomic. Pretty-printed with sorted keys, so the file is

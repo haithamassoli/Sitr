@@ -7,6 +7,35 @@ per version and move `Unreleased` entries into it before tagging.
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-09-08
+
+### Added
+- Menu bar and Settings now name the actual protection state instead of only "Protected": preparing, no apps
+  configured, waiting for a protected app, recovering capture, limited detection, detection failed, applying rules —
+  each with one line saying what is and is not covered right now.
+- A recovery action next to that state: **Open Screen Recording Settings**, **Retry Protection**, or **Configure
+  Protected Apps**, the same in the menu and in Settings.
+- **Protection scope** line (all apps / all apps except overrides / selected apps), so the Default Rule's effect is
+  readable without opening the Rules table.
+- Rules failures are visible and recoverable: an unreadable rules file leaves the original untouched and offers
+  **Retry Reading Rules** or **Reset Rules…**; a failed save says the change applies until quit and offers a retry.
+- Launch-at-login and **Relaunch now** failures report instead of silently doing nothing.
+- Setup summary after onboarding, an appearance reset, and an empty-state line in the Rules table.
+
+### Fixed
+- Curtain: a frame whose only changes were too small to be a person no longer skipped verification while a pre-cover
+  was up, which could leave a Curtain window covered after the content under it was already verified safe.
+- Onboarding, degraded-state and permission copy now matches the state the app is actually in.
+
+### Changed
+- Hiding **Everyone** skips face detection and the gender classifier entirely — no per-frame work whose answer cannot
+  change a cover.
+- Detection models can be swapped at runtime, so a model that finishes loading late upgrades protection in place
+  instead of requiring a relaunch.
+- Amended targets recorded in the docs: Curtain exposure p95 ≤ 60 ms (was 50), bench recall ≥ 90 % for bodies ≥ 80 px
+  and misclassification ≤ 6 % for the v1 classifier. `docs/improvement-plan.md` records the measurement protocol and
+  the remaining gaps; the M1 8 GB re-take is still outstanding.
+
 ## [0.1.1] - 2026-09-06
 
 ### Added

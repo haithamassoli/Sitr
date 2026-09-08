@@ -50,9 +50,33 @@ private func track(_ id: Int, _ rect: Rect, _ category: Category) -> Track {
     #expect(needsFaces(persons: [b], tracks: [track(2, b, .unknown)], classifiedAt: [2: 9.99], now: 10, refresh: 1))
     // No people, no faces.
     #expect(!needsFaces(persons: [], tracks: tracks, classifiedAt: fresh, now: 10, refresh: 1))
+    for hiddenSet in HiddenSet.allCases {
+        #expect(needsFaces(persons: [a], tracks: [], classifiedAt: [:], now: 10, refresh: 1,
+                           hiddenSet: hiddenSet) == (hiddenSet != .everyone))
+    }
 }
 
 // MARK: - cover reuse
+
+@Test func curtainComparesPixelsAcrossSkippedFramesAndIgnoresOverlayDamage() throws {
+    func frame(_ sequence: Int, changedByte: Bool = false, size: Int = 65) throws -> Frame {
+        let buffer = try makeBuffer(size, size)
+        CVPixelBufferLockBaseAddress(buffer, [])
+        let base = CVPixelBufferGetBaseAddress(buffer)!
+        let rowBytes = CVPixelBufferGetBytesPerRow(buffer)
+        base.initializeMemory(as: UInt8.self, repeating: 0, count: rowBytes * size)
+        if changedByte { base.storeBytes(of: UInt8(1), toByteOffset: 64 * rowBytes + 64 * 4, as: UInt8.self) }
+        CVPixelBufferUnlockBaseAddress(buffer, [])
+        return Frame(pixelBuffer: buffer, displayID: 1, sequence: sequence, timestamp: 0,
+                     dirtyRects: [r(0, 0, Double(size), Double(size))], contentRect: .zero,
+                     scaleFactor: 1, contentScale: 1, displaySize: CGSize(width: size, height: size))
+    }
+    let old = try frame(1)
+    #expect(old.changedTiles(since: nil) == [r(0, 0, 65, 65)])
+    #expect(try frame(2).changedTiles(since: old).isEmpty) // full-screen WindowServer damage, identical capture
+    #expect(try frame(10, changedByte: true).changedTiles(since: old) == [r(64, 64, 1, 1)])
+    #expect(try frame(11, size: 66).changedTiles(since: old) == [r(0, 0, 66, 66)])
+}
 
 @Test func aCoverIsReusedOnlyWhileItsBoxAndItsPixelsHoldStill() {
     let cover = r(100, 100, 200, 400)
@@ -85,6 +109,8 @@ private func track(_ id: Int, _ rect: Rect, _ category: Category) -> Track {
     let tracks = [r(100, 100, 100, 300)]  // display points; the frame below is 1 px per point
     // A clock tick in the corner: too small to hold a 40 px body, nowhere near anybody.
     #expect(nothingDetectableChanged(dirtyRects: [r(1200, 0, 30, 20)], pixelsPerPoint: 1, tracks: tracks))
+    // The same tiny change must reach verification after the Curtain fast path pre-covers its tile.
+    #expect(!nothingDetectableChanged(dirtyRects: [r(1200, 0, 30, 20)], pixelsPerPoint: 1, tracks: tracks, hasCurtain: true))
     // The same tick, but over a tracked person: they may have moved inside their own box.
     #expect(!nothingDetectableChanged(dirtyRects: [r(120, 120, 30, 20)], pixelsPerPoint: 1, tracks: tracks))
     // Big enough to hold a person who was not there before.

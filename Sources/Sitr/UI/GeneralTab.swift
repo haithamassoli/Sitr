@@ -15,13 +15,13 @@ struct GeneralTab: View {
             // degraded footer is the only state that needs explaining (M4-T07); the others are self-describing.
             Section {
                 LabeledContent("Protection status") { Text(model.statusText) }
+                LabeledContent("Protection scope") { Text(model.scopeText) }
+                ProtectionRecovery(model: model)
             } footer: {
-                if model.status == .degraded {
-                    Text("Detection is slower than 250 ms per frame, so covers can lag until it speeds up again.")
-                }
+                if let text = model.recoveryText { Text(text) }
             }
             Section {
-                LaunchAtLoginToggle()
+                LaunchAtLoginToggle(model: model)
             }
             Section {
                 Picker("Language", selection: Binding(get: { model.preferences.language }, set: { model.preferences.language = $0 })) {
@@ -30,12 +30,13 @@ struct GeneralTab: View {
                 .accessibilityLabel("Language")
                 if model.preferences.language != Self.launchLanguage {
                     LabeledContent("The new language applies after a relaunch.") {
-                        Button("Relaunch now") { Self.relaunch() }
+                        Button("Relaunch now") { Self.relaunch(model: model) }
                             .accessibilityLabel("Relaunch Sitr now")
                             .accessibilityHint("Quits and reopens Sitr in the new language")
                     }
                     .font(.callout)
                 }
+                if let problem = model.relaunchProblem { Text(problem).foregroundStyle(.red) }
             } footer: {
                 Text("System follows the language order in System Settings › General › Language & Region.")
             }
@@ -54,11 +55,13 @@ struct GeneralTab: View {
     }
 
     /// Starts a second instance from the same bundle, then quits this one; the new process reads `AppleLanguages` at launch.
-    static func relaunch() {
+    static func relaunch(model: AppModel) {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.createsNewApplicationInstance = true
-        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, _ in
-            Task { @MainActor in NSApp.terminate(nil) }
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { app, error in
+            Task { @MainActor in
+                model.finishRelaunch(error: error ?? (app == nil ? CocoaError(.executableNotLoadable) : nil)) { NSApp.terminate(nil) }
+            }
         }
     }
 }

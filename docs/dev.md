@@ -18,6 +18,11 @@ swift test                       # SitrCore + SitrDetect tests
 swift run sitr-spike <rig> ...   # M1 rigs
 ```
 
+For a timed check over a real browser, run `build/Sitr.app/Contents/MacOS/Sitr --selftest live --mode curtain --seconds 60`
+(or `--mode blur`), then switch the video between windowed and fullscreen playback. This uses temporary rules and test
+preferences, hides Everyone, prints health/layer counts and pipeline timings, and exits automatically. It does not change
+the user's protection settings. A passing exit confirms capture and processing, not complete person-detection recall.
+
 ## Rules for every change
 - Swift 6 language mode, strict concurrency, zero warnings in `SitrCore`.
 - Never write screen pixels to disk or logs. Logs carry timings and counts only.

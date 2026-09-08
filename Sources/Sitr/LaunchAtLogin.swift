@@ -4,8 +4,8 @@ import SwiftUI
 /// Launch at login via `SMAppService.mainApp` (M2-T15). The toggle re-reads the real status on appear and whenever the
 /// app becomes active, so a change made in System Settings › Login Items shows up too.
 struct LaunchAtLoginToggle: View {
+    let model: AppModel
     @State private var status = SMAppService.mainApp.status
-    @State private var error: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -19,7 +19,7 @@ struct LaunchAtLoginToggle: View {
                 }
                 .font(.callout)
             }
-            if let error {
+            if let error = model.loginProblem {
                 Text(error).font(.callout).foregroundStyle(.red)
             }
         }
@@ -32,9 +32,9 @@ struct LaunchAtLoginToggle: View {
     private func set(_ enabled: Bool) {
         do {
             if enabled { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
-            error = nil
+            model.loginProblem = nil
         } catch {
-            self.error = error.localizedDescription
+            model.loginProblem = error.localizedDescription
         }
         refresh()
     }

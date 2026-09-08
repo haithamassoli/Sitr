@@ -64,6 +64,7 @@ final class CaptureSession {
     }
     /// Counters from the callback: complete / idle / other frames, dirty rect total, last buffer size and attachments.
     var stats: CaptureStats { sink.stats.withLock { $0 } }
+    var acceptsFrames: Bool { sink.isAccepting }
 
     private let permission: PermissionMonitor
     private let sink: FrameSink
@@ -71,6 +72,10 @@ final class CaptureSession {
     private var activeFilter: SCContentFilter?
     /// Installed by `updateFilter`; nil = the default (display minus our own process).
     private var customFilter: SCContentFilter?
+    var makeFilter: ((SCDisplay, SCShareableContent) throws -> SCContentFilter)?
+    private var filterRevision = 0
+    private var connectTask: Task<Void, Never>?
+    private var filterTask: Task<Void, Error>?
     private var wantsRunning = false
     /// Which connection the stream delegate's callbacks belong to; bumped by every teardown (M4-T10).
     private var generation = 0
@@ -117,7 +122,8 @@ final class CaptureSession {
     /// hands the ScreenCaptureKit round trip to a task.
     private func beginConnect() {
         guard !simulated else { return connectSimulated() }
-        Task { await connect() }
+        guard connectTask == nil, stream == nil else { return }
+        connectTask = Task { await connect() }
     }
 
     private func connectSimulated() {
@@ -127,11 +133,40 @@ final class CaptureSession {
         health = .ok
     }
 
-    /// M3 filter builder: replaces the default own-process exclusion, live when the stream runs, otherwise at the next start.
+    /// Close the delivery gate synchronously when rules change, including queued/in-flight frames.
+    func invalidateFilter() {
+        filterRevision &+= 1
+        customFilter = nil
+        sink.accept(nil)
+    }
+
     func updateFilter(_ filter: SCContentFilter) async throws {
         customFilter = filter
-        activeFilter = filter
-        try await stream?.updateContentFilter(filter)
+        filterRevision &+= 1
+        sink.accept(nil)
+        guard let stream, isConnected else { return } // connect installs the newest filter before opening the gate
+        if let filterTask { try await filterTask.value; return }
+        let generation = self.generation
+        let task = Task { try await self.installLatestFilter(on: stream, generation: generation) }
+        filterTask = task
+        defer { if generation == self.generation { filterTask = nil } }
+        do { try await task.value }
+        catch {
+            if generation == self.generation { failed(error) }
+            throw error
+        }
+    }
+
+    private func installLatestFilter(on stream: SCStream, generation: Int) async throws {
+        while let filter = customFilter {
+            let revision = filterRevision
+            try await stream.updateContentFilter(filter)
+            guard self.generation == generation, self.stream === stream, !Task.isCancelled else { return }
+            guard revision == filterRevision else { continue }
+            activeFilter = filter
+            sink.accept(stream)
+            return
+        }
     }
 
     /// `SCContentFilter` that captures `display` without any of our own windows (menu bar UI, panels, settings).
@@ -142,33 +177,44 @@ final class CaptureSession {
 
     private func connect() async {
         guard wantsRunning, stream == nil else { return }
-        guard !simulated else { return connectSimulated() }  // M4-T10 seam: a display that does not exist
+        guard !simulated else { return connectSimulated() }
+        let generation = self.generation
+        defer { if generation == self.generation { connectTask = nil } }
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+            guard self.generation == generation, wantsRunning, !Task.isCancelled else { return }
             guard let display = content.displays.first(where: { $0.displayID == displayID }) else { throw CaptureError.displayGone }
-            let filter = customFilter ?? Self.ownProcessExcluded(display: display, content: content)
+            let filter = try makeFilter?(display, content) ?? customFilter ?? Self.ownProcessExcluded(display: display, content: content)
+            let revision = filterRevision
             let s = SCStream(filter: filter, configuration: configuration(for: filter), delegate: sink)
             try s.addStreamOutput(sink, type: .screen, sampleHandlerQueue: sink.queue)
-            sink.displaySize.withLock { $0 = CGSize(width: display.width, height: display.height) }
-            // M4-T10: the delegate reports the stop of *this* stream. `stopCapture` is asynchronous, so a stream we tore
-            // down for a sleep, a restart or a failure can report its stop after the next one is already running; without
-            // the generation that late callback would take the healthy successor down with it.
-            let generation = self.generation
-            sink.onStop.withLock {
-                $0 = { [weak self] error in
-                    let session = self  // a `let`, not the weak box, so the main-actor task can capture it
-                    Task { @MainActor in session?.streamStopped(generation, error) }
-                }
-            }
-            try await s.startCapture()
-            guard wantsRunning, stream == nil else { try? await s.stopCapture(); return }  // stop() or restart() raced us
             stream = s
             activeFilter = filter
+            sink.displaySize.withLock { $0 = CGSize(width: display.width, height: display.height) }
+            sink.onStop.withLock {
+                $0 = { [weak self] stopped, error in
+                    let stoppedID = ObjectIdentifier(stopped)
+                    Task { @MainActor [weak self] in
+                        guard let self, self.stream.map(ObjectIdentifier.init) == stoppedID else { return }
+                        self.streamStopped(generation, error)
+                    }
+                }
+            }
+            sink.accept(s) // the initial filter already reflects the current rules; retain the first complete frame
+            try await s.startCapture()
+            guard self.generation == generation, wantsRunning, stream === s, !Task.isCancelled else {
+                try? await s.stopCapture()
+                return
+            }
+            if revision != filterRevision {
+                try await installLatestFilter(on: s, generation: generation)
+            }
+            guard self.generation == generation, stream === s else { return }
             isConnected = true
             policy.connected(at: CACurrentMediaTime())
             health = .ok
         } catch {
-            failed(error)
+            if self.generation == generation, !Task.isCancelled { failed(error) }
         }
     }
 
@@ -194,7 +240,12 @@ final class CaptureSession {
     }
 
     private func teardown() {
-        generation &+= 1  // whatever the dropped stream reports from here on is about a stream nobody is watching
+        generation &+= 1
+        sink.accept(nil)
+        connectTask?.cancel()
+        connectTask = nil
+        filterTask?.cancel()
+        filterTask = nil
         isConnected = false
         guard let s = stream else { return }
         stream = nil
@@ -240,7 +291,7 @@ final class CaptureSession {
 
     private func retry() async {
         policy.retryFired()
-        await connect()
+        beginConnect()
     }
 
     /// M4-T10 test seam: the failure path without a stream to break, so the backoff and the display-gone rule are
@@ -270,7 +321,14 @@ nonisolated final class FrameSink: NSObject, SCStreamOutput, SCStreamDelegate, @
     let queue = DispatchQueue(label: "sitr.capture")
     let stats = Mutex(CaptureStats())
     let displaySize = Mutex(CGSize.zero)
-    let onStop = Mutex<(@Sendable (Error) -> Void)?>(nil)
+    let onStop = Mutex<(@Sendable (SCStream, Error) -> Void)?>(nil)
+    private let delivery = Mutex((stream: Optional<ObjectIdentifier>.none, revision: 0))
+
+    var isAccepting: Bool { delivery.withLock { $0.stream != nil } }
+
+    func accept(_ stream: SCStream?) {
+        delivery.withLock { $0 = (stream.map(ObjectIdentifier.init), $0.revision &+ 1) }
+    }
     private let displayID: CGDirectDisplayID
     private let continuation: AsyncStream<Frame>.Continuation
     private let sequence = Mutex(0)
@@ -282,6 +340,8 @@ nonisolated final class FrameSink: NSObject, SCStreamOutput, SCStreamDelegate, @
 
     func stream(_ stream: SCStream, didOutputSampleBuffer sb: CMSampleBuffer, of type: SCStreamOutputType) {
         let t = CACurrentMediaTime()
+        let token = delivery.withLock { $0 }
+        guard token.stream == ObjectIdentifier(stream) else { return }
         guard type == .screen, let a = FrameAttachments(sb) else { return }
         let pb = sb.imageBuffer
         stats.withLock { s in
@@ -298,12 +358,13 @@ nonisolated final class FrameSink: NSObject, SCStreamOutput, SCStreamDelegate, @
         }
         guard a.status == .complete, let pb else { return }  // idle (and stopped/blank) frames never reach the pipeline
         let seq = sequence.withLock { $0 += 1; return $0 }
-        continuation.yield(Frame(pixelBuffer: pb, displayID: displayID, sequence: seq, timestamp: t, dirtyRects: a.dirtyRects,
+        continuation.yield(Frame(pixelBuffer: pb, displayID: displayID,
+                                 isCurrent: { [weak self] in self?.delivery.withLock { $0 == token } ?? false }, sequence: seq, timestamp: t, dirtyRects: a.dirtyRects,
                                  contentRect: a.contentRect, scaleFactor: a.scaleFactor, contentScale: a.contentScale,
                                  displaySize: displaySize.withLock { $0 }))
     }
 
     func stream(_ stream: SCStream, didStopWithError error: Error) {
-        onStop.withLock { $0 }?(error)
+        onStop.withLock { $0 }?(stream, error)
     }
 }

@@ -109,6 +109,17 @@
         }
       }
     },
+    "Add an app or use the recommended settings to start protection." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضف تطبيقًا أو استخدم الإعدادات الموصى بها لبدء الحماية."
+          }
+        }
+      }
+    },
     "Add app override" : {
       "comment" : "Accessibility label of the Add menu, Protection",
       "extractionState" : "manual",
@@ -133,6 +144,28 @@
         }
       }
     },
+    "All apps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كل التطبيقات"
+          }
+        }
+      }
+    },
+    "All apps except overrides" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كل التطبيقات باستثناء التطبيقات المستثناة"
+          }
+        }
+      }
+    },
     "Allow Screen Recording" : {
       "comment" : "Onboarding step 2 title and button",
       "extractionState" : "manual",
@@ -153,6 +186,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "اسمح بتسجيل الشاشة أولًا، أو اختر «التخطي الآن»"
+          }
+        }
+      }
+    },
+    "Allow Screen Recording to resume detection. Curtain apps stay covered; Blur apps are uncovered." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسمح بتسجيل الشاشة لاستئناف الاكتشاف. تبقى تطبيقات وضع الستارة محجوبة، أما تطبيقات وضع التمويه فلا تبقى محجوبة."
           }
         }
       }
@@ -237,6 +281,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "يُطبَّق فورًا دون إعادة تشغيل"
+          }
+        }
+      }
+    },
+    "Applying protection rules" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ تطبيق قواعد الحماية"
           }
         }
       }
@@ -337,6 +392,17 @@
         }
       }
     },
+    "Capture or detection needs attention. Open Sitr for status and recovery actions." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التقاط الشاشة أو الاكتشاف يحتاج إلى إجراء. افتح سِتر لعرض الحالة وخيارات الاستعادة."
+          }
+        }
+      }
+    },
     "Captures at 8 frames per second instead of 15 while the Mac is in Low Power Mode." : {
       "comment" : "General › Low Power footer",
       "extractionState" : "manual",
@@ -369,6 +435,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تُطبَّق التغييرات على الأغطية الظاهرة على الشاشة فورًا. الإعدادات الافتراضية: غاوسي، ٧٠٪، ١٥٪. النمط المصمت يتجاهل شدة التمويه."
+          }
+        }
+      }
+    },
+    "Changes apply until quit; saving failed. Retry to keep these settings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسري التغييرات حتى إغلاق التطبيق، لكن تعذّر حفظها. أعد المحاولة للاحتفاظ بهذه الإعدادات."
           }
         }
       }
@@ -441,6 +518,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "التواصل"
+          }
+        }
+      }
+    },
+    "Configure Protected Apps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعداد التطبيقات المشمولة بالحماية"
           }
         }
       }
@@ -589,6 +677,17 @@
         }
       }
     },
+    "Default settings: hide everyone in Safari, Chrome, Arc, Telegram, WhatsApp and Discord, and start at login. Other apps stay Off. Change these choices in Settings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإعدادات الافتراضية: إخفاء الجميع في Safari وChrome وArc وTelegram وWhatsApp وDiscord، والتشغيل عند تسجيل الدخول. تبقى التطبيقات الأخرى دون حماية. يمكنك تغيير هذه الخيارات في الإعدادات."
+          }
+        }
+      }
+    },
     "Default settings: hide everyone, cover browsers and chat apps, start at login. Everything is changeable later in Settings." : {
       "comment" : "Onboarding step 1, what Use Default Settings applies",
       "extractionState" : "manual",
@@ -609,6 +708,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "أداء الحماية منخفض"
+          }
+        }
+      }
+    },
+    "Detection has repeatedly failed. Existing covers remain; new people may be missed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فشل الاكتشاف عدة مرات. تبقى الحواجز الحالية، لكن قد لا يُكتشَف أشخاص جدد."
           }
         }
       }
@@ -637,6 +747,17 @@
         }
       }
     },
+    "Detection needs attention" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اكتشاف الأشخاص يحتاج إلى إجراء"
+          }
+        }
+      }
+    },
     "Disable Protection" : {
       "comment" : "Menu bar item",
       "extractionState" : "manual",
@@ -657,6 +778,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الحماية معطّلة"
+          }
+        }
+      }
+    },
+    "Dismiss setup summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إغلاق ملخص الإعداد"
           }
         }
       }
@@ -973,6 +1105,17 @@
         }
       }
     },
+    "Launch at login could not be enabled. Try again in General settings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر تفعيل التشغيل عند تسجيل الدخول. أعد المحاولة من الإعدادات العامة."
+          }
+        }
+      }
+    },
     "Leaves every app Off and opens Settings, Protection, when setup finishes" : {
       "comment" : "Accessibility hint, Configure myself",
       "extractionState" : "manual",
@@ -1117,6 +1260,28 @@
         }
       }
     },
+    "No app overrides. Add an app or apply the recommended settings below." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا توجد قواعد خاصة بالتطبيقات. أضف تطبيقًا أو طبّق الإعدادات الموصى بها أدناه."
+          }
+        }
+      }
+    },
+    "No apps configured" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم تُحدَّد تطبيقات للحماية"
+          }
+        }
+      }
+    },
     "Not allowed yet. Until it is, Sitr covers nothing and shows a warning icon in the menu bar." : {
       "comment" : "Onboarding step 2 status",
       "extractionState" : "manual",
@@ -1177,6 +1342,17 @@
         }
       }
     },
+    "Open Screen Recording Settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح إعدادات تسجيل الشاشة"
+          }
+        }
+      }
+    },
     "Open System Settings" : {
       "comment" : "Onboarding step 2 button",
       "extractionState" : "manual",
@@ -1197,6 +1373,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "فتح THIRD_PARTY_NOTICES.md على GitHub"
+          }
+        }
+      }
+    },
+    "Open an app covered by your protection rules." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتح تطبيقًا تشمله قواعد الحماية."
           }
         }
       }
@@ -1357,6 +1544,17 @@
         }
       }
     },
+    "Preparing protection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ تجهيز الحماية"
+          }
+        }
+      }
+    },
     "Press shortcut…" : {
       "comment" : "Shortcut recorder field while it waits for keys",
       "extractionState" : "manual",
@@ -1425,6 +1623,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الحماية"
+          }
+        }
+      }
+    },
+    "Protection is limited" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحماية محدودة"
+          }
+        }
+      }
+    },
+    "Protection scope" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نطاق الحماية"
           }
         }
       }
@@ -1525,6 +1745,17 @@
         }
       }
     },
+    "Recommended: Safari, Chrome, Arc, Telegram, WhatsApp and Discord as Curtain; the Default Rule stays. Removing an override restores the Default Rule, which may still protect that app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الموصى به: وضع الستارة لتطبيقات Safari وChrome وArc وTelegram وWhatsApp وDiscord، مع إبقاء القاعدة الافتراضية. حذف قاعدة تطبيق يعيد تطبيق القاعدة الافتراضية عليه، وقد تبقى حمايته مفعّلة."
+          }
+        }
+      }
+    },
     "Recommended: Safari, Chrome, Arc, Telegram, WhatsApp and Discord as Curtain; the Default Rule stays. Select rows and press ⌫ to remove them." : {
       "comment" : "Protection › App overrides footer",
       "extractionState" : "manual",
@@ -1533,6 +1764,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الموصى به: Safari وChrome وArc وTelegram وWhatsApp وDiscord بوضع الستارة، مع بقاء القاعدة الافتراضية كما هي. حدد الصفوف واضغط ⌫ لإزالتها."
+          }
+        }
+      }
+    },
+    "Recovering screen capture" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ استعادة التقاط الشاشة"
           }
         }
       }
@@ -1621,6 +1863,50 @@
         }
       }
     },
+    "Reset Appearance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين المظهر"
+          }
+        }
+      }
+    },
+    "Reset Rules" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين القواعد"
+          }
+        }
+      }
+    },
+    "Reset Rules…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين القواعد…"
+          }
+        }
+      }
+    },
+    "Reset all protection rules?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد إعادة تعيين كل قواعد الحماية؟"
+          }
+        }
+      }
+    },
     "Reset shortcut to default, Control Option Space" : {
       "comment" : "Accessibility label, Shortcuts › Reset to Default",
       "extractionState" : "manual",
@@ -1653,6 +1939,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "استئناف الحماية"
+          }
+        }
+      }
+    },
+    "Retry Protection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة محاولة الحماية"
+          }
+        }
+      }
+    },
+    "Retry Reading Rules" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة محاولة قراءة القواعد"
+          }
+        }
+      }
+    },
+    "Retry Saving" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة محاولة الحفظ"
           }
         }
       }
@@ -1729,6 +2048,28 @@
         }
       }
     },
+    "Review the apps below. Saved rules for apps that are not installed will apply when you install them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "راجع التطبيقات أدناه. تسري القواعد المحفوظة للتطبيقات غير المثبّتة عند تثبيتها."
+          }
+        }
+      }
+    },
+    "Rules could not be reset. Your existing files have been kept." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّرت إعادة تعيين القواعد. احتُفظ بملفاتك الحالية."
+          }
+        }
+      }
+    },
     "Safari, Chrome, Arc" : {
       "comment" : "Onboarding step 4, preset table",
       "extractionState" : "manual",
@@ -1737,6 +2078,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Safari وChrome وArc"
+          }
+        }
+      }
+    },
+    "Sample cover only. This preview does not test screen detection." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مثال للحجب فقط. هذه المعاينة لا تختبر اكتشاف الأشخاص على الشاشة."
+          }
+        }
+      }
+    },
+    "Saved rules could not be read. The original file is unchanged. Retry reading it or reset your rules." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّرت قراءة القواعد المحفوظة. لم يتغير الملف الأصلي. أعد محاولة قراءته أو أعد تعيين القواعد."
           }
         }
       }
@@ -1753,6 +2116,17 @@
         }
       }
     },
+    "Screen Recording is not allowed. Detection is unavailable; existing Curtain rules keep those app windows covered." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يُسمح بتسجيل الشاشة. الاكتشاف غير متاح، وتبقى نوافذ التطبيقات التي تشملها قواعد الستارة الحالية محجوبة."
+          }
+        }
+      }
+    },
     "Screen Recording permission is missing or screen capture stopped. Nothing is covered until it resumes." : {
       "comment" : "Notification body",
       "extractionState" : "manual",
@@ -1765,6 +2139,17 @@
         }
       }
     },
+    "Screen Recording permission is missing. Curtain apps stay covered; Blur apps are uncovered until capture resumes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إذن تسجيل الشاشة غير متاح. تبقى تطبيقات وضع الستارة محجوبة، أما تطبيقات التمويه فتبقى مكشوفة حتى استئناف الالتقاط."
+          }
+        }
+      }
+    },
     "Screen capture is running again and people on screen are covered." : {
       "comment" : "Notification body",
       "extractionState" : "manual",
@@ -1773,6 +2158,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "عاد التقاط الشاشة إلى العمل، والأشخاص على الشاشة مغطّون."
+          }
+        }
+      }
+    },
+    "Screen capture is running again. Your protection rules apply." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استؤنف التقاط الشاشة. تسري قواعد الحماية التي حددتها."
+          }
+        }
+      }
+    },
+    "Screen capture stopped. Sitr is reconnecting; Curtain apps stay covered." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "توقف التقاط الشاشة. يحاول سِتر إعادة الاتصال، وتبقى تطبيقات وضع الستارة محجوبة."
           }
         }
       }
@@ -1797,6 +2204,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "لقطة الشاشة"
+          }
+        }
+      }
+    },
+    "Selected apps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التطبيقات المحددة"
           }
         }
       }
@@ -1845,6 +2263,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الإعدادات…"
+          }
+        }
+      }
+    },
+    "Setup complete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اكتمل الإعداد"
           }
         }
       }
@@ -1969,6 +2398,17 @@
         }
       }
     },
+    "Sitr could not relaunch. Keep using the app and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّرت إعادة تشغيل سِتر. يمكنك متابعة استخدامه ثم إعادة المحاولة."
+          }
+        }
+      }
+    },
     "Sitr hides people on your screen as they appear — women, men, or everyone — in every app: browsers, chats, photos, video, calls." : {
       "comment" : "Onboarding step 1",
       "extractionState" : "manual",
@@ -2041,6 +2481,17 @@
         }
       }
     },
+    "Sitr will keep a recovery copy of the existing file and set all apps to Off." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيحتفظ سِتر بنسخة استعادة من الملف الحالي ويوقف الحماية لكل التطبيقات."
+          }
+        }
+      }
+    },
     "Sitr: %@" : {
       "comment" : "Accessibility label of the menu bar icon; %@ is the status line",
       "extractionState" : "manual",
@@ -2073,6 +2524,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "مصمت"
+          }
+        }
+      }
+    },
+    "Some detection features could not load. Category-specific protection may be less accurate; Unknown follows Strict Mode." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر تحميل بعض ميزات الاكتشاف. قد تنخفض دقة الحماية حسب الفئة، ويخضع الأشخاص غير المصنفين للوضع الصارم."
           }
         }
       }
@@ -2281,6 +2743,17 @@
         }
       }
     },
+    "Waiting for a protected app" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بانتظار فتح تطبيق مشمول بالحماية"
+          }
+        }
+      }
+    },
     "Walks through the setup step by step" : {
       "comment" : "Accessibility hint for the Customize button",
       "extractionState" : "manual",
@@ -2373,6 +2846,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "لم يسجّل macOS الاختصار %1$@ (الخطأ %2$lld)؛ اختر اختصارًا آخر."
+          }
+        }
+      }
+    },
+    "macOS may ask you to allow Screen Recording again. If permission is lost, Sitr shows a warning and reopens this step." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قد يطلب macOS السماح بتسجيل الشاشة مجددًا. إذا فُقد الإذن، يعرض سِتر تحذيرًا ويعيد فتح هذه الخطوة."
           }
         }
       }

@@ -45,6 +45,8 @@ struct MenuBarContent: View {
         let hotkey = model.preferences.hotkey.displayString
         Text(status)
             .accessibilityLabel("Status: \(status)")
+        Text(model.scopeText)
+        ProtectionRecovery(model: model)
         Divider()
         if case .paused = model.status {
             Button("Resume Protection") { model.resume() }
@@ -90,5 +92,28 @@ struct MenuBarContent: View {
         Button("Quit Sitr") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
             .accessibilityLabel("Quit Sitr")
+    }
+}
+
+/// Shared actions keep the menu and Settings aligned with the actual failure.
+struct ProtectionRecovery: View {
+    let model: AppModel
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        switch model.status {
+        case .needsPermission:
+            Button("Open Screen Recording Settings") { model.openPermissionSettings() }
+        case .recovering, .modelUnavailable, .detectionFailed:
+            Button("Retry Protection") { model.retryProtection() }
+        case .noApps, .waitingForApps:
+            Button("Configure Protected Apps") {
+                model.settingsTab = .protection
+                openSettings()
+                NSApp.activate()
+            }
+        default:
+            EmptyView()
+        }
     }
 }

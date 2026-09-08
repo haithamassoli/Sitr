@@ -34,6 +34,7 @@ struct SitrApp: App {
         Settings {
             SettingsView(model: runtime.model)
         }
+        .windowResizability(.contentMinSize)
     }
 }
 
@@ -70,9 +71,6 @@ struct SitrApp: App {
     /// Detection plug-ins shared by every display's pipeline: the CoreML models once `loadModels()` has them, else these fallbacks.
     private var detector: any PersonDetecting = VisionPersonDetector()
     private var classifier: any GenderClassifying = NoClassifier()
-    private var sawOK: Set<CGDirectDisplayID> = []
-    /// Per display: whether the session was `.ok` at the last look (a false → true edge re-installs the filter).
-    private var sessionOK: [CGDirectDisplayID: Bool] = [:]
     private var healthTask: Task<Void, Never>?
     private var lastFrameAt: [CGDirectDisplayID: Double] = [:]
     private var curtainRects: [CGDirectDisplayID: [CGRect]] = [:]
@@ -81,6 +79,11 @@ struct SitrApp: App {
     private var stallDegraded = false
     private var windowPIDs: Set<pid_t> = []
     private let log = Logger(subsystem: "com.goldentik.Sitr", category: "runtime")
+    private var modelsLoading = true
+    private var detectorUnavailable = false
+    private var classifierUnavailable = false
+    private var retryTask: Task<Void, Never>?
+    private var running = false
 
     init(model: AppModel) {
         self.model = model
@@ -88,12 +91,24 @@ struct SitrApp: App {
         displayManager = displays
         lowPower = LowPowerMonitor(reducesFrameRate: { model.preferences.lowPowerReducesFrameRate })
         filters = FilterBuilder(rules: model.policy.rules) { displays.displays }
+        displays.makeFilter = { [weak self] display, content in
+            guard let self else { throw CancellationError() }
+            return self.filters.makeFilter(display: display, content: content).2
+        }
+        displays.processingEnabled = model.policy.processingEnabled(at: CACurrentMediaTime()) && model.policy.rules.hasMonitoredApps
         model.onPolicyChanged = { [weak self] policy in
             guard let self else { return }
+            let processing = policy.processingEnabled(at: CACurrentMediaTime()) && policy.rules.hasMonitoredApps
+            if self.filters.rules != policy.rules || self.displayManager.processingEnabled != processing {
+                self.lastFrameAt = [:]
+            }
             self.pipelines.values.forEach { $0.update(policy) }
             self.filters.rules = policy.rules
+            self.displayManager.processingEnabled = processing
             self.windowsChanged()
         }
+        model.onRetryProtection = { [weak self] in self?.retryProtection() }
+        model.onOpenPermissionSettings = { [weak self] in self?.permission.openSystemSettings() }
         model.onRevealChanged = { [weak self] revealed in self?.displayManager.setRevealed(revealed) }
         // Wired in `init`, observed in `start()`: the unit tests drive `systemEvents.simulate(_:)` on a runtime that
         // never starts real capture.
@@ -107,6 +122,8 @@ struct SitrApp: App {
     /// then on. The models load while capture connects (~0.5 s): ~0.1 s when the ANE cache is warm, 3–5 s on the first launch after
     /// an update.
     func start() {
+        guard !running else { return }
+        running = true
         DetectionMeter.shared.reset()  // M4-T07: a new Runtime starts from a clean detection history
         displayManager.start()
         lowPower.onChange = { [weak self] _ in self?.windowsChanged() }  // windowsChanged is the only writer of session.fps
@@ -122,6 +139,7 @@ struct SitrApp: App {
         }
         Task {
             await loadModels()
+            guard running else { return }
             reconcile()
             observe()
             observeWindows()
@@ -131,6 +149,9 @@ struct SitrApp: App {
 
     /// Selftests: stops pipelines and capture, closes the panels.
     func stop() async {
+        running = false
+        retryTask?.cancel()
+        retryTask = nil
         healthTask?.cancel()
         healthTask = nil
         lowPower.stop()
@@ -157,9 +178,33 @@ struct SitrApp: App {
             try await CoreMLPersonDetector(contentsOf: Self.modelURL("PersonDetector"), computeUnits: .cpuAndNeuralEngine)
         }
         async let c = Self.load("gender classifier") { try await GenderClassifier(contentsOf: Self.modelURL("GenderClassifier")) }
-        if let d = await d { detector = d }
-        if let c = await c { classifier = c }
+        let loadedDetector = await d, loadedClassifier = await c
+        detectorUnavailable = loadedDetector == nil
+        classifierUnavailable = loadedClassifier == nil
+        if let loadedDetector { detector = loadedDetector }
+        if let loadedClassifier { classifier = loadedClassifier }
+        modelsLoading = false
         log.info("models \(self.modelsNote, privacy: .public) load_ms=\(Int((CACurrentMediaTime() - t0) * 1000))")
+    }
+
+    private func retryProtection() {
+        guard retryTask == nil else { return }
+        retryTask = Task { [weak self] in
+            guard let self else { return }
+            defer { retryTask = nil }
+            if detectorUnavailable || classifierUnavailable || DetectionMeter.shared.hasFailures {
+                modelsLoading = true
+                model.readiness = .preparing
+                await loadModels()
+                guard running, !Task.isCancelled else { return }
+                for p in pipelines.values { await p.replaceModels(detector: detector, classifier: classifier) }
+                DetectionMeter.shared.reset()
+            }
+            permission.refresh()
+            for d in displayManager.displays where !d.session.isConnected { d.session.start() }
+            filters.refreshNow()
+            checkHealth()
+        }
     }
 
     private nonisolated static func load<T: Sendable>(_ what: String, _ make: @Sendable () async throws -> T) async -> T? {
@@ -189,7 +234,6 @@ struct SitrApp: App {
         let current = displayManager.displays
         for id in Array(pipelines.keys) where !current.contains(where: { $0.id == id }) {
             let gone = pipelines.removeValue(forKey: id)
-            sawOK.remove(id)
             DetectionMeter.shared.forget(display: id)  // M4-T07: an unplugged display leaves no degraded state behind
             filters.forget(id)
             Task { await gone?.stop() }
@@ -228,8 +272,6 @@ struct SitrApp: App {
         for t in stallChecks.values { t.cancel() }
         stallChecks = [:]
         stalled = []
-        sawOK = []
-        sessionOK = [:]
         lastFrameAt = [:]
         curtainChangedAt = [:]
         curtainRects = [:]
@@ -350,7 +392,7 @@ struct SitrApp: App {
         stallChecks[id] = nil
         // M4-T10: "no frame arrived" says nothing while the stream is parked for a sleep or a lock, and the covers are
         // already up for that reason. `windowsChanged` arms a fresh check once the topology is back.
-        guard systemEvents.capturesFrames else { return }
+        guard systemEvents.capturesFrames, displayManager.processingEnabled else { return }
         guard let changed = curtainChangedAt[id], permission.state == .granted,
               displayManager.displays.first(where: { $0.id == id })?.session.health.isOK == true else { return }
         let now = CACurrentMediaTime()
@@ -374,39 +416,47 @@ struct SitrApp: App {
     /// M4-T10 adds the suspended and resuming states to that: from the moment the Mac starts to sleep or the screen locks
     /// until the first frame after the wake, capture is not live, so Curtain windows are covered rather than trusted.
     private func refreshFailClosed() {
+        let enabled = model.policy.processingEnabled(at: CACurrentMediaTime())
         let down = model.policy.health == .needsPermission || !systemEvents.capturesFrames
         for d in displayManager.displays {
-            let specs = down || stalled.contains(d.id)
+            let specs = enabled && (down || !d.session.health.isOK || (!d.session.simulated && !d.session.acceptsFrames) || stalled.contains(d.id))
                 ? failClosedSpecs(windows: windowTracker.windows, rules: model.policy.rules, displayID: d.id, color: d.renderer.solidColor) : []
             pipelines[d.id]?.update(failClosed: specs)
         }
     }
 
-    /// M2-T16: no grant, or a capture session that stopped or errored → `.needsPermission` (Blur fails open, warning icon,
-    /// one notification). Back to `.ok` on the first frame a pipeline commits once every session runs again. A session's
-    /// initial `.stopped(nil)` before its first connect is not a failure; `stop()` after it ran is.
-    /// M4-T07: with capture healthy, slow detection is `.degraded` and speeding up again clears it (`DetectionMeter`).
-    /// Needs permission outranks degraded (FR7) and only a committed frame leaves it.
-    /// M4-T10: across sleep, lock and fast user switching the streams are down because we stopped them, so health holds
-    /// where it is until capture has had `SystemActivityMachine.settleFor` to come back. A grant that is really gone still
-    /// reports immediately, and the covers do not depend on this — `refreshFailClosed` keeps Curtain windows covered for
-    /// the whole transition.
+    /// Permission loss requires a user grant; other stream failures recover with backoff.
+    /// Intentional pauses and sleep do not report a capture failure. Curtain covers survive recovery.
     func checkHealth() {
-        if permission.state == .granted, systemEvents.holdsHealth() { return }
-        var failed = permission.state != .granted
-        for d in displayManager.displays {
-            switch d.session.health {
-            case .ok: sessionBecameOK(d.id)
-            case .stopped(let error):
-                sessionOK[d.id] = false
-                if error != nil || sawOK.contains(d.id) { failed = true }
-            }
-        }
-        if failed {
+        defer { updateReadiness() }
+        if permission.state != .granted {
             setHealth(.needsPermission)
+            return
+        }
+        guard !modelsLoading, displayManager.processingEnabled, !systemEvents.holdsHealth() else { return }
+        let sessions = displayManager.displays.map(\.session)
+        let recovering = sessions.contains { !$0.health.isOK }
+        for d in displayManager.displays where !d.session.health.isOK {
+            if lastFrameAt.removeValue(forKey: d.id) != nil { pipelines[d.id]?.captureStopped() }
+        }
+        if recovering || !stalled.isEmpty {
+            setHealth(.degraded)
         } else if model.policy.health != .needsPermission {
             setHealth(detectionHealth)
         }
+        refreshFailClosed()
+    }
+
+    private func updateReadiness() {
+        let displays = displayManager.displays
+        if modelsLoading { model.readiness = .preparing }
+        else if detectorUnavailable || (model.policy.hiddenSet != .everyone && classifierUnavailable) { model.readiness = .modelUnavailable }
+        else if DetectionMeter.shared.hasFailures { model.readiness = .detectionFailed }
+        else if displays.isEmpty || displays.contains(where: { !$0.session.health.isOK }) { model.readiness = .recovering }
+        else if displays.contains(where: { !$0.session.simulated && !$0.session.acceptsFrames }) { model.readiness = .updatingRules }
+        else if !windowTracker.windows.contains(where: { model.policy.rules.isMonitored($0.bundleID) }) { model.readiness = .waitingForApps }
+        else if displays.contains(where: { lastFrameAt[$0.id] == nil }) { model.readiness = .preparing }
+        else { model.readiness = .ready }
     }
 
     /// M4-T10: every managed display's stream is connected. The resume grace may only end on a frame once this holds.
@@ -415,21 +465,7 @@ struct SitrApp: App {
     /// `.degraded` while any display's detection has been over 250 ms/frame for 3 s (PRD FR10).
     private var detectionHealth: Health { DetectionMeter.shared.isDegraded ? .degraded : .ok }
 
-    /// A session (re)connected: install its filter on the live stream. `CaptureSession.updateFilter` while `connect()` is between
-    /// `SCStream(...)` and `stream = s` only records the filter (`stream` is still nil), so the first install can be lost and the
-    /// stream runs with the default own-process exclusion until this re-install (a few frames after the first `.ok`).
-    // ponytail: the fix belongs in CaptureSession.connect (apply `customFilter` after `stream = s` when it changed meanwhile),
-    // not this task's file; until then the 250 ms health poll plus one SCShareableContent fetch bound the leak.
-    private func sessionBecameOK(_ id: CGDirectDisplayID) {
-        sawOK.insert(id)
-        guard sessionOK[id] != true else { return }
-        sessionOK[id] = true
-        filters.forget(id)
-        filters.refreshNow()
-    }
-
     private func frameCommitted(_ id: CGDirectDisplayID, _ specs: [CoverLayerSpec], _ frame: Frame, _ at: Double) {
-        sessionBecameOK(id)
         lastFrameAt[id] = at
         // M4-T10: the wake is over and the covers can come down — but only on a frame from a stream that is actually
         // connected. `SCStream.stopCapture` is asynchronous, so a frame or two from the stream we tore down for the sleep

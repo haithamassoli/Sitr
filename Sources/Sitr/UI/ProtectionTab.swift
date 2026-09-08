@@ -23,12 +23,33 @@ struct ProtectionTab: View {
     let model: AppModel
     @State private var selection: Set<String> = []
     @State private var addProblem: String?
+    @State private var confirmReset = false
+    @State private var appInfoRevision = 0
 
     private var rules: Rules { model.policy.rules }
     private var presetApplied: Bool { RecommendedPreset.isApplied(rules) }
 
     var body: some View {
         Form {
+            if model.showSetupSummary {
+                Section("Setup complete") {
+                    Text(model.statusText)
+                    Text(model.scopeText)
+                    Text("Review the apps below. Saved rules for apps that are not installed will apply when you install them.")
+                    Button("Dismiss setup summary") { model.showSetupSummary = false }
+                }
+            }
+            if let problem = model.rulesProblem {
+                Section {
+                    Text(problem).foregroundStyle(.red)
+                    if model.rulesNeedRecovery {
+                        Button("Retry Reading Rules") { model.reloadRules() }
+                        Button("Reset Rules…", role: .destructive) { confirmReset = true }
+                    } else {
+                        Button("Retry Saving") { model.saveRules() }
+                    }
+                }
+            }
             Section {
                 Picker("Hide", selection: Binding(get: { model.policy.hiddenSet }, set: { model.setHiddenSet($0) })) {
                     Text("Women").tag(HiddenSet.women)
@@ -58,8 +79,12 @@ struct ProtectionTab: View {
                 Text("For apps without an override. Off: never captured. Blur: detect, then cover. Curtain: cover changes at once, uncover what is verified safe.")
             }
             Section {
+                if rules.overrides.isEmpty {
+                    Text("No app overrides. Add an app or apply the recommended settings below.")
+                        .foregroundStyle(.secondary)
+                }
                 Table(rules.overrides, selection: $selection) {
-                    TableColumn("App") { rule in AppCell(bundleID: rule.bundleID) }
+                    TableColumn("App") { rule in AppCell(bundleID: rule.bundleID, revision: appInfoRevision) }
                     TableColumn("Mode") { rule in
                         let name = AppInfo.lookup(rule.bundleID).name
                         Picker("Mode", selection: Binding(get: { rule.mode }, set: { mode in model.updateRules { $0.upsert(AppRule(bundleID: rule.bundleID, mode: mode)) } })) {
@@ -97,12 +122,12 @@ struct ProtectionTab: View {
                         .disabled(presetApplied)
                         .accessibilityLabel("Use recommended settings")
                         .accessibilityHint("Sets Safari, Chrome, Arc, Telegram, WhatsApp and Discord to Curtain")
-                    if presetApplied {
-                        Label("Recommended settings applied", systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                            .font(.callout)
-                    }
                     Spacer()
+                }
+                if presetApplied {
+                    Label("Recommended settings applied", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                        .font(.callout)
                 }
                 if let addProblem {
                     Text(addProblem).font(.callout).foregroundStyle(.red)
@@ -110,10 +135,20 @@ struct ProtectionTab: View {
             } header: {
                 Text("App overrides")
             } footer: {
-                Text("Recommended: Safari, Chrome, Arc, Telegram, WhatsApp and Discord as Curtain; the Default Rule stays. Select rows and press ⌫ to remove them.")
+                Text("Recommended: Safari, Chrome, Arc, Telegram, WhatsApp and Discord as Curtain; the Default Rule stays. Removing an override restores the Default Rule, which may still protect that app.")
             }
         }
         .formStyle(.grouped)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            AppInfo.refresh()
+            appInfoRevision += 1
+        }
+        .onAppear { AppInfo.refresh(); appInfoRevision += 1 }
+        .confirmationDialog(String(localized: "Reset all protection rules?"), isPresented: $confirmReset) {
+            Button("Reset Rules", role: .destructive) { model.resetRules() }
+        } message: {
+            Text("Sitr will keep a recovery copy of the existing file and set all apps to Off.")
+        }
     }
 
     /// Running apps with a Dock presence (`.regular`), sorted by name, ourselves excluded.
@@ -162,8 +197,10 @@ struct AppInfo {
     let icon: NSImage
     let installed: Bool
 
-    // ponytail: process-lifetime cache; an app installed while Settings is open shows its icon after a relaunch.
+    // ponytail: refreshed when Settings activates; observe installation events if live updates become necessary.
     private static var cache: [String: AppInfo] = [:]
+
+    static func refresh() { cache = [:] }
 
     static func lookup(_ bundleID: String) -> AppInfo {
         if let hit = cache[bundleID] { return hit }
@@ -183,6 +220,7 @@ struct AppInfo {
 
 private struct AppCell: View {
     let bundleID: String
+    let revision: Int
 
     var body: some View {
         let info = AppInfo.lookup(bundleID)

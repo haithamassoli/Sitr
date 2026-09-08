@@ -7,13 +7,16 @@ public struct PersonObservation: Hashable, Sendable {
     public var category: Category
     /// Classifier P(woman) when it ran; carried for the bench and debug counts, not used by the tracker.
     public var pWoman: Double?
+    /// False when the pipeline reused a cached category without obtaining new evidence.
+    public var categoryVerified: Bool
     /// Bundle ID of the app whose window the person was seen in; nil when the owner is unknown (Default Rule applies).
     public var bundleID: String?
 
-    public init(rect: Rect, category: Category, pWoman: Double? = nil, bundleID: String? = nil) {
+    public init(rect: Rect, category: Category, pWoman: Double? = nil, bundleID: String? = nil, categoryVerified: Bool = true) {
         self.rect = rect
         self.category = category
         self.pWoman = pWoman
+        self.categoryVerified = categoryVerified
         self.bundleID = bundleID
     }
 }
@@ -48,6 +51,7 @@ public struct Track: Hashable, Sendable, Identifiable {
         lastSeen = now
         hits += 1
         if let bundleID = observation.bundleID { self.bundleID = bundleID }
+        guard observation.categoryVerified else { return }
         if observation.category == category {
             contrary = nil
             contraryHits = 0

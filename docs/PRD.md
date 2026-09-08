@@ -129,12 +129,13 @@ Tabs: Protection (hidden set, Strict Mode, Default Rule, overrides, preset), App
 ### FR10 Failure behavior
 | Condition | Curtain apps | Blur apps and Default Rule | UI |
 |---|---|---|---|
-| Permission revoked or capture error | Solid cover over each app window (rects from CGWindowList) until capture resumes | Uncovered | Warning icon, one notification |
+| Permission revoked | Solid cover over each app window (rects from CGWindowList) until capture resumes | Uncovered | Warning icon, deduplicated notification, open permission settings |
+| Capture error with permission intact | Solid cover until a fresh frame restores capture | Uncovered | Recovering screen capture, deduplicated notification, retry action |
 | Stream stalls > 1 s while windows change | Same fail-closed cover | Uncovered | Warning icon |
 | Detection > 250 ms/frame for 3 s | Pre-cover stays until verified | Degraded | Warning icon |
 | Crash | Relaunched by login item at next login; no self-restart in v1 | | |
 
-Paused and Disabled are user actions, not failures: overlays removed, icon dimmed.
+Paused and Disabled are user actions: overlays removed, capture and inference stopped, icon dimmed. Resume uses fresh capture state. Preparation, no configured apps, waiting for an eligible app, and model fallback have distinct status text.
 
 ### FR11 Screen sharing and screenshots (documented behavior)
 - Share Entire Screen: the overlay is a normal window, covers are usually visible to viewers.

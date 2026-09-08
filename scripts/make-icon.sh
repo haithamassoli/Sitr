@@ -15,4 +15,5 @@ for n in icon_16x16:16 icon_16x16@2x:32 icon_32x32:32 icon_32x32@2x:64 icon_128x
   sips -z "${n#*:}" "${n#*:}" "$SET/icon_512x512@2x.png" --out "$SET/${n%%:*}.png" >/dev/null
 done
 iconutil -c icns "$SET" -o App/Icon/AppIcon.icns
+cp "$SET/icon_128x128@2x.png" App/Icon/icon.png
 echo "wrote App/Icon/AppIcon.icns"
