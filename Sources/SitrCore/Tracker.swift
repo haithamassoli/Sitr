@@ -34,7 +34,7 @@ public struct Track: Hashable, Sendable, Identifiable {
     /// Owner app of the latest attributed observation; sticky through observations without one, like `category`.
     public var bundleID: String?
     /// Category the recent observations disagree with `category` on, and how many in a row said so.
-    var contrary: Category?
+    public private(set) var contrary: Category?
     var contraryHits = 0
 
     public init(id: Int, rect: Rect, category: Category, lastSeen: Double, hits: Int = 1, bundleID: String? = nil) {
@@ -95,9 +95,10 @@ public struct Tracker: Sendable {
     public mutating func update(_ observations: [PersonObservation], at now: Double, sequence: Int) -> [Track] {
         guard sequence > lastSequence else { return tracks }
         lastSequence = sequence
-        tracks.removeAll { now - $0.lastSeen > Self.persistence }
 
-        // Greedy one-to-one matching, best IoU first.
+        // Greedy one-to-one matching, best IoU first. Every track takes part, however old: SCK sends no frame while the
+        // screen is still, so expiring before matching gave every person a new id (and a fresh, non-sticky category) on the
+        // first frame after 0.3 s of stillness.
         var pairs: [(iou: Double, track: Int, observation: Int)] = []
         for (t, track) in tracks.enumerated() {
             for (o, observation) in observations.enumerated() {
@@ -112,6 +113,7 @@ public struct Tracker: Sendable {
             matchedObservations.insert(pair.observation)
             tracks[pair.track].hit(observations[pair.observation], at: now)
         }
+        tracks.removeAll { now - $0.lastSeen > Self.persistence }  // matched tracks were just seen, so only unmatched ones go
         for (o, observation) in observations.enumerated() where !matchedObservations.contains(o) {
             tracks.append(
                 Track(

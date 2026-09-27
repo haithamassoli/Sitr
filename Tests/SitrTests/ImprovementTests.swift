@@ -58,7 +58,9 @@ import Testing
         #expect(model.rulesProblem != nil)
         let restored = self.model(directory)
         #expect(restored.rulesNeedRecovery && restored.rulesProblem != nil)
+        let rulesBeforeEdit = restored.policy.rules
         restored.updateRules { $0.defaultMode = .blur }
+        #expect(restored.policy.rules == rulesBeforeEdit)
         #expect(try String(contentsOf: restored.rulesStore.fileURL, encoding: .utf8) == "broken rules")
         restored.resetRules()
         #expect(!restored.rulesNeedRecovery && restored.rulesProblem == nil)

@@ -1,0 +1,10 @@
+{
+  "name": "sitr-music-extension",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Sitr Music browser extension",
+  "scripts": {
+    "test": "node --test --import ./tests/setup.js tests/*.test.js"
+  }
+}

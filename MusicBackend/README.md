@@ -1,0 +1,11 @@
+# Sitr Music helper (internal prototype)
+
+Run `scripts/build-music-helper.sh` on Apple Silicon with Python 3.12 to produce `build/SitrMusicHelper.app`. The build bundles Python, FFmpeg, FFprobe, Deno, and yt-dlp's EJS solver. The `htdemucs` weights (about 80 MB) download once from Meta on first use. Users need none of those tools installed. Run backend tests with `PYTHONPATH=MusicBackend .build/music-venv/bin/python -m pytest MusicBackend/tests -q`.
+
+The app listens only on `127.0.0.1:8724`. Browser calls must have a `chrome-extension://` Origin. Calls without Origin must send `X-Sitr-Music-Client: extension` (or `native` for local checks); a web page's Origin is rejected even with that header. This header is a browser request gate, not a secret against other local processes. Any installed browser extension with localhost access can call the helper; this prototype does not pair to one extension ID. The Sitr extension sends every API request through its service worker.
+
+The helper is a separate sandboxed app because Sitr itself has no network entitlement. It has network client/server entitlements for downloads and local HTTP. Its hardened runtime build also has `com.apple.security.cs.disable-library-validation`: with ad hoc signing, PyInstaller's bundled Python.framework failed to load even after nested code was signed, reporting mismatched Team IDs. A release signed with one Developer ID should test removing this entitlement after signing nested code inside-out; it is currently required for the local test build.
+
+The packaged helper runs in managed mode by default. It registers Darwin notification `com.goldentik.Sitr.Music.enabled`, reads its state on startup, and checks for posts every 250 ms. State `1` keeps it running; state `0` makes it signal itself to let Uvicorn shut down. Run the packaged executable with `--sitr-standalone` for a direct smoke test. Source Python remains standalone by default and accepts `--sitr-managed` for development.
+
+The helper reports its state to Sitr through Darwin notifications: `com.goldentik.Sitr.Music.model` (1 preparing, 2 ready, 3 failed and retrying every 30 s) and `com.goldentik.Sitr.Music.extension` (1 once an extension request arrives). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for licenses.

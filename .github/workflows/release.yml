@@ -58,6 +58,8 @@ jobs:
           echo "$NOTARY_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
           echo "NOTARY_KEY_PATH=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
           rm -f "$RUNNER_TEMP/cert.p12"
+      - name: Python 3.12 for the music helper (scripts/build-music-helper.sh)
+        run: brew list python@3.12 >/dev/null 2>&1 || brew install python@3.12
       - name: Build, sign, notarize, staple (dry run when SIGN_ID is ad-hoc)
         env:
           NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}

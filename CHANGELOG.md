@@ -7,6 +7,24 @@ per version and move `Unreleased` entries into it before tagging.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-27
+
+### Added
+- **Music removal in the browser.** Settings › Music turns on a separate helper that plays web videos with the music
+  removed and the speech kept, in Chrome, Edge, Brave, and Arc. The first audio plays about 3 seconds after pressing
+  **Remove music**; a 20-minute video is fully processed in about 2 minutes on an M3. Processing stays on the Mac.
+- A four-step extension install guide inside Settings › Music, with a checkmark once the extension connects, and a
+  status line while the voice model downloads (about 80 MB, first use only).
+
+### Changed
+- Sitr itself still has no network entitlement. The music helper is a separate sandboxed app with network access,
+  off by default. The voice model is downloaded from Meta's official server instead of being bundled.
+
+### Fixed
+- Screen protection: after the screen stayed still, people got new tracking IDs, which could uncover a covered person
+  for a frame. They now keep their ID and category.
+- A music helper left running by a crashed Sitr is stopped at the next launch when music removal is off.
+
 ## [0.1.3] - 2026-09-08
 
 ### Added

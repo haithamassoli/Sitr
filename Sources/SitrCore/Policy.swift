@@ -84,12 +84,14 @@ public struct Policy: Hashable, Sendable {
     }
 
     /// Covers for this frame: one per hidden track whose app resolves to Blur or Curtain (`rules.mode(for:)`; a track
-    /// without a bundle ID takes the Default Rule), overlapping hidden tracks of one mode merged into one (see
+    /// without a bundle ID takes the Default Rule). A contrary classifier answer is covered provisionally until confirmed;
+    /// overlapping hidden tracks of one mode are merged into one (see
     /// `Tracker.merged`), ascending by `trackID`. Empty when paused (until > now), disabled, or without permission.
     public func covers(for tracks: [Track], now: Double) -> [Cover] {
         guard isProtecting(at: now) else { return [] }
         return [CoverMode.blur, .curtain].flatMap { mode in
-            Tracker.merged(tracks.filter { hides($0.category) && rules.mode(for: $0.bundleID).coverMode == mode })
+            Tracker.merged(tracks.filter { (hides($0.category) || $0.contrary.map(hides) == true)
+                && rules.mode(for: $0.bundleID).coverMode == mode })
                 .map { Cover(trackID: $0.id, rect: $0.rect, mode: mode) }
         }.sorted { $0.trackID < $1.trackID }
     }

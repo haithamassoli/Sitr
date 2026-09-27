@@ -232,7 +232,7 @@ struct OnboardingView: View {
         switch flow.step {
         case .welcome:
             page("eye.slash", Text("Welcome to Sitr")) {
-                Text("Sitr hides people on your screen as they appear — women, men, or everyone — in every app: browsers, chats, photos, video, calls.")
+                Text("Sitr hides people on your screen as they appear — women, men, or everyone — in the apps you choose: browsers, chats, photos, video, calls.")
                 Text("Everything happens on this Mac. Sitr has no network access, so nothing leaves your Mac: no pixels, no logs, no telemetry. Verify it any time:")
                 Text(AboutTab.verifyCommand)
                     .font(.system(.callout, design: .monospaced))
@@ -379,7 +379,7 @@ struct OnboardingView: View {
             Spacer()
             if flow.step == .permission, !flow.permissionGranted {
                 Button("Skip for now") { skipPermission() }
-                    .accessibilityHint("Continues without Screen Recording. Sitr covers nothing until it is allowed.")
+                    .accessibilityHint("Continues without Screen Recording. Person detection stays off; Curtain app windows remain covered.")
             }
             if flow.step == .welcome {
                 Button("Customize") { flow.advance() }

@@ -97,8 +97,9 @@ nonisolated func classifiable(face: Detection?, body: Detection) -> Bool {
 // ViT do not fit the ANE. A settled track is now re-checked once a second (`classifyRefresh`), which is what the 3-crop cap
 // below used to buy on a busy screen and does not on a quiet one.
 // ponytail: 3 crops per frame still caps the worst case, so ten new faces cost the same as three. The cost of the slower
-// refresh: a track whose *person* changes without the box moving keeps the old category for up to `classifyRefresh` ×
-// `Tracker.flipFrames` ≈ 3 s (it was ~0.6 s). Upgrade path: the ≤ 10 MB MobileNetV3 of docs/spike/classifier.md, which is
+// refresh: a track whose *person* changes without the box moving may remain uncovered until the next classifier answer
+// (up to `classifyRefresh`); contrary evidence covers it while the next two frames confirm the category. Upgrade path:
+// the ≤ 10 MB MobileNetV3 of docs/spike/classifier.md, which is
 // cheap enough to run on every track every frame.
 nonisolated func classificationOrder(classifiable: [Bool], sticky: [Category?], fresh: [Bool] = [], round: Int, limit: Int = 3) -> [Int] {
     func rotated(_ v: [Int]) -> [Int] { v.isEmpty ? v : Array(v[(round % v.count)...] + v[..<(round % v.count)]) }
@@ -135,7 +136,7 @@ nonisolated func nothingDetectableChanged(dirtyRects: [CGRect], pixelsPerPoint: 
 }
 
 /// Whether this frame's faces have to be looked for: any detected person that no track matches (someone new), or whose track
-/// is `.unknown` or has no classifier answer newer than `refresh`. Faces feed nothing else — `classifiable` gates the
+/// is `.unknown`, has contrary evidence, or has no classifier answer newer than `refresh`. Faces feed nothing else — `classifiable` gates the
 /// classifier and `categorize` reads the face size — so when every person here already has a fresh answer, the face request is
 /// work whose result cannot change a cover. Pure; unit-tested. `persons` in display points, like `Track.rect`.
 // M4-T09: `DetectFaceRectanglesRequest` was ~1.6 s of a 30 s browsing profile on its own Vision queue. Skipping it costs the
@@ -146,7 +147,7 @@ nonisolated func needsFaces(persons: [Rect], tracks: [Track], classifiedAt: [Int
     guard hiddenSet != .everyone else { return false }
     return persons.contains { p in
         guard let track = tracks.filter({ $0.rect.iou(p) >= Tracker.matchIoU }).max(by: { $0.rect.iou(p) < $1.rect.iou(p) }) else { return true }
-        return track.category == .unknown || classifiedAt[track.id].map { now - $0 >= refresh } ?? true
+        return track.category == .unknown || track.contrary != nil || classifiedAt[track.id].map { now - $0 >= refresh } ?? true
     }
 }
 
@@ -635,8 +636,10 @@ actor Pipeline {
             let sticky = matched.map(\.?.category)
             let usable = persons.indices.map { classifiable(face: assigned[$0], body: persons[$0]) }
             // M4-T09: a track the classifier answered for less than `classifyRefresh` ago keeps that answer instead of paying
-            // for a crop on every frame.
-            let fresh = perfLegacy ? [] : matched.map { m in m.flatMap { classifiedAt[$0.id] }.map { t1 - $0 < Self.classifyRefresh } ?? false }
+            // for a crop on every frame. Contrary evidence gets fresh checks until the category is confirmed or rejected.
+            let fresh = perfLegacy ? [] : matched.map { m in
+                m?.contrary == nil && (m.flatMap { classifiedAt[$0.id] }.map { t1 - $0 < Self.classifyRefresh } ?? false)
+            }
             let order = classificationOrder(classifiable: usable, sticky: sticky, fresh: fresh, round: round)
             round += 1
             let probabilities = order.isEmpty ? [] : await classifier.pWoman(faces: order.map { assigned[$0]!.box }, in: frame)

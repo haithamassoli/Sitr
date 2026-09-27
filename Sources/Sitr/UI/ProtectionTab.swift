@@ -73,6 +73,7 @@ struct ProtectionTab: View {
                 Picker("Default Rule", selection: Binding(get: { rules.defaultMode }, set: { mode in model.updateRules { $0.defaultMode = mode } })) {
                     ForEach(RuleMode.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
+                .disabled(model.rulesNeedRecovery)
                 .accessibilityLabel("Default Rule")
                 .accessibilityHint("Mode for every app without an override. Off means never captured.")
             } footer: {
@@ -102,6 +103,7 @@ struct ProtectionTab: View {
                     }
                     .width(24)
                 }
+                .disabled(model.rulesNeedRecovery)
                 .frame(height: 190)  // fixed: the table scrolls, the buttons below stay in view
                 .onDeleteCommand { remove(selection) }
                 .accessibilityLabel("App overrides")
@@ -115,11 +117,12 @@ struct ProtectionTab: View {
                     } label: {
                         Label("Add", systemImage: "plus")
                     }
+                    .disabled(model.rulesNeedRecovery)
                     .fixedSize()
                     .accessibilityLabel("Add app override")
                     .accessibilityHint("Pick a running app, or Other to choose an app file")
                     Button("Use recommended settings") { model.updateRules { RecommendedPreset.apply(to: &$0) } }
-                        .disabled(presetApplied)
+                        .disabled(presetApplied || model.rulesNeedRecovery)
                         .accessibilityLabel("Use recommended settings")
                         .accessibilityHint("Sets Safari, Chrome, Arc, Telegram, WhatsApp and Discord to Curtain")
                     Spacer()

@@ -48,6 +48,10 @@ private func track(_ id: Int, _ rect: Rect, _ category: Category) -> Track {
     #expect(needsFaces(persons: [a], tracks: tracks, classifiedAt: [:], now: 10, refresh: 1))
     // An Unknown track always wants a face, however recently it was asked.
     #expect(needsFaces(persons: [b], tracks: [track(2, b, .unknown)], classifiedAt: [2: 9.99], now: 10, refresh: 1))
+    var tracker = Tracker()
+    tracker.update([PersonObservation(rect: a, category: .woman)], at: 9.5, sequence: 1)
+    tracker.update([PersonObservation(rect: a, category: .man)], at: 9.6, sequence: 2)
+    #expect(needsFaces(persons: [a], tracks: tracker.tracks, classifiedAt: [1: 9.6], now: 10, refresh: 1))
     // No people, no faces.
     #expect(!needsFaces(persons: [], tracks: tracks, classifiedAt: fresh, now: 10, refresh: 1))
     for hiddenSet in HiddenSet.allCases {

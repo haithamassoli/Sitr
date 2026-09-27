@@ -12,3 +12,6 @@ Models/venv/
 *.mlmodelc/
 !Models/dist/*.mlpackage/
 .claude/
+__pycache__/
+.pytest_cache/
+node_modules/

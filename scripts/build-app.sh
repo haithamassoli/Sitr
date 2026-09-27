@@ -19,6 +19,16 @@ fi
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 [ -d App/Resources ] && cp -R App/Resources/. "$APP/Contents/Resources/"
 cp App/Icon/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+if [ -f browser-extension/manifest.json ]; then
+  # Same exclusions as browser-extension/package.sh: users load this folder with "Load unpacked".
+  rsync -a --exclude tests --exclude package.json --exclude CHROMEWEBSTORE.md --exclude package.sh --exclude PRIVACY.md \
+    --exclude .DS_Store browser-extension/ "$APP/Contents/Resources/BrowserExtension/"
+fi
+if [ "${INCLUDE_MUSIC_HELPER:-0}" = 1 ]; then
+  MUSIC_SIGN_ID="$SIGN_ID" scripts/build-music-helper.sh
+  mkdir -p "$APP/Contents/Helpers"
+  cp -R build/SitrMusicHelper.app "$APP/Contents/Helpers/"
+fi
 # String Catalog (M4-T05): xcstringstool turns the catalog into en.lproj/ar.lproj/Localizable.strings, which is what
 # Text("…") and String(localized:) read from the main bundle; the .xcstrings source itself is not a runtime resource.
 # xcstringstool exits non-zero on a malformed catalog, and set -e turns that into a failed build.

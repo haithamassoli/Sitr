@@ -4,7 +4,7 @@ import SwiftUI
 /// `SITR_OPEN_SETTINGS=<tab>` (dev smoke runs, docs/m4/settings.md) selects the initial tab; `MenuBarLabel` opens the window.
 struct SettingsView: View {
     nonisolated enum Tab: String, CaseIterable {
-        case general, protection, appearance, shortcuts, about
+        case general, protection, music, appearance, shortcuts, about
     }
 
     let model: AppModel
@@ -28,6 +28,9 @@ struct SettingsView: View {
             ProtectionTab(model: model)
                 .tabItem { Label("Protection", systemImage: "eye.slash") }
                 .tag(Tab.protection)
+            MusicTab()
+                .tabItem { Label("Music", systemImage: "music.note.list") }
+                .tag(Tab.music)
             AppearanceTab(model: model)
                 .tabItem { Label("Appearance", systemImage: "paintbrush") }
                 .tag(Tab.appearance)

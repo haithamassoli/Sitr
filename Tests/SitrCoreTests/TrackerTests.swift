@@ -90,6 +90,15 @@ private func person(x: Double, y: Double = 0, _ category: Category = .woman) -> 
         #expect(tracker.update([person(x: 0, .man)], at: 4 * frame, sequence: 4)[0].category == .man)
     }
 
+    @Test func stillScreenKeepsIDAndStickyCategory() {
+        // SCK sends no frame while nothing changes: the next frame can come seconds later.
+        var tracker = Tracker()
+        tracker.update([person(x: 0, .woman)], at: 0, sequence: 0)
+        let after = tracker.update([person(x: 0, .man)], at: 2, sequence: 1)
+        #expect(after.map(\.id) == [1] && after[0].category == .woman)  // one contrary answer does not flip it
+        #expect(tracker.update([person(x: 300)], at: 4, sequence: 2).map(\.id) == [2])  // unmatched and old: gone
+    }
+
     @Test func separatePeopleGetSeparateTracks() {
         var tracker = Tracker()
         let tracks = tracker.update([person(x: 0), person(x: 100)], at: 0, sequence: 0)
@@ -189,6 +198,25 @@ private func person(x: Double, y: Double = 0, _ category: Category = .woman) -> 
         }
         #expect(tracker.update([], at: 4, sequence: 46).isEmpty)
         #expect(tracker.update([PersonObservation(rect: rect, category: .unknown)], at: 4.1, sequence: 47)[0].category == .unknown)
+    }
+
+    @Test func contraryClassificationCoversAReplacementUntilItIsConfirmed() {
+        var tracker = Tracker()
+        let rect = Rect(x: 10, y: 10, width: 80, height: 100)
+        let policy = Policy(hiddenSet: .men, strictMode: false, rules: Rules(defaultMode: .blur))
+        tracker.update([PersonObservation(rect: rect, category: .woman)], at: 0, sequence: 0)
+        #expect(policy.covers(for: tracker.tracks, now: 0).isEmpty)
+        tracker.update([PersonObservation(rect: rect, category: .man)], at: 1.0 / 15, sequence: 1)
+        #expect(tracker.tracks[0].category == .woman)
+        #expect(policy.covers(for: tracker.tracks, now: 1.0 / 15).count == 1)
+        tracker.update([PersonObservation(rect: rect, category: .woman)], at: 2.0 / 15, sequence: 2)
+        #expect(tracker.tracks[0].contrary == nil)
+        #expect(policy.covers(for: tracker.tracks, now: 2.0 / 15).isEmpty)
+        for sequence in 3...5 {
+            tracker.update([PersonObservation(rect: rect, category: .man)], at: Double(sequence) / 15, sequence: sequence)
+            #expect(policy.covers(for: tracker.tracks, now: Double(sequence) / 15).count == 1)
+        }
+        #expect(tracker.tracks[0].category == .man)
     }
 
 }

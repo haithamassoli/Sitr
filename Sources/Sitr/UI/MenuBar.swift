@@ -79,6 +79,11 @@ struct MenuBarContent: View {
                 .accessibilityLabel("Reveal unavailable")
         }
         Divider()
+        Button("Music in browser…") {
+            model.settingsTab = .music
+            openSettings()
+            NSApp.activate()
+        }
         Button("Settings…") {
             openSettings()
             NSApp.activate()

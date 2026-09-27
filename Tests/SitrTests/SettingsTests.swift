@@ -111,7 +111,7 @@ import Testing
     }
 
     @Test func settingsTabsMatchFR9() {
-        #expect(SettingsView.Tab.allCases.map(\.rawValue) == ["general", "protection", "appearance", "shortcuts", "about"])
+        #expect(SettingsView.Tab.allCases.map(\.rawValue) == ["general", "protection", "music", "appearance", "shortcuts", "about"])
         #expect(SettingsView.Tab(rawValue: "appearance") == .appearance)
     }
 }

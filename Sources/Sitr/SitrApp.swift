@@ -7,6 +7,7 @@ import os
 
 @main
 struct SitrApp: App {
+    @NSApplicationDelegateAdaptor(MusicAppDelegate.self) private var musicDelegate
     @State private var runtime: Runtime
 
     init() {
@@ -22,7 +23,10 @@ struct SitrApp: App {
         }
         let runtime = Runtime(model: AppModel())
         _runtime = State(initialValue: runtime)
-        Task { @MainActor in runtime.start() }  // first run-loop turn; capture and covers are up well inside a second (docs/m2/pipeline.md)
+        Task { @MainActor in
+            runtime.start()
+            MusicService.shared.startIfEnabled()
+        }  // first run-loop turn; capture and covers are up well inside a second (docs/m2/pipeline.md)
     }
 
     var body: some Scene {
@@ -35,6 +39,12 @@ struct SitrApp: App {
             SettingsView(model: runtime.model)
         }
         .windowResizability(.contentMinSize)
+    }
+}
+
+@MainActor final class MusicAppDelegate: NSObject, NSApplicationDelegate {
+    func applicationWillTerminate(_ notification: Notification) {
+        MusicService.shared.stop()
     }
 }
 

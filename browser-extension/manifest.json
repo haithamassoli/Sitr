@@ -1,0 +1,62 @@
+{
+  "manifest_version": 3,
+  "name": "Sitr Music",
+  "version": "0.2.0",
+  "description": "Remove music from web videos while keeping speech with the Sitr app.",
+  "permissions": ["storage", "downloads"],
+  "host_permissions": [
+    "http://127.0.0.1:8724/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["page-script.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Sitr Music",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/icon-32.png",
+        "main.js",
+        "settings.js",
+        "i18n.js",
+        "session.js",
+        "button.js",
+        "mute-controller.js",
+        "audio-scheduler.js",
+        "stretch.js",
+        "third_party/soundtouch/*.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

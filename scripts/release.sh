@@ -23,7 +23,7 @@ fi
 
 # ponytail: only build/ is wiped; .build/ stays (CI checkouts are clean anyway, `swift package clean` locally buys nothing).
 rm -rf build
-VERSION=$VERSION scripts/build-app.sh --sign="$SIGN_ID"
+VERSION=$VERSION INCLUDE_MUSIC_HELPER=1 scripts/build-app.sh --sign="$SIGN_ID"
 codesign --verify --deep --strict --verbose=2 "$APP"
 ditto -c -k --keepParent "$APP" "$ZIP"
 

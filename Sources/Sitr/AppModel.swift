@@ -258,6 +258,7 @@ import SitrCore
     /// M3-T08: edits the rules in place, pushes them to the pipelines through `onPolicyChanged`, and saves `rules.json`.
     /// Runtime invalidates pending frames and applies the matching capture filter.
     func updateRules(_ edit: (inout Rules) -> Void) {
+        guard !rulesNeedRecovery else { return }
         var rules = policy.rules
         edit(&rules)
         guard rules != policy.rules else { return }

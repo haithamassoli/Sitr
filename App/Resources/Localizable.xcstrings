@@ -144,6 +144,17 @@
         }
       }
     },
+    "Add to Chrome" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة إلى Chrome"
+          }
+        }
+      }
+    },
     "All apps" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -308,6 +319,17 @@
         }
       }
     },
+    "Audio is processed on this Mac. The first time, Sitr downloads a voice model (about 80 MB); after that the helper only downloads the audio of videos you choose." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُعالَج الصوت على هذا الـMac. في المرة الأولى ينزّل Sitr نموذج الصوت (نحو 80 ميغابايت)، وبعدها لا ينزّل المساعد إلا صوت الفيديوهات التي تختارها."
+          }
+        }
+      }
+    },
     "Back" : {
       "comment" : "Onboarding button",
       "extractionState" : "manual",
@@ -376,6 +398,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "هامش الجسم"
+          }
+        }
+      }
+    },
+    "Browser extension" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة المتصفح"
           }
         }
       }
@@ -557,14 +590,14 @@
         }
       }
     },
-    "Continues without Screen Recording. Sitr covers nothing until it is allowed." : {
+    "Continues without Screen Recording. Person detection stays off; Curtain app windows remain covered." : {
       "comment" : "Accessibility hint, Skip for now",
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يتابع دون تسجيل الشاشة. لا يغطي Sitr أي شيء حتى يُسمح به."
+            "value" : "يتابع دون إذن تسجيل الشاشة. يتوقف كشف الأشخاص، وتبقى نوافذ تطبيقات الستارة مغطاة."
           }
         }
       }
@@ -577,6 +610,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تم النسخ"
+          }
+        }
+      }
+    },
+    "Copied. In the browser, press ⌘L, then ⌘V, then Return." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم النسخ. في المتصفح اضغط ⌘L ثم ⌘V ثم Return."
           }
         }
       }
@@ -601,6 +645,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "نسخ أمر التحقق"
+          }
+        }
+      }
+    },
+    "Could not download the voice model. Check your internet connection; Sitr keeps trying." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر تنزيل نموذج الصوت. تحقّق من اتصالك بالإنترنت، وسيواصل Sitr المحاولة."
+          }
+        }
+      }
+    },
+    "Could not start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذر التشغيل"
+          }
+        }
+      }
+    },
+    "Could not stop helper" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر إيقاف مساعد الصوت"
           }
         }
       }
@@ -805,6 +882,39 @@
         }
       }
     },
+    "Download Google Chrome" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تنزيل Google Chrome"
+          }
+        }
+      }
+    },
+    "Downloading the voice model…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ تنزيل نموذج الصوت…"
+          }
+        }
+      }
+    },
+    "Drag the extension onto the page" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسحب الإضافة إلى الصفحة"
+          }
+        }
+      }
+    },
     "Enable Protection" : {
       "comment" : "Menu bar item, replaces Disable Protection",
       "extractionState" : "manual",
@@ -813,6 +923,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تفعيل الحماية"
+          }
+        }
+      }
+    },
+    "Enable music removal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تفعيل إزالة الموسيقى"
           }
         }
       }
@@ -837,6 +958,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "كل شيء يحدث على جهاز Mac هذا. لا يملك Sitr أي وصول إلى الشبكة، فلا يخرج شيء من جهازك: لا بكسلات ولا سجلات ولا بيانات قياس. يمكنك التحقق من ذلك في أي وقت:"
+          }
+        }
+      }
+    },
+    "Extension connected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإضافة متصلة"
           }
         }
       }
@@ -961,6 +1093,17 @@
         }
       }
     },
+    "Helper missing from this build" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مساعد الصوت غير موجود في هذه النسخة"
+          }
+        }
+      }
+    },
     "Hidden set" : {
       "comment" : "Accessibility label of the Hide picker",
       "extractionState" : "manual",
@@ -1041,6 +1184,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تبديل مصدر الإدخال"
+          }
+        }
+      }
+    },
+    "Installation steps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خطوات التثبيت"
           }
         }
       }
@@ -1248,6 +1402,50 @@
         }
       }
     },
+    "Music" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الموسيقى"
+          }
+        }
+      }
+    },
+    "Music in browser…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الموسيقى في المتصفح…"
+          }
+        }
+      }
+    },
+    "Music removal in browser" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إزالة الموسيقى في المتصفح"
+          }
+        }
+      }
+    },
+    "Music removal needs Google Chrome or another Chromium browser." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحتاج إزالة الموسيقى إلى Google Chrome أو متصفح آخر مبني على Chromium."
+          }
+        }
+      }
+    },
     "Needs Screen Recording permission" : {
       "comment" : "Menu bar status line",
       "extractionState" : "manual",
@@ -1318,6 +1516,28 @@
         }
       }
     },
+    "On any video, press Remove music. Press it again to hear the original audio." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اضغط «إزالة الموسيقى» على أي فيديو، واضغطه مرة أخرى لسماع الصوت الأصلي."
+          }
+        }
+      }
+    },
+    "Open %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتح %@"
+          }
+        }
+      }
+    },
     "Open Login Items" : {
       "comment" : "General › Launch at login button",
       "extractionState" : "manual",
@@ -1377,6 +1597,17 @@
         }
       }
     },
+    "Open a video and press Remove music on it. A checkmark appears here once the extension connects." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتح فيديو واضغط «إزالة الموسيقى» عليه. تظهر هنا علامة ✓ عند اتصال الإضافة."
+          }
+        }
+      }
+    },
     "Open an app covered by your protection rules." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1396,6 +1627,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "فتح الكود المصدري لـ Sitr على GitHub"
+          }
+        }
+      }
+    },
+    "Open the extensions page" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتح صفحة الإضافات"
           }
         }
       }
@@ -1697,6 +1939,17 @@
         }
       }
     },
+    "Ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جاهز"
+          }
+        }
+      }
+    },
     "Recommended Protection" : {
       "comment" : "Onboarding step 4 title",
       "extractionState" : "manual",
@@ -1931,6 +2184,17 @@
         }
       }
     },
+    "Restart Sitr. If the helper still cannot start, reinstall Sitr." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أعد تشغيل ستر. إذا تعذّر تشغيل مساعد الصوت، فأعد تثبيت التطبيق."
+          }
+        }
+      }
+    },
     "Resume Protection" : {
       "comment" : "Menu bar item while paused",
       "extractionState" : "manual",
@@ -2066,6 +2330,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تعذّرت إعادة تعيين القواعد. احتُفظ بملفاتك الحالية."
+          }
+        }
+      }
+    },
+    "Running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعمل"
           }
         }
       }
@@ -2338,6 +2613,17 @@
         }
       }
     },
+    "Show extension folder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أظهر مجلد الإضافة"
+          }
+        }
+      }
+    },
     "Shows the macOS permission dialog" : {
       "comment" : "Accessibility hint, Allow Screen Recording",
       "extractionState" : "manual",
@@ -2409,14 +2695,14 @@
         }
       }
     },
-    "Sitr hides people on your screen as they appear — women, men, or everyone — in every app: browsers, chats, photos, video, calls." : {
+    "Sitr hides people on your screen as they appear — women, men, or everyone — in the apps you choose: browsers, chats, photos, video, calls." : {
       "comment" : "Onboarding step 1",
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يخفي Sitr الأشخاص على شاشتك لحظة ظهورهم — النساء أو الرجال أو الجميع — في كل التطبيقات: المتصفحات والمحادثات والصور والفيديو والمكالمات."
+            "value" : "يخفي Sitr الأشخاص على شاشتك لحظة ظهورهم — النساء أو الرجال أو الجميع — في التطبيقات التي تختارها: المتصفحات والمحادثات والصور والفيديو والمكالمات."
           }
         }
       }
@@ -2429,6 +2715,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sitr يحتاج إلى انتباهك"
+          }
+        }
+      }
+    },
+    "Sitr opens your browser and copies the extensions page address for you." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يفتح Sitr متصفحك وينسخ لك عنوان صفحة الإضافات."
           }
         }
       }
@@ -2465,6 +2762,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "استُعيدت حماية Sitr"
+          }
+        }
+      }
+    },
+    "Sitr shows the BrowserExtension folder in Finder. Drag it onto the extensions page." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعرض Sitr مجلد BrowserExtension في Finder. اسحبه وأفلته على صفحة الإضافات."
           }
         }
       }
@@ -2563,6 +2871,17 @@
         }
       }
     },
+    "Speech may sound different. Singing can remain because the model keeps the human voice. Some sites or protected videos may not work." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قد يتغير صوت الكلام. قد يبقى الغناء لأن النموذج يحافظ على الصوت البشري. بعض المواقع أو الفيديوهات المحمية قد لا تعمل."
+          }
+        }
+      }
+    },
     "Spotlight" : {
       "comment" : "Who else uses ⌘Space",
       "extractionState" : "manual",
@@ -2571,6 +2890,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spotlight"
+          }
+        }
+      }
+    },
+    "Starting…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ التشغيل…"
+          }
+        }
+      }
+    },
+    "Status" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحالة"
           }
         }
       }
@@ -2595,6 +2936,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الخطوة %1$lld من %2$lld"
+          }
+        }
+      }
+    },
+    "Stopped unexpectedly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "توقف بشكل غير متوقع"
           }
         }
       }
@@ -2635,6 +2987,17 @@
         }
       }
     },
+    "Technical details" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تفاصيل تقنية"
+          }
+        }
+      }
+    },
     "Telegram, WhatsApp, Discord" : {
       "comment" : "Onboarding step 4, preset table",
       "extractionState" : "manual",
@@ -2655,6 +3018,61 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تُطبَّق اللغة الجديدة بعد إعادة التشغيل."
+          }
+        }
+      }
+    },
+    "The switch is in the top-right corner of the extensions page." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المفتاح في أعلى صفحة الإضافات، في الزاوية العلوية اليسرى عند استخدام الواجهة العربية."
+          }
+        }
+      }
+    },
+    "Try again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حاول مجددًا"
+          }
+        }
+      }
+    },
+    "Try it" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جرّبها"
+          }
+        }
+      }
+    },
+    "Try stopping again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حاول إيقافه مجددًا"
+          }
+        }
+      }
+    },
+    "Turn on Developer mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فعّل «وضع مطوّر البرامج»"
           }
         }
       }
@@ -2778,6 +3196,17 @@
         }
       }
     },
+    "What to expect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ما الذي تتوقعه"
+          }
+        }
+      }
+    },
     "Who gets covered. Everyone includes people Sitr cannot classify." : {
       "comment" : "Accessibility hint of the Hide picker, Protection",
       "extractionState" : "manual",
@@ -2810,6 +3239,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "النساء"
+          }
+        }
+      }
+    },
+    "Works in Google Chrome, Microsoft Edge, Brave and Arc. Keep Sitr in the Applications folder; the browser loads the extension from there." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعمل في Google Chrome وMicrosoft Edge وBrave وArc. أبقِ Sitr في مجلد التطبيقات، فالمتصفح يحمّل الإضافة من هناك."
           }
         }
       }

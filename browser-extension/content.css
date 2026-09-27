@@ -1,0 +1,255 @@
+/* All extension-injected UI is namespaced under .nomusic-* so we never collide
+   with host-page styles. We avoid !important except where the host site is
+   known to fight back (YouTube's z-index war). */
+
+.nomusic-btn {
+  position: absolute;
+  z-index: 2147483600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 10px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(15, 17, 22, 0.78);
+  color: #f5f6f8;
+  font: 600 11px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    sans-serif;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  backdrop-filter: saturate(140%) blur(8px);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  /* Faded at rest so we don't sit on top of the video's content; comes back
+     to full opacity on hover or while actively doing something the user
+     should see (downloading, removing music, on, error). */
+  opacity: 0.86;
+  transition: opacity 180ms ease, transform 120ms ease, background 120ms ease;
+  user-select: none;
+  overflow: visible; /* dismiss × sits slightly outside the pill */
+}
+
+/* The pill stays faded in every state once the mouse leaves; only hover lifts
+   it to full opacity. Focus is deliberately excluded so it doesn't get stuck
+   at full opacity after a click (some browsers leave the element focused until
+   the next user click). */
+.nomusic-btn:hover { opacity: 1; }
+.nomusic-btn:focus-visible, .nomusic-menu__item:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.nomusic-btn:hover { background: rgba(28, 30, 38, 0.88); }
+.nomusic-btn:active { transform: translateY(1px); }
+.nomusic-btn[data-state="active"] {
+  background: rgba(34, 139, 90, 0.92);
+}
+.nomusic-btn[data-state="working"] {
+  background: rgba(70, 95, 160, 0.92);
+}
+/* Paused: the same working blue but dimmed, and the icon doesn't pulse (the
+   pulse rule targets "working" only) — signals "we stopped, not stalled".
+   The % fill stays frozen so the user sees progress was preserved. */
+.nomusic-btn[data-state="paused"] {
+  background: rgba(70, 95, 160, 0.5);
+}
+.nomusic-btn[data-state="error"] {
+  background: rgba(170, 60, 60, 0.92);
+}
+
+/* Dismiss control: hidden at rest, fades in along with the button on hover.
+   The X is drawn with two pseudo-element bars instead of a "×" glyph so it
+   sits exactly at the bubble's optical center regardless of font metrics. */
+.nomusic-btn__dismiss {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(15, 17, 22, 0.96);
+  border: none;
+  color: #f5f6f8;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 150ms ease, background 120ms ease, transform 120ms ease;
+  user-select: none;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.nomusic-btn__dismiss::before,
+.nomusic-btn__dismiss::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: currentColor;
+}
+.nomusic-btn__dismiss::before { transform: translate(-50%, -50%) rotate(45deg); }
+.nomusic-btn__dismiss::after  { transform: translate(-50%, -50%) rotate(-45deg); }
+/* Only hover reveals the ×. Keyboard focus on the pill doesn't, since a
+   focused-but-not-hovered button doesn't really need a dismiss target. */
+.nomusic-btn:hover .nomusic-btn__dismiss {
+  opacity: 1;
+  pointer-events: auto;
+}
+.nomusic-btn__dismiss:hover {
+  background: rgba(170, 60, 60, 0.96);
+  transform: scale(1.08);
+}
+
+/* Download control: a small chevron that opens the download menu. Available
+   for any live job — active (ready), working (still processing), or paused — so
+   the user can queue a download mid-process; picking one finishes the track and
+   saves automatically. Hidden in idle/error. Sits above the progress fill. */
+.nomusic-btn__dl {
+  position: relative;
+  z-index: 1;
+  display: none;
+  /* Match the icon's height (14px) so the chevron is never the tallest flex
+     item — otherwise it stretches the pill taller whenever it appears. */
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  text-align: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.28);
+  color: #f5f6f8;
+  font-size: 11px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 120ms ease, transform 120ms ease;
+}
+.nomusic-btn[data-state="active"] .nomusic-btn__dl,
+.nomusic-btn[data-state="working"] .nomusic-btn__dl,
+.nomusic-btn[data-state="paused"] .nomusic-btn__dl {
+  display: inline-block;
+}
+.nomusic-btn__dl:hover {
+  background: rgba(0, 0, 0, 0.45);
+  transform: translateY(-1px);
+}
+
+/* Download menu. Lives on document.body (fixed-positioned by JS on open) so it
+   isn't clipped by the host player and doesn't nest <button>s inside the pill
+   <button>. z-index sits just above the pill. */
+.nomusic-menu {
+  position: fixed;
+  z-index: 2147483601;
+  min-width: 168px;
+  padding: 5px;
+  border-radius: 10px;
+  background: rgba(20, 22, 28, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  backdrop-filter: saturate(140%) blur(8px);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+  color: #f5f6f8;
+  font: 500 12px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    sans-serif;
+  user-select: none;
+}
+.nomusic-menu[hidden] {
+  display: none;
+}
+.nomusic-menu__section {
+  padding: 6px 9px 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #8a92a0;
+}
+.nomusic-menu__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 9px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.nomusic-menu__item:hover {
+  background: rgba(70, 95, 160, 0.55);
+}
+
+/* Clip wrapper for the progress fill: matches the pill's rounding and hides
+   overflow, so the fill reads as a straight-edged bar clipped to the pill
+   shape (not a rounded blob at low %). It's a separate element from the pill
+   so overflow:hidden here doesn't clip the dismiss × that sits outside. */
+.nomusic-btn__clip {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Subtle fill that grows behind the text as work progresses. Plain rectangle
+   with a straight right (progress) edge; its left/top/bottom corners are
+   clipped to the pill by .nomusic-btn__clip. */
+.nomusic-btn__fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.10),
+    rgba(255, 255, 255, 0.18)
+  );
+  transition: width 200ms ease;
+}
+
+.nomusic-btn__icon,
+.nomusic-btn__label,
+.nomusic-btn__pct {
+  position: relative;
+  z-index: 1;
+}
+
+.nomusic-btn__icon {
+  flex: 0 0 auto;
+  display: block;
+  /* Subtle separation from the dark pill so the lime mark reads cleanly. */
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+  /* The icon's 28x14 box is locked with inline !important in content.js, NOT
+     here: some hosts (Telegram Web) force-size every <img> in their message UI
+     with a high-specificity !important rule that would beat a stylesheet rule
+     and blow the wordmark up to its natural 1008x510 across the video. An inline
+     !important declaration outranks any stylesheet rule, so it's set there. */
+}
+
+.nomusic-btn[data-state="working"] .nomusic-btn__icon {
+  animation: nomusic-pulse 1.1s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes nomusic-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.92); }
+  50%      { opacity: 1;    transform: scale(1.08); }
+}
+
+.nomusic-btn__label {
+  white-space: nowrap;
+}
+
+.nomusic-btn__pct {
+  /* tabular-nums keeps the digits from jiggling as the number changes; no
+     reserved min-width, so the % sits right after the label instead of being
+     pushed to a far right-aligned column. */
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.nomusic-btn__pct:empty {
+  display: none;
+}

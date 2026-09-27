@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>Sitr Music</title>
+  <style>
+    :root { color-scheme: light; font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { box-sizing: border-box; width: 320px; margin: 0; padding: 18px; color: #17342e; background: #f7faf8; }
+    h1 { margin: 0 0 4px; font-size: 20px; }
+    p { margin: 8px 0; }
+    .subtle { color: #536b62; font-size: 12px; }
+    .status { display: flex; align-items: center; gap: 8px; margin: 16px 0; padding: 12px; border-radius: 12px; background: #e7efeb; font-weight: 700; }
+    .status::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #a57833; }
+    .status.ready { background: #e1f3e8; }
+    .status.ready::before { background: #238556; }
+    .status.offline { background: #f9e9e3; }
+    .status.offline::before { background: #b75d41; }
+    .steps { margin: 8px 0 14px; padding: 0 22px 0 0; }
+    .steps li { margin: 6px 0; }
+    button { cursor: pointer; border: 0; border-radius: 9px; padding: 8px 11px; background: #186946; color: white; font: inherit; }
+    button:focus-visible, summary:focus-visible, input:focus-visible { outline: 2px solid #174fbe; outline-offset: 2px; }
+    details { margin-top: 14px; padding-top: 12px; border-top: 1px solid #cbd9d1; }
+    summary { cursor: pointer; font-weight: 600; }
+    label { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; cursor: pointer; }
+    input { margin-top: 4px; accent-color: #186946; }
+    .small { font-size: 12px; color: #536b62; }
+    .cache { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; }
+    .cache button { background: #e7efeb; color: #17342e; }
+    .message { min-height: 18px; color: #a13b2b; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1 data-en="Sitr Music">ستر ميوزك</h1>
+  <p class="subtle" data-en="Hear speech in web videos with the music reduced.">استمع إلى الكلام في فيديوهات المتصفح بعد تخفيف الموسيقى.</p>
+  <div id="status" class="status" role="status" aria-live="polite">جارٍ فحص الاتصال بتطبيق ستر…</div>
+  <div id="offline" hidden>
+    <p data-en="To get started:">للبدء:</p>
+    <ol class="steps">
+      <li data-en="Open the Sitr app on your Mac.">افتح تطبيق <strong>ستر</strong> على جهازك.</li>
+      <li data-en="Open Music and start the local service.">من تبويب الموسيقى، شغّل الخدمة المحلية.</li>
+      <li data-en="Return to the video and press Remove music above it.">ارجع إلى الفيديو واضغط زر «إزالة الموسيقى» الذي يظهر فوقه.</li>
+    </ol>
+    <button id="retry" type="button" data-en="Check again">إعادة الفحص</button>
+  </div>
+  <div id="ready" hidden>
+    <p data-en="Open a video and press Remove music above it. Press again to restore the original sound.">افتح فيديو واضغط زر <strong>إزالة الموسيقى</strong> فوقه. اضغط الزر مرة أخرى للعودة إلى الصوت الأصلي.</p>
+  </div>
+  <details>
+    <summary data-en="More options">خيارات إضافية</summary>
+    <label><input id="effects" type="checkbox"><span><span data-en="Keep some effects and ambient sounds">أبقِ بعض المؤثرات والأصوات المحيطة</span><br><span class="small" data-en="Some music may come through with this option.">قد تتسرّب موسيقى مع هذا الخيار.</span></span></label>
+    <p class="small" data-en="The default keeps speech and singing. Results vary by video.">الوضع الافتراضي يحتفظ بالكلام والغناء. جودة الفصل تختلف حسب الفيديو.</p>
+    <div class="cache"><span><span data-en="Temporary files:">ملفات مؤقتة:</span> <strong id="cacheSize">—</strong></span><button id="clearCache" type="button" disabled data-en="Delete">حذفها</button></div>
+  </details>
+  <p id="message" class="message" role="status" aria-live="polite"></p>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

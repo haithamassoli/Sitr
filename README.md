@@ -13,11 +13,15 @@ Everything runs on your Mac. Sitr is sandboxed and ships without a network entit
 socket: no pixels, logs, telemetry, or crash reports leave the machine. Frames stay in memory and are never written
 to disk. You can check this yourself, see [Verify the privacy claim](#verify-the-privacy-claim).
 
+Sitr can also remove music from videos in your browser (optional, off by default, see
+[Music removal in the browser](#music-removal-in-the-browser)). That feature runs in a separate helper app with its own
+sandbox and network access; Sitr itself keeps its no-network entitlement and never sends screen frames to the helper.
+
 ## Requirements
 
 - macOS 15 or later.
 - A Mac with Apple silicon (M1 or newer). Intel Macs are not supported.
-- The Screen & System Audio Recording permission (video only; Sitr never records audio).
+- The Screen & System Audio Recording permission for screen protection (video only; Sitr never records audio).
 
 ## Install
 
@@ -98,6 +102,22 @@ Settings and the menu also show preparation, configured-app scope, capture recov
 
 If saving rules fails, Settings keeps a retry message visible. Unreadable rules remain untouched until you retry reading or explicitly reset them; reset keeps a recovery copy. Appearance has a separate reset that preserves protection rules.
 
+## Music removal in the browser
+
+Sitr can play web videos with the music removed and the speech kept, in Google Chrome, Microsoft Edge, Brave, or Arc.
+
+1. Open Settings › **Music** and turn on **Enable music removal**. The first time, Sitr downloads a voice model
+   (about 80 MB, once).
+2. Install the browser extension by following the four steps on that page: open the extensions page, turn on
+   Developer mode, and drag in the extension folder that Sitr shows you. A checkmark appears once the extension
+   connects. (A one-click Chrome Web Store version is on its way.)
+3. On a video, press **Remove music**. Press it again for the original sound.
+
+The helper downloads the audio of the video you chose from its website and separates the voice on your Mac. The
+first audio plays about 3 seconds after you press the button, and a 20-minute video is fully processed in about 2
+minutes on an M3. Singing can remain, because the model keeps human voices. Live streams and protected videos may not
+work. Keep Sitr in the Applications folder, since the browser loads the extension from there.
+
 ## Verify the privacy claim
 
 Run this in Terminal (Settings › About shows the same command with a Copy button):
@@ -142,7 +162,7 @@ covered in the capture as well.
 Capture normally runs at 15 frames per second, rising to 30 on displays with Curtain windows (capped at 8 in Low Power Mode when the Settings › General toggle is on), only on
 the displays and apps that need it, and skips frames in which nothing changed. The targets for an M1 with 8 GB are: person visible to covered in at most 150 ms (95th percentile) in Blur mode and 60 ms
 in Curtain mode at 30 fps capture; Reveal press or release within one frame; under 1 % CPU on a static screen, about 15 % of one
-performance core while browsing, about 25 % during 1080p video with people; under 300 MB of memory. Performance depends on the workload. These are targets; see [current validation](docs/improvement-results.md) for measurements and remaining gaps. A saturated GPU (games, video export) can delay covers, which the menu bar reports as Degraded.
+performance core while browsing, about 25 % during 1080p video with people; under 300 MB of memory. Performance depends on the workload. These are targets; see [current validation](docs/perf.md) for measurements and remaining gaps. A saturated GPU (games, video export) can delay covers, which the menu bar reports as Degraded.
 
 ## Build from source
 
