@@ -1,0 +1,170 @@
+---
+import '../styles.css';
+import { dicts, type Lang } from '../i18n';
+import { release, repo } from '../release';
+
+const { lang } = Astro.props as { lang: Lang };
+const t = dicts[lang];
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const pathFor = (l: Lang) => (l === 'en' ? base : `${base}${l}/`);
+const abs = (path: string) => new URL(path, Astro.site).href;
+const url = abs(pathFor(lang));
+const ogImage = abs(`${base}og-${lang}.png`);
+const version = release.version ? ` ${release.version}` : '';
+const readme = `${repo}/blob/main/${t.footer.readme}`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Sitr',
+  description: t.description,
+  url,
+  image: ogImage,
+  inLanguage: lang,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'macOS 15 or later (Apple silicon)',
+  downloadUrl: release.url,
+  ...(release.version && { softwareVersion: release.version }),
+  license: 'https://www.gnu.org/licenses/gpl-3.0.html',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  author: { '@type': 'Person', name: 'Haitham Assoli' },
+};
+---
+
+<!doctype html>
+<html lang={lang} dir={t.dir}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f7f2" />
+    <title>{t.title}</title>
+    <meta name="description" content={t.description} />
+    <link rel="canonical" href={url} />
+    <link rel="alternate" hreflang="en" href={abs(pathFor('en'))} />
+    <link rel="alternate" hreflang="ar" href={abs(pathFor('ar'))} />
+    <link rel="alternate" hreflang="x-default" href={abs(pathFor('en'))} />
+    <link rel="icon" href={`${base}icon.svg`} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={`${base}apple-touch-icon.png`} />
+    <link rel="sitemap" href={`${base}sitemap-index.xml`} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Sitr" />
+    <meta property="og:url" content={url} />
+    <meta property="og:title" content={t.title} />
+    <meta property="og:description" content={t.description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={t.ogAlt} />
+    <meta property="og:locale" content={t.ogLocale} />
+    <meta property="og:locale:alternate" content={dicts[t.otherLang.code as Lang].ogLocale} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={t.title} />
+    <meta name="twitter:description" content={t.description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={t.ogAlt} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="#top" aria-label={t.home}><img src={`${base}icon.svg`} alt="" width="42" height="42" />Sitr</a>
+        <nav class="nav" aria-label={t.mainNav}>
+          <a href="#features">{t.nav.features}</a>
+          <a href="#how">{t.nav.how}</a>
+          <a href="#privacy">{t.nav.privacy}</a>
+        </nav>
+        <a class="lang-link" href={pathFor(t.otherLang.code as Lang)} hreflang={t.otherLang.code} lang={t.otherLang.code}>{t.otherLang.label}</a>
+        <a class="header-link" href="#download">{t.getSitr}</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <div class="wrap hero">
+        <div>
+          <span class="eyebrow">{t.eyebrow}</span>
+          <h1>{t.h1[0]}<br /><em>{t.h1[1]}</em></h1>
+          <p class="hero-copy">{t.heroCopy}</p>
+          <div class="actions">
+            <a class="button" href={release.url}>{t.download}{version} <span aria-hidden="true">↓</span></a>
+            <a class="text-link" href={repo}>{t.explore}</a>
+          </div>
+          <p class="requirements">{t.requirements}</p>
+        </div>
+        <div class="hero-art" role="img" aria-label={t.artLabel}>
+          <div class="desktop" aria-hidden="true">
+            <div class="menu-bar"><span>● &nbsp; {t.mock.menu}</span><strong>◉ &nbsp; {t.mock.active}</strong></div>
+            <div class="window">
+              <div class="toolbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="address"></span></div>
+              <div class="browser-content">
+                <div class="sidebar"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div>
+                <div class="scene"><div class="person one"></div><div class="person two"></div><div class="cover"><div class="cover-inner"><span class="cover-icon">◌</span>{t.mock.hidden}</div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="status-card" aria-hidden="true"><div class="status-top">{t.mock.on}</div><small>{t.mock.onSub}</small></div>
+          <span class="art-caption">{t.mock.caption}</span>
+        </div>
+      </div>
+
+      <div class="trust">
+        <div class="wrap trust-inner">
+          {t.trust.map((item, i) => <div class="trust-item"><b aria-hidden="true">{['✓', '◎', '◇'][i]}</b>{item}</div>)}
+        </div>
+      </div>
+
+      <section class="wrap features" id="features">
+        <div class="section-heading">
+          <p class="section-kicker">{t.features.kicker}</p>
+          <h2>{t.features.title}</h2>
+          <p>{t.features.body}</p>
+        </div>
+        <div class="feature-grid">
+          {t.features.items.map(([n, title, body]) => <article class="feature"><span class="feature-number">{n}</span><h3>{title}</h3><p>{body}</p></article>)}
+        </div>
+      </section>
+
+      <section class="wrap how" id="how">
+        <div class="how-panel">
+          <div><p class="section-kicker">{t.how.kicker}</p><h2>{t.how.title}</h2><p>{t.how.body}</p></div>
+          <div class="steps">
+            {t.how.steps.map(([title, body], i) => <div class="step"><span>0{i + 1}</span><div><h3>{title}</h3><p>{body}</p></div></div>)}
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap privacy" id="privacy">
+        <div class="section-heading">
+          <p class="section-kicker">{t.privacy.kicker}</p>
+          <h2>{t.privacy.title}</h2>
+          <p>{t.privacy.body}</p>
+          <a class="text-link" href={readme + t.privacy.verifyUrl}>{t.privacy.verify} {t.arrow}</a>
+        </div>
+        <div class="privacy-note">
+          <img src={`${base}icon.svg`} alt="" width="50" height="50" />
+          <p>{t.privacy.note.map((line, i) => <Fragment>{i > 0 && <br />}{line}</Fragment>)}</p>
+          <small>{t.privacy.small}</small>
+        </div>
+      </section>
+
+      <section class="wrap download" id="download">
+        <div class="download-panel">
+          <div><p class="section-kicker">{t.cta.kicker}</p><h2>{t.cta.title}</h2><p>{t.cta.body}</p></div>
+          <a class="button" href={release.url}>{t.cta.button}{version} <span aria-hidden="true">↓</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap footer-inner">
+        <a class="brand" href="#top"><img src={`${base}icon.svg`} alt="" width="33" height="33" />Sitr</a>
+        <a href={repo}>GitHub</a>
+        <a href={`${repo}/releases`}>{t.footer.releases}</a>
+        <a href={readme}>{t.footer.guide}</a>
+        <span>{t.footer.made}</span>
+      </div>
+    </footer>
+  </body>
+</html>
