@@ -7,10 +7,13 @@ per version and move `Unreleased` entries into it before tagging.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-28
+
 ### Fixed
 - Curtain: scrolling a page no longer makes the whole window flash. A mouse or trackpad scroll is not pre-covered, and
   people on the page are covered once detected (~50–100 ms). A video with a person in it no longer flashes on every
   frame either: it switches to Blur behaviour after half a second, as a video without people always did.
+- Music removal: closing a tab or navigating away now stops processing its video instead of letting it run to the end.
 
 ### Changed
 - Frames whose captured pixels, windows and settings did not change since the last processed frame are skipped. Apps
