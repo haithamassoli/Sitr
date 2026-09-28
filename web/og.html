@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- Source for public/og-{en,ar}.png (1200x630). Regenerate with: npm run og -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  body { width: 1200px; height: 630px; overflow: hidden; display: flex; align-items: center; gap: 70px; padding: 0 90px;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #f5f8ef;
+    background: radial-gradient(circle at 88% 12%, #2a6a57 0, transparent 40%), radial-gradient(circle at 5% 100%, #1f5a4a 0, transparent 45%), #153e35; }
+  img { width: 250px; height: 250px; flex: none; filter: drop-shadow(0 30px 40px #0005); }
+  .kicker { color: #90d9b4; font-size: 26px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+  h1 { margin: 22px 0 26px; font-family: Georgia, serif; font-weight: 500; font-size: 84px; line-height: 1.05; letter-spacing: -.04em; }
+  h1 em { color: #90d9b4; }
+  p { color: #b8d1c4; font-size: 28px; font-weight: 600; }
+  [dir=rtl] * { letter-spacing: 0; font-style: normal; }
+  [dir=rtl] h1 { font-family: "Times New Roman", serif; font-size: 96px; line-height: 1.2; }
+</style>
+</head>
+<body>
+  <img src="public/icon.svg" alt="">
+  <div id="copy"></div>
+  <script>
+    const ar = location.hash === '#ar';
+    document.documentElement.lang = ar ? 'ar' : 'en';
+    document.documentElement.dir = ar ? 'rtl' : 'ltr';
+    document.getElementById('copy').innerHTML = ar
+      ? '<div class="kicker">Sitr «ستر» لأجهزة Mac</div><h1>شاشة أهدأ.<br><em>بشروطك.</em></h1><p>مجاني ومفتوح المصدر · يعمل على جهازك بالكامل</p>'
+      : '<div class="kicker">Sitr for Mac</div><h1>A quieter screen.<br><em>On your terms.</em></h1><p>Free &amp; open source · Runs entirely on your Mac</p>';
+  </script>
+</body>
+</html>
