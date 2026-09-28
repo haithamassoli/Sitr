@@ -1,0 +1,14 @@
+{
+	"pid": 83577,
+	"port": 4329,
+	"url": "http://localhost:4329",
+	"urls": {
+		"local": [
+			"http://localhost:4329/Sitr/"
+		],
+		"network": [],
+		"networkInterfaceNames": []
+	},
+	"background": true,
+	"startedAt": "2026-09-28T02:40:55.709Z"
+}
