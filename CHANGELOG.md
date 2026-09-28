@@ -7,6 +7,16 @@ per version and move `Unreleased` entries into it before tagging.
 
 ## [Unreleased]
 
+### Fixed
+- Curtain: scrolling a page no longer makes the whole window flash. A mouse or trackpad scroll is not pre-covered, and
+  people on the page are covered once detected (~50–100 ms). A video with a person in it no longer flashes on every
+  frame either: it switches to Blur behaviour after half a second, as a video without people always did.
+
+### Changed
+- Frames whose captured pixels, windows and settings did not change since the last processed frame are skipped. Apps
+  Sitr does not watch (an editor, a terminal) redrawing used to run the person detector on every frame; on a quiet
+  screen Sitr now uses about 3 % of a core instead of about 30 % (M3, two displays).
+
 ## [0.2.0] - 2026-09-27
 
 ### Added

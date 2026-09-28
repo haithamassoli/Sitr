@@ -179,6 +179,12 @@ def prioritize(job_id: str, req: PrioritizeRequest, request: Request) -> dict[st
     return {"applied": ok}
 
 
+@router.post("/process/{job_id}/cancel")
+def cancel(job_id: str, request: Request) -> dict[str, bool]:
+    """Release the GPU now instead of after the idle timeout."""
+    return {"cancelled": request.app.state.registry.cancel(job_id)}
+
+
 @router.get("/status/{job_id}")
 def status(job_id: str, request: Request) -> JsonDict:
     registry = request.app.state.registry

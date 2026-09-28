@@ -169,6 +169,19 @@ nonisolated func coverCanReuse(cached: CGRect, cover: CGRect, dirty: [CGRect]?, 
     return !dirty.contains { $0.intersects(probe) }
 }
 
+/// When the user last scrolled, anywhere (`CACurrentMediaTime()`). `Runtime` feeds it from a global scroll-wheel monitor
+/// (trackpad momentum included); the pipeline reads it per frame so a Curtain window being scrolled is not pre-covered.
+// ponytail: one global clock, not per window — while you scroll one window, a video in another Curtain window loses its
+// pre-cover too (its people are still covered on detection). Upgrade path: note the window under the cursor. Keyboard scrolling
+// (space, arrows) is not seen: a key monitor needs Input Monitoring, so those scrolls still pre-cover.
+nonisolated enum ScrollActivity {
+    /// Scroll counts as ongoing this long after the last event: the page paints the last step a frame or two later.
+    static let grace = 0.3
+    private static let last = Mutex(-Double.infinity)
+    static func note(at t: Double = CACurrentMediaTime()) { last.withLock { $0 = t } }
+    static func isScrolling(at now: Double) -> Bool { now - last.withLock { $0 } <= grace }
+}
+
 /// Overlay layer ids. Track ids are ≥ 1 (`Tracker.nextID` starts at 1), so everything else lives below zero: pre-covers just under
 /// it, fail-closed covers far below (a window id is 32 bits, a piece index 8), and no range ever meets another. Unit-tested.
 nonisolated enum CoverID {
@@ -301,7 +314,10 @@ actor Pipeline {
     private var curtains: [String: Curtain] = [:]
     private var curtainWindowIDs: [String: Set<Int>] = [:]
     private var personSpecs: [CoverLayerSpec] = []
+    /// The last frame processed to the end, kept for `changedTiles`. Holds one of the stream's `queueDepth` surfaces.
     private var verifiedFrame: Frame?
+    /// What `verifiedFrame` was processed under; a frame identical to it in pixels *and* in these needs no processing.
+    private var verifiedState: (windows: [WindowRect], appearance: CoverAppearance, revision: Int)?
     private var preSpecs: [CoverLayerSpec] = []
     /// M4-T09: last frame's rendered cover per track id, reused while the box and the pixels under it hold still
     /// (`coverCanReuse`). Pruned to the covers of the current frame, so it cannot grow and it pins no recycled surface.
@@ -441,6 +457,7 @@ actor Pipeline {
         lastSequence = nil
         ownDamage = false
         verifiedFrame = nil
+        verifiedState = nil
         personSpecs = []
         preSpecs = []
         curtains = [:]
@@ -556,13 +573,30 @@ actor Pipeline {
             let curtainWindows = current.policy.isProtecting(at: t0)
                 ? snapshot.filter { $0.displayID == displayID && rules.mode(for: $0.bundleID) == .curtain } : []
             syncCurtains(curtainWindows, now: t0)
+            // Exact changes against the last processed capture, including across dropped frames. SCK's dirty rects also carry
+            // damage from everything the filter leaves out (our overlay, every Off app), so they cannot tell these apart.
+            let changed = frame.changedTiles(since: verifiedFrame)
+            // Not one captured pixel changed since the last processed frame, and neither did the windows (an Off window moving
+            // off a person changes no captured pixel), the look or the policy: detection would answer the same, and re-rendering
+            // from identical pixels only re-commits — which damages the display, which makes SCK deliver another identical frame.
+            // Excluded apps redrawing (typing in an editor on a display nothing is protected on) and our own commits are most
+            // of the frames a display receives; each one used to cost a full detection.
+            if !perfLegacy, changed.isEmpty, let v = verifiedState,
+                v.revision == current.revision, v.appearance == current.appearance, v.windows == snapshot
+            {
+                metrics.detectSkips += 1
+                if let hook = preCoverHook.withLock({ $0 }) { await hook([], frame, CACurrentMediaTime()) }
+                continue
+            }
             var pre: [CoverLayerSpec] = []
             if !curtains.isEmpty {
-                // Compare against the last verified capture, including across dropped frames. Overlay damage
-                // is absent from the pixels, so static browser chrome is not repeatedly pre-covered.
-                let dirty = frame.changedTiles(since: verifiedFrame).map { frame.pixelsToDisplayPoints(Rect($0)) }
+                // Overlay damage is absent from the pixels, so static browser chrome is not repeatedly pre-covered.
+                let dirty = changed.map { frame.pixelsToDisplayPoints(Rect($0)) }
                 if gap > 0 { metrics.gapCovers += 1 }
-                for key in curtains.keys { curtains[key]?.dirty(rects: dirty, seq: frame.sequence, now: t0) }
+                let scrolling = ScrollActivity.isScrolling(at: t0)
+                for key in curtains.keys {
+                    curtains[key]?.dirty(rects: dirty, seq: frame.sequence, now: t0, scrolling: scrolling)
+                }
                 pre = preCoverSpecs(frame: frame, appearance: current.appearance, windows: snapshot, curtainWindows: curtainWindows)
             }
             if !pre.isEmpty || !preSpecs.isEmpty {
@@ -732,7 +766,8 @@ actor Pipeline {
                 preSpecs = verifiedPre
             }
             personSpecs = specs
-            verifiedFrame = curtains.isEmpty ? nil : frame
+            verifiedFrame = frame
+            verifiedState = (snapshot, a, current.revision)
             await applyAll(ifCurrent: isCurrent)
             guard isCurrent(), !Task.isCancelled else { continue }
             let t5 = CACurrentMediaTime()

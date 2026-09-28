@@ -221,3 +221,38 @@ test("the video tail past total_chunks * stride counts as the last chunk", () =>
   s.chunks.set(19, { buffer: {}, playStart: 180.5 });
   assert.equal(s._isBuffered(190.4), true);
 });
+
+test("dispose cancels an unfinished helper job, but not a finished one", () => {
+  const previous = chrome.runtime.sendMessage;
+  const sent = [];
+  chrome.runtime.sendMessage = async (message) => sent.push(message);
+  try {
+    const video = { removeEventListener() {}, isConnected: true };
+    const live = new Session(video, { dispose() {} });
+    live.jobId = "J";
+    live.dispose();
+    assert.deepEqual(sent, [{ type: "cancel", jobId: "J" }]);
+
+    const done = new Session(video, { dispose() {} });
+    done.jobId = "D";
+    done._streamEnded = true;
+    done.dispose();
+    assert.equal(sent.length, 1);
+  } finally {
+    chrome.runtime.sendMessage = previous;
+  }
+});
+
+test("a queued status with no worker is resubmitted, at most every 5 s", () => {
+  const s = makeSession();
+  s.button = { showStatus() {} };
+  s.video = { currentTime: 0 };
+  let resumed = 0;
+  s._resumeProcessing = () => resumed++;
+  s._lastSubmitAt = Date.now();
+  s.handleStatus({ state: "queued" });
+  assert.equal(resumed, 0); // just submitted: still queued for real
+  s._lastSubmitAt = Date.now() - 6000;
+  s.handleStatus({ state: "queued" });
+  assert.equal(resumed, 1);
+});

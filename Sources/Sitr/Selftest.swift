@@ -101,6 +101,8 @@ enum Selftest {
         case "curtain":
             let trials = option(args, "--trials", default: 30)
             Harness.run("curtain", deadline: Double(trials) * 8 + 90) { try await curtainExposureTest(trials: trials, stimulusApp: stimulusPath(args)) }
+        case "slide":
+            Harness.run("slide", deadline: 150) { try await slideTest(stimulusApp: stimulusPath(args)) }
         case "overlap":
             Harness.run("overlap", deadline: 150) { try await overlapTest(stimulusApp: stimulusPath(args), stimulus2App: stimulusPath(args, second: true)) }
         default:
@@ -1416,7 +1418,23 @@ nonisolated enum RemoteLayout {
     /// measured region. Pulsed no faster than every 300 ms (> `Curtain.motionGap`) so it never earns trusted motion.
     static let heartbeat = CGRect(x: 60, y: 10, width: 40, height: 40)
     /// Every command the stimulus registers for (fixed names; `origin` takes "x,y" in the notification's `object`).
-    static let commands = ["person_on", "person_off", "scroll", "video_on", "video_off", "move", "front", "origin", "pulse", "quit"]
+    static let commands = ["person_on", "person_off", "scroll", "video_on", "video_off", "move", "front", "origin", "pulse", "slide", "quit"]
+    /// `slide <pt/s>`: the photo at half size moves up and down `slideTravel` points for `slideSeconds` (a fast page scroll of a
+    /// person). Time-based, so the test knows where the person is at any moment from the `slide_start` flush time alone.
+    static let slidePhoto = CGRect(x: 200, y: 20, width: 200, height: 299.5)
+    static let slideTravel = 300.0
+    static let slideSeconds = 3.0
+    /// Photo offset (points down) `t` seconds into a slide: a triangle wave 0 → travel → 0 ….
+    static func slideOffset(_ t: Double, speed: Double) -> Double {
+        let d = (t * speed).truncatingRemainder(dividingBy: 2 * slideTravel)
+        return d <= slideTravel ? d : 2 * slideTravel - d
+    }
+    /// The person's box `t` seconds into a slide, window-local.
+    static func slidePerson(_ t: Double, speed: Double) -> CGRect {
+        let k = slidePhoto.width / photo.width
+        return CGRect(x: slidePhoto.minX + (person.minX - photo.minX) * k, y: slidePhoto.minY + (person.minY - photo.minY) * k + slideOffset(t, speed: speed),
+                      width: person.width * k, height: person.height * k)
+    }
 
     /// Control channel: the test writes `<dir>/cmd` ("<seq> <command> <argument>"), the stimulus appends to `<dir>/done`
     /// ("<command> <CACurrentMediaTime()>") after its flushed transaction.
@@ -1443,6 +1461,7 @@ private final class RemoteStimulusWindow {
     private var beat = 0
     private var video: Task<Void, Never>?
     private var scroll: Task<Void, Never>?
+    private var slide: Task<Void, Never>?
     private(set) var quit = false
     private let channel: String
     private var lastSeq = 0
@@ -1585,6 +1604,28 @@ private final class RemoteStimulusWindow {
                     try? await Task.sleep(for: .milliseconds(33))
                 }
             }
+        case "slide":
+            let speed = Double(argument ?? "") ?? 1000
+            slide?.cancel()
+            slide = Task { @MainActor [weak self] in
+                guard let self else { return }
+                let full = photo.frame, h = RemoteLayout.size.height
+                let t0 = CACurrentMediaTime()
+                done("slide_start", at: t0)
+                while CACurrentMediaTime() - t0 < RemoteLayout.slideSeconds, !Task.isCancelled {
+                    _ = flush {
+                        photo.isHidden = false
+                        let dy = RemoteLayout.slideOffset(CACurrentMediaTime() - t0, speed: speed)
+                        photo.frame = appKitRect(RemoteLayout.slidePhoto.offsetBy(dx: 0, dy: dy), displayHeight: h)
+                    }
+                    try? await Task.sleep(for: .milliseconds(8))
+                }
+                _ = flush {
+                    photo.isHidden = true
+                    photo.frame = full
+                }
+                done("slide", at: CACurrentMediaTime())
+            }
         case "video_off":
             video?.cancel()
             video = nil
@@ -1615,6 +1656,7 @@ private final class RemoteStimulusWindow {
         poll?.cancel()
         video?.cancel()
         scroll?.cancel()
+        slide?.cancel()
     }
 }
 
@@ -1667,6 +1709,7 @@ private final class RemoteApp {
     func send(_ command: String, argument: String? = nil) {
         drainReplies()
         replies[command] = nil
+        replies[command + "_start"] = nil  // `scroll` / `slide` also answer `<command>_start`; a stale one is a previous run's
         seq += 1
         try? Data("\(seq) \(command) \(argument ?? "")".utf8).write(to: RemoteLayout.commandFile(channel.path), options: .atomic)
     }
@@ -1806,14 +1849,18 @@ private final class CurtainRecorder {
     /// Diagnostics since `arm()`: applies with any pre-cover layer, the best coverage of `region` one reached, and its rects.
     private(set) var preLayersSinceArm = 0, bestCoverage = 0.0
     private(set) var bestRects = ""
+    /// Commits since `arm()` that left `region` without a person cover (a person cover dropping out: flicker).
+    private(set) var uncoveredCommits = 0
     private var armed = false
 
     init(region: CGRect) { self.region = region }
 
     func arm() {
         preHit = nil
+        preCleared = nil
         trackHit = nil
         preLayersSinceArm = 0
+        uncoveredCommits = 0
         bestCoverage = 0
         bestRects = ""
         armed = true
@@ -1846,6 +1893,7 @@ private final class CurtainRecorder {
         notePre(specs, at: time)
         trackCovered = coverage(of: region, by: specs.filter { CoverID.isTrack($0.id) }.map(\.frame)) >= 0.25
         if armed, trackCovered, trackHit == nil { trackHit = time }
+        if armed, !trackCovered { uncoveredCommits += 1 }
     }
 }
 
@@ -2084,6 +2132,7 @@ private func curtainScrollTest(stimulusApp: String) async throws -> Bool {
     runtime.onCommit = { id, specs, _, at in if id == d.id { recorder.recordCommit(specs, at: at) } }
     var preMs: [Double] = [], lingerMs: [Double] = []
     var ok = true
+    _ = await stimulus.ask("front")
     for i in 0..<6 {
         _ = await stimulus.pulseUntil(4) { !recorder.preCovered }
         try await Task.sleep(for: .milliseconds(1200))
@@ -2097,9 +2146,63 @@ private func curtainScrollTest(stimulusApp: String) async throws -> Bool {
         let linger = recorder.preCleared.map { $0 - tEnd } ?? .nan
         preMs.append(pre)
         lingerMs.append(linger)
-        print("curtain_scroll trial=\(i) precovered=\(covered) precover_ms=\(ms(pre)) cleared=\(cleared) linger_ms=\(ms(linger)) load1=\(fmt(loadAverage()))")
-        ok = ok && covered && cleared
+        // Wheel or trackpad scrolling anywhere on the Mac (the person at the keyboard) turns pre-covers off for the burst.
+        let userScrolled = ScrollActivity.isScrolling(at: tStart)
+        print("curtain_scroll trial=\(i) precovered=\(covered) precover_ms=\(ms(pre)) cleared=\(cleared) linger_ms=\(ms(linger)) user_scrolled=\(userScrolled) load1=\(fmt(loadAverage()))")
+        ok = ok && (covered || userScrolled) && cleared
     }
+    // The user scrolling (real scroll-wheel events through the app's global monitor; zero deltas, so whatever app is under
+    // the cursor does not move) a page with a person on it: nothing may pre-cover the text column during the burst — the
+    // flash this test used to require — and the person's cover must stay up on every commit.
+    let personRecorder = CurtainRecorder(region: RemoteLayout.person.offsetBy(dx: window.rect.minX, dy: window.rect.minY))
+    runtime.onCommit = { id, specs, _, at in
+        guard id == d.id else { return }
+        recorder.recordCommit(specs, at: at)
+        personRecorder.recordCommit(specs, at: at)
+    }
+    func wheel() { CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1, wheel1: 0, wheel2: 0, wheel3: 0)?.post(tap: .cghidEventTap) }
+    try await Task.sleep(for: .milliseconds(500))
+    wheel()
+    let monitorSeen = await waitUntil(1) { ScrollActivity.isScrolling(at: CACurrentMediaTime()) }
+    print("curtain_scroll_monitor wheel_event_seen=\(monitorSeen)")
+    ok = ok && monitorSeen
+    _ = await stimulus.ask("front")  // a shared screen: another app's window over the stimulus hides the person from the test
+    _ = await stimulus.ask("person_on")
+    let personShown = await stimulus.pulseUntil(4) { personRecorder.trackCovered && !recorder.preCovered }
+    // A still page with a person on it must go quiet: nothing on screen changes, so nothing should be captured or processed.
+    try await Task.sleep(for: .milliseconds(1500))
+    let still0 = await pipeline.metrics, cpuStill0 = processCPUSeconds()
+    try await Task.sleep(for: .seconds(3))
+    let still1 = await pipeline.metrics
+    let stillFPS = Double(still1.framesIn - still0.framesIn) / 3
+    print("curtain_still_person frames_per_s=\(fmt(stillFPS)) detections=\(still1.detections - still0.detections) detect_skips=\(still1.detectSkips - still0.detectSkips) "
+        + "applies=\(still1.applies - still0.applies) renders=\(still1.renders - still0.renders) "
+        + "cpu_pct=\(fmt((processCPUSeconds() - cpuStill0) / 3 * 100)) pre_layers=\(still1.preLayers) layers=\(still1.layers)")
+    var userFlashes = 0, userDrops = 0
+    for i in 0..<5 {
+        try await Task.sleep(for: .milliseconds(1200))
+        recorder.arm()
+        personRecorder.arm()
+        let hits0 = recorder.preHits
+        let pump = Task { @MainActor in
+            while !Task.isCancelled {
+                wheel()
+                try? await Task.sleep(for: .milliseconds(30))
+            }
+        }
+        stimulus.send("scroll")
+        _ = await stimulus.reply("scroll", timeout: 3)
+        try await Task.sleep(for: .milliseconds(150))
+        pump.cancel()
+        let flashed = recorder.preHits - hits0  // applies that covered the scrolled column (the person's own tiles stay covered)
+        userFlashes += flashed
+        userDrops += personRecorder.uncoveredCommits
+        print("curtain_user_scroll trial=\(i) precover_applies=\(flashed) person_uncovered_commits=\(personRecorder.uncoveredCommits) load1=\(fmt(loadAverage()))")
+    }
+    _ = await stimulus.ask("person_off")
+    print("curtain_user_scroll_summary person_shown=\(personShown) precover_applies=\(userFlashes) person_uncovered_commits=\(userDrops) ok=\(personShown && userFlashes == 0 && userDrops == 0)")
+    ok = ok && personShown && userFlashes == 0 && userDrops == 0
+
     let m = await pipeline.metrics
     let clearP95 = percentile(m.curtainClear, 0.95)
     print("curtain_scroll_summary precover_ms p50=\(ms(percentile(preMs, 0.5))) p95=\(ms(percentile(preMs, 0.95))) linger_ms p50=\(ms(percentile(lingerMs, 0.5))) "
@@ -2108,6 +2211,48 @@ private func curtainScrollTest(stimulusApp: String) async throws -> Bool {
     stimulus.terminate()
     runtime.displayManager.stop()
     return ok && clearP95 <= 0.1
+}
+
+/// A person moving fast (the stimulus `slide`: up and down 300 pt at 400 / 1000 / 2000 pt/s, Blur mode): per commit after the
+/// first 0.4 s, how much of where the person is *now* the person covers hide (`covered` mean, `exposed` = commits under 80 %),
+/// how much cover area lies off the person (`excess`, ghost and trailing covers), and how many layer ids the one person used
+/// (a new id means the tracker lost them). Reported, gated only on the person being covered at all.
+@MainActor
+private func slideTest(stimulusApp: String) async throws -> Bool {
+    let stimulusID = Bundle(url: URL(fileURLWithPath: stimulusApp))?.bundleIdentifier ?? "com.goldentik.SitrStimulus"
+    let rules = Rules(defaultMode: .off, overrides: [AppRule(bundleID: stimulusID, mode: .blur)])
+    let (runtime, d, pipeline, stimulus, window) = try await bootWithStimulus(rules: rules, app: stimulusApp)
+    var ok = true
+    _ = await stimulus.ask("front")
+    for speed in [400.0, 1000.0, 2000.0] {
+        var t0: Double?
+        var coverages: [Double] = [], excess: [Double] = [], ids = Set<Int>(), maxLayers = 0
+        runtime.onCommit = { id, specs, _, at in
+            guard id == d.id, let t0, at - t0 > 0.4, at - t0 < RemoteLayout.slideSeconds else { return }
+            let covers = specs.filter { CoverID.isTrack($0.id) }.map(\.frame)
+            let person = RemoteLayout.slidePerson(at - t0, speed: speed).offsetBy(dx: window.rect.minX, dy: window.rect.minY)
+            coverages.append(coverage(of: person, by: covers))
+            let area = covers.reduce(0) { $0 + $1.width * $1.height }, padded = person.width * person.height * 1.15 * 1.15
+            excess.append(max(0, area - padded) / padded)
+            specs.filter { CoverID.isTrack($0.id) }.forEach { ids.insert($0.id) }
+            maxLayers = max(maxLayers, covers.count)
+        }
+        stimulus.send("slide", argument: "\(Int(speed))")
+        t0 = await stimulus.reply("slide_start", timeout: 3)
+        _ = await stimulus.reply("slide", timeout: RemoteLayout.slideSeconds + 3)
+        runtime.onCommit = nil
+        try await Task.sleep(for: .milliseconds(800))
+        let mean = coverages.isEmpty ? 0 : coverages.reduce(0, +) / Double(coverages.count)
+        let exposed = coverages.count { $0 < 0.8 }
+        print("slide speed_pt_s=\(Int(speed)) commits=\(coverages.count) covered_mean=\(fmt(mean)) exposed_commits=\(exposed) "
+            + "excess_mean=\(fmt(excess.isEmpty ? 0 : excess.reduce(0, +) / Double(excess.count))) layer_ids=\(ids.count) max_layers=\(maxLayers) load1=\(fmt(loadAverage()))")
+        ok = ok && !coverages.isEmpty && mean > 0.3
+    }
+    let m = await pipeline.metrics
+    print("slide_counts in=\(m.framesIn) out=\(m.framesOut) skipped=\(m.skipped) detect_ms=\(PipelineMetrics.p(m.detect)) e2e_ms=\(PipelineMetrics.p(m.e2e)) \(runtime.modelsNote)")
+    stimulus.terminate()
+    runtime.displayManager.stop()
+    return ok
 }
 
 /// `seconds` of block motion without people in the Curtain window: trusted motion within ~500 ms (`trusted_after_ms`), no

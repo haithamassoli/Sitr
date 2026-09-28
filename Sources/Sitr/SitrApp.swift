@@ -94,6 +94,7 @@ struct SitrApp: App {
     private var classifierUnavailable = false
     private var retryTask: Task<Void, Never>?
     private var running = false
+    private var scrollMonitor: Any?
 
     init(model: AppModel) {
         self.model = model
@@ -139,6 +140,9 @@ struct SitrApp: App {
         lowPower.onChange = { [weak self] _ in self?.windowsChanged() }  // windowsChanged is the only writer of session.fps
         lowPower.start()
         systemEvents.start()
+        // Mouse-class events need no Input Monitoring grant; the handler runs on the main thread for every wheel
+        // and momentum step.
+        scrollMonitor = NSEvent.addGlobalMonitorForEvents(matching: .scrollWheel) { _ in ScrollActivity.note() }
         windowTracker.start()
         filters.start()
         healthTask = Task { [weak self] in
@@ -166,6 +170,8 @@ struct SitrApp: App {
         healthTask = nil
         lowPower.stop()
         systemEvents.reset()
+        if let scrollMonitor { NSEvent.removeMonitor(scrollMonitor) }
+        scrollMonitor = nil
         for t in stallChecks.values { t.cancel() }
         stallChecks = [:]
         filters.stop()

@@ -32,6 +32,9 @@ function requestFor(message) {
         return { path: `/process/${id}/prioritize`, body: { from_chunk: message.fromChunk } };
       }
       break;
+    case "cancel":
+      if (jobIdOk(id)) return { path: `/process/${id}/cancel`, body: {} };
+      break;
   }
   throw new Error("Invalid helper request");
 }

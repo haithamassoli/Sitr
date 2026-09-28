@@ -60,6 +60,19 @@ test("prioritize accepts a safe job id and chunk", async () => {
   assert.equal(invalid.ok, false);
 });
 
+test("cancel posts to the job's cancel route and rejects unsafe ids", async () => {
+  const send = await loadBackground();
+  let request;
+  globalThis.fetch = async (url, options) => {
+    request = { url, options };
+    return { ok: true, json: async () => ({ cancelled: true }) };
+  };
+  assert.deepEqual(await send({ type: "cancel", jobId: "abc_123" }), { ok: true, data: { cancelled: true } });
+  assert.equal(request.url, "http://127.0.0.1:8724/process/abc_123/cancel");
+  assert.equal(request.options.method, "POST");
+  assert.equal((await send({ type: "cancel", jobId: "../cache" })).ok, false);
+});
+
 test("worker relays status and chunk bytes without exposing localhost to pages", async () => {
   const send = await loadBackground();
   globalThis.fetch = async (url) => url.includes("/chunk/")

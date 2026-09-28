@@ -699,6 +699,18 @@ class JobRegistry:
                 self._abandoning.add(key)
                 raise WorkerAbandoned
 
+    def cancel(self, key: str) -> bool:
+        """Stop a live worker at its next chunk boundary, without waiting out
+        the idle timeout: the viewer switched video or turned removal off.
+        Chunks already on disk stay cached, so a later /process resumes.
+        ponytail: one viewer per job; a second tab on the same video respawns
+        its worker on its next play or queued-status retry."""
+        with self._lock:
+            if not self._is_live_duplicate(self._jobs.get(key), key):
+                return False
+            self._abandoning.add(key)
+            return True
+
     def prioritize(self, key: str, from_chunk: int) -> bool:
         """Rotate the job's pending-chunk order so ``from_chunk`` is next.
 

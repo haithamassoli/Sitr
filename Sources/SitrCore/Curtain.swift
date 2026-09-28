@@ -31,7 +31,7 @@ public struct Curtain: Sendable {
         var lastDirty: Double
         /// First frame seq of the current continuous-motion run; only frames from the run vouch for its content.
         var runSeq: Int
-        /// When the current run was first verified safe; nil until then and after any hidden person.
+        /// When a frame of the current run was first verified; nil until then.
         var safeSince: Double?
         var trusted = false
     }
@@ -62,10 +62,12 @@ public struct Curtain: Sendable {
         windows[id] = nil
     }
 
-    /// A frame arrived: every tile under a dirty rect is pre-covered as of `seq`, except in windows in trusted motion.
-    /// Call for every frame, with empty `rects` when nothing changed, so the seq bookkeeping stays current; windows no
-    /// rect overlaps are untouched (a frame in which a window did not change is not motion for it).
-    public mutating func dirty(rects: [Rect], seq: Int, now: Double) {
+    /// A frame arrived: every tile under a dirty rect is pre-covered as of `seq`, except in windows in trusted motion and
+    /// while `scrolling` (the user is scrolling: the change is the page moving, not new content, and pre-covering every
+    /// scrolled frame flashes the whole window; people in it are still covered once detected). Call for every frame, with
+    /// empty `rects` when nothing changed, so the seq bookkeeping stays current; windows no rect overlaps are untouched (a
+    /// frame in which a window did not change is not motion for it). Scrolled frames still count as motion toward trust.
+    public mutating func dirty(rects: [Rect], seq: Int, now: Double, scrolling: Bool = false) {
         lastSeq = max(lastSeq, seq)
         for (id, var window) in windows {
             let spans = rects.compactMap { window.span(of: $0) }
@@ -76,7 +78,7 @@ public struct Curtain: Sendable {
                 window.safeSince = nil
             }
             window.lastDirty = now
-            if !window.trusted {
+            if !window.trusted, !scrolling {
                 for span in spans {
                     for row in span.rows {
                         for column in span.columns {
@@ -92,9 +94,10 @@ public struct Curtain: Sendable {
 
     /// Detection finished for frame `seq` and Policy produced `hiddenRects` (its person covers, display points).
     /// A tile pre-covered as of `seq` or earlier clears unless a hidden rect overlaps it; tiles dirtied by a later
-    /// frame stay covered whatever this frame says. A window verified safe (no hidden rect overlaps it) throughout
-    /// `trustAfter` of continuous motion becomes trusted; a hidden person restarts that clock but does not end an
-    /// existing trust (that would re-curtain a whole video around one covered person; only `staticReset` ends it).
+    /// frame stay covered whatever this frame says. A window verified throughout `trustAfter` of continuous motion
+    /// becomes trusted, people or not: a hidden person has their own cover, and holding trust back re-covered the whole
+    /// moving region on every frame and cleared it on every result — the window flashed at the frame rate for as long
+    /// as a video or a scroll showed anyone. Only `staticReset` ends trust.
     public mutating func verified(seq: Int, hiddenRects: [Rect], now: Double) {
         lastSeq = max(lastSeq, seq)
         for (id, var window) in windows {
@@ -105,9 +108,7 @@ public struct Curtain: Sendable {
                     window.tiles[i] = Self.clear
                 }
             }
-            if !hidden.isEmpty {
-                window.safeSince = nil
-            } else if seq >= window.runSeq {
+            if seq >= window.runSeq {
                 let safeSince = window.safeSince ?? now
                 window.safeSince = safeSince
                 if now - safeSince >= Self.trustAfter, now - window.lastDirty <= Self.motionGap {

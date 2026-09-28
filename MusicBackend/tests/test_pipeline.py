@@ -691,6 +691,22 @@ def test_status_poll_keeps_live_worker_active():
     registry._raise_if_abandoned("k", 10)
 
 
+def test_cancel_stops_only_a_live_worker():
+    import pytest
+
+    from jobs import JobRegistry, JobState, JobStatus, WorkerAbandoned
+
+    registry = JobRegistry(processor=None, cache=None)
+    registry._jobs["k"] = JobStatus(job_id="k", state=JobState.PROCESSING)
+    registry._jobs["done"] = JobStatus(job_id="done", state=JobState.READY)
+    registry.get("k")  # a fresh poll would otherwise keep it alive
+    assert registry.cancel("k") is True
+    with pytest.raises(WorkerAbandoned):
+        registry._raise_if_abandoned("k", 10)
+    assert registry.cancel("done") is False
+    assert registry.cancel("missing") is False
+
+
 def test_abandon_all_pushes_terminal_event_to_open_streams():
     # /cache/clear must send a terminal event to each open /events stream so the
     # client's EventSource closes instead of hanging on keep-alives forever.

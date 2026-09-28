@@ -229,6 +229,7 @@ export class Session {
     // Pinned on first request, like sourceUrl: the popup applies changes to
     // future videos, so a resume must not switch this one to a new job.
     this._jobSettings ??= { model: settings.model, keepStems: settings.keepStems };
+    this._lastSubmitAt = Date.now();
     const response = await chrome.runtime.sendMessage({
       type: "process",
       url: this.sourceUrl || window.location.href,
@@ -359,6 +360,13 @@ export class Session {
     // convey "waiting", and the phase label is more useful content.
     this.button.showStatus(status);
 
+    // A job abandoned under us (a sleep longer than the idle timeout, another
+    // tab cancelling the same video) reads back as queued with no worker.
+    // /process is idempotent for a live job, so retrying is safe.
+    if (status.state === "queued" && Date.now() - this._lastSubmitAt > 5000) {
+      this._resumeProcessing();
+    }
+
     if (status.state === "error") {
       this._streamEnded = true;
       if (this.eventSource) this.eventSource.close();
@@ -442,8 +450,8 @@ export class Session {
     const cur = this._chunkIdxForTime(this.video.currentTime);
     const lo = cur - 1;
     const hi = cur + Math.ceil(40 / stride);
-    for (const i of this.readyChunks) {
-      if (i >= lo && i <= hi && !this.fetchedIdx.has(i)) {
+    for (let i = Math.max(0, lo); i <= hi; i++) {
+      if (this.readyChunks.has(i) && !this.fetchedIdx.has(i)) {
         this.fetchedIdx.add(i);
         this.fetchAndQueueChunk(i);
       }
@@ -627,6 +635,11 @@ export class Session {
     }
     if (this.bufferTimer) clearTimeout(this.bufferTimer);
     if (this._prioritizeTimer) clearTimeout(this._prioritizeTimer);
+    // Video changed, toggled off, or the page is leaving: free the GPU now
+    // rather than after the helper's idle timeout. Cached chunks stay.
+    if (this.jobId && !this._streamEnded) {
+      chrome.runtime.sendMessage({ type: "cancel", jobId: this.jobId }).catch(() => {});
+    }
     // If we paused for buffering, let the video resume now that we're
     // letting go of it — otherwise it would stay paused with no audio
     // override and the user would have to hit play themselves.

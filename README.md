@@ -66,7 +66,7 @@ Every app runs in one of three modes:
 |---|---|
 | **Off** | The app is never captured or analyzed. |
 | **Blur** | Frames are captured and analyzed; people in the hidden set are covered as soon as they are detected, roughly 100–200 ms after they appear. |
-| **Curtain** | Changed regions of the app's windows are covered the moment they change, then uncovered once detection has verified them safe. Exposure is bounded by capture-to-draw latency, not zero. A region that keeps changing and stays safe for half a second (video without people, a long scroll) behaves like Blur until it is static again. |
+| **Curtain** | Changed regions of the app's windows are covered the moment they change, then uncovered once detection has verified them safe. Exposure is bounded by capture-to-draw latency, not zero. Scrolling with a mouse or trackpad is not covered: people on the page are covered once detected. A region that keeps changing for half a second (a video) behaves like Blur until it is static again. |
 
 The **Default Rule** is the mode for every app without an override. Its initial value is Off, so a fresh install
 covers nothing until you add rules; setting it to Blur or Curtain protects the entire Mac. **Overrides** in Settings ›

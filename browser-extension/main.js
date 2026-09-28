@@ -174,6 +174,10 @@ function init() {
       scheduleRefresh();
     }
   }, 400);
+  // Tab closed or navigated away: dispose cancels the helper job right away.
+  window.addEventListener("pagehide", () => {
+    for (const btn of liveButtons) btn.session?.dispose?.();
+  });
   let resizeTimer = null;
   window.addEventListener("resize", () => {
     if (resizeTimer) clearTimeout(resizeTimer);

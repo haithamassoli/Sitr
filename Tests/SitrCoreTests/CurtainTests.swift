@@ -128,7 +128,9 @@ private func play(
         #expect(curtain.preCovers().isEmpty)
     }
 
-    @Test func personInAVerifiedFrameKeepsTheirTilesCoveredAndBlocksTrust() {
+    /// The flicker fix: a person in a moving region used to hold trust back forever, so every frame re-covered the whole
+    /// region on arrival and cleared it on its result. Now the person's tiles stay covered steadily and trust comes on time.
+    @Test func personInAVideoKeepsTheirTilesCoveredAndTheRestStopsFlashingOnceTrusted() {
         var curtain = Curtain()
         curtain.windowChanged(id: 1, rect: window, now: 0)
         curtain.verified(seq: 0, hiddenRects: [], now: 0)
@@ -136,18 +138,20 @@ private func play(
         let person = Rect(x: 140, y: 20, width: 30, height: 100)  // inside tile column 2, both rows
         let personTiles = Rect(x: 128, y: 0, width: 64, height: 128)
         var t = 0.5
+        var trustedAt: Double?
         for n in 1...40 {  // 1.25 s of video with a person in it
             curtain.dirty(rects: [video], seq: n, now: t)
-            #expect(curtain.preCovers() == [video])
+            #expect(curtain.preCovers() == (trustedAt == nil ? [video] : [personTiles]))
             curtain.verified(seq: n, hiddenRects: [person], now: t + latency)
             #expect(curtain.preCovers() == [personTiles])  // column 1 cleared, column 2 stays for the person cover
-            #expect(!curtain.isTrusted(window: 1))
+            if trustedAt == nil, curtain.isTrusted(window: 1) { trustedAt = t + latency }
             t += frame
         }
-        // The person leaves: the next safe result clears their tiles, and trust follows 0.5 s later.
-        let run = play(&curtain, rects: [video], from: t, seq: 41, count: 20)
-        #expect(run.preCoveredOnArrival.count == 17)
-        #expect(run.trustedAt == t + 16 * frame + latency)
+        #expect(trustedAt == 0.5 + 16 * frame + latency)  // same as a video without people
+        // The person leaves: the next result clears their tiles.
+        curtain.dirty(rects: [video], seq: 41, now: t)
+        curtain.verified(seq: 41, hiddenRects: [], now: t + latency)
+        #expect(curtain.preCovers().isEmpty)
     }
 
     @Test func personDuringTrustedMotionKeepsBlurBehaviourUntilTheNextReset() {
@@ -161,11 +165,34 @@ private func play(
         run = play(&curtain, rects: [window], hidden: [person], from: run.next, seq: run.nextSeq, count: 20)
         #expect(run.preCoveredOnArrival.isEmpty)
         #expect(curtain.isTrusted(window: 1))
-        // After a ≥ 1 s pause the video resumes with the person: curtained again, no trust while a person is seen.
-        run = play(&curtain, rects: [window], hidden: [person], from: run.next + 1, seq: run.nextSeq, count: 40)
-        #expect(run.preCoveredOnArrival.count == 40)
-        #expect(run.trustedAt == nil)
+        // After a ≥ 1 s pause the video resumes with the person: curtained again until trust is earned again.
+        let t = run.next + 1
+        run = play(&curtain, rects: [window], hidden: [person], from: t, seq: run.nextSeq, count: 40)
+        #expect(run.trustedAt == t + 16 * frame + latency)
+        // The person's tiles, until they leave.
         #expect(curtain.preCovers() == [Rect(x: 128, y: 0, width: 64, height: 128)])
+    }
+
+    /// The user scrolling (a wheel or trackpad event, `scrolling: true`) is never pre-covered, people or not, and still counts
+    /// as motion toward trust. A change after the page settled (a page load) is pre-covered as before.
+    @Test func scrollingIsNeverPreCoveredButStillEarnsTrust() {
+        var curtain = Curtain()
+        curtain.windowChanged(id: 1, rect: window, now: 0)
+        curtain.verified(seq: 0, hiddenRects: [], now: 0)
+        let person = Rect(x: 140, y: 20, width: 30, height: 100)
+        var t = 0.5
+        var trustedAt: Double?
+        for n in 1...20 {
+            curtain.dirty(rects: [window], seq: n, now: t, scrolling: true)
+            #expect(curtain.preCovers().isEmpty)
+            curtain.verified(seq: n, hiddenRects: n > 5 ? [person] : [], now: t + latency)
+            #expect(curtain.preCovers().isEmpty)
+            if trustedAt == nil, curtain.isTrusted(window: 1) { trustedAt = t + latency }
+            t += frame
+        }
+        #expect(trustedAt == 0.5 + 16 * frame + latency)
+        curtain.dirty(rects: [window], seq: 21, now: t + 1)  // still ≥ staticReset later, not scrolling: a page load
+        #expect(curtain.preCovers() == [window])
     }
 
     @Test func outOfOrder_aResultForFrameNNeverClearsTilesDirtiedByFrameNPlusOne() {

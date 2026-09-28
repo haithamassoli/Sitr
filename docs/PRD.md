@@ -84,7 +84,8 @@ Muslim macOS user on Apple Silicon who wants women, men, or everyone hidden on s
 Per Curtain app, per region:
 1. Frame arrives. `dirtyRects ∩ app window rects` → covered immediately with the active style, before detection runs.
 2. Detection on that frame completes → regions without a hidden-set person are uncovered; hidden-set persons keep person covers.
-3. Trusted motion: a region continuously changing and verified safe for ≥ 500 ms (video without people, long scroll) is no longer pre-covered and behaves as Blur mode until it stays static ≥ 1 s, which resets it. Prevents permanently blurred video.
+3. Trusted motion: a region continuously changing and verified for ≥ 500 ms (video, long scroll) is no longer pre-covered and behaves as Blur mode until it stays static ≥ 1 s, which resets it. Prevents permanently blurred video. People in the region do not hold trust back (they have their own cover); holding it back re-covered and uncovered the region on every frame.
+4. User scrolling: while a mouse or trackpad scroll is under way (global scroll-wheel monitor, 300 ms grace after the last event), dirty regions are not pre-covered; people are covered on detection. Keyboard scrolling is not seen and still pre-covers.
 4. New windows of a Curtain app are fully covered until their first verified frame.
 - Window rects come from `CGWindowListCopyWindowInfo` (bounds and owner PID need no extra permission), polled at 10 Hz and on app activation.
 - Displays showing a Curtain app capture at 30 fps (`minimumFrameInterval` 1/30 s); other displays keep the 15 fps default. Amended after the M1 spike: 15 fps capture measures 76 ms p95 for the Curtain path, 30 fps 55 ms, 60 fps 54 ms (`docs/spike/latency.md`).
