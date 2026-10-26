@@ -144,14 +144,52 @@ import os
     }
 }
 
+extension MusicService {
+    /// One status line, shared by Settings › Remove Music and the menu bar card.
+    var statusText: Text {
+        switch state {
+        case .off: Text("Off")
+        case .missing: Text("Helper missing from this build")
+        case .starting: Text("Starting…")
+        case .running:
+            switch modelState {
+            case .preparing: Text("Downloading the voice model…")
+            case .failed: Text("Could not download the voice model. Check your internet connection; Sitr keeps trying.")
+            case .ready, .unknown: Text("Ready")
+            }
+        case .stopped: Text("Stopped unexpectedly")
+        case .failed: Text("Could not start")
+        case .stopFailed: Text("Could not stop helper")
+        }
+    }
+
+    var tone: Color {
+        switch state {
+        case .running: modelState == .failed ? .orange : modelState == .preparing ? .secondary : .green
+        case .off, .starting: .secondary
+        case .missing, .stopped, .failed, .stopFailed: .orange
+        }
+    }
+}
+
 struct MusicTab: View {
     private let music = MusicService.shared
 
     var body: some View {
         Form {
             Section {
-                Toggle("Enable music removal", isOn: Binding(get: { music.enabled }, set: { music.enabled = $0 }))
-                LabeledContent("Status") { status }
+                Toggle(isOn: Binding(get: { music.enabled }, set: { music.enabled = $0 })) {
+                    Text("Remove music from videos")
+                    Text("Plays web videos with the music removed and the speech kept.")
+                }
+                LabeledContent("Status") {
+                    HStack(spacing: 6) {
+                        if music.state == .starting || (music.state == .running && music.modelState == .preparing) {
+                            ProgressView().controlSize(.small)
+                        }
+                        music.statusText.foregroundStyle(music.tone)
+                    }
+                }
                 if music.enabled && (music.state == .stopped || music.state == .failed) {
                     Button("Try again") { music.start() }
                 }
@@ -160,8 +198,6 @@ struct MusicTab: View {
                     Text("Restart Sitr. If the helper still cannot start, reinstall Sitr.")
                     DisclosureGroup("Technical details") { Text(error) }
                 }
-            } header: {
-                Text("Music removal in browser")
             } footer: {
                 Text("Audio is processed on this Mac. The first time, Sitr downloads a voice model (about 80 MB); after that the helper only downloads the audio of videos you choose.")
             }
@@ -183,6 +219,7 @@ struct MusicTab: View {
 
             Section {
                 Text("Speech may sound different. Singing can remain because the model keeps the human voice. Some sites or protected videos may not work.")
+                    .foregroundStyle(.secondary)
             } header: {
                 Text("What to expect")
             }
@@ -193,27 +230,6 @@ struct MusicTab: View {
                 music.refreshHelperStatus()
                 try? await Task.sleep(for: .seconds(1))
             }
-        }
-    }
-
-    @ViewBuilder private var status: some View {
-        switch music.state {
-        case .off: Text("Off")
-        case .missing: Text("Helper missing from this build")
-        case .starting: Text("Starting…")
-        case .running:
-            switch music.modelState {
-            case .preparing:
-                HStack(spacing: 6) {
-                    ProgressView().controlSize(.small)
-                    Text("Downloading the voice model…")
-                }
-            case .failed: Text("Could not download the voice model. Check your internet connection; Sitr keeps trying.")
-            case .ready, .unknown: Label("Ready", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-            }
-        case .stopped: Text("Stopped unexpectedly")
-        case .failed: Text("Could not start")
-        case .stopFailed: Text("Could not stop helper")
         }
     }
 }

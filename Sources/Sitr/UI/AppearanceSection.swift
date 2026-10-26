@@ -3,54 +3,48 @@ import CoreVideo
 import QuartzCore
 import SwiftUI
 
-/// Settings › Appearance (M4-T02, PRD FR3): style, Blur Strength, Body Padding, bound to `Preferences` (the `Runtime`
+/// Settings › General › Covers (M4-T02, PRD FR3): style, Blur Strength, Body Padding, bound to `Preferences` (the `Runtime`
 /// observes those keys and pushes a new `CoverAppearance` to every pipeline, so the overlays follow at once), plus a
-/// preview that runs the real `CoverRenderer` over a synthetic scene.
-struct AppearanceTab: View {
+/// preview that runs the real `CoverRenderer` over a synthetic scene. Sections only; `GeneralTab` owns the Form.
+struct AppearanceSection: View {
     let model: AppModel
 
     private var preferences: Preferences { model.preferences }
 
     var body: some View {
-        Form {
-            Section {
-                Picker("Style", selection: Binding(get: { preferences.coverStyle }, set: { preferences.coverStyle = $0 })) {
-                    Text("Gaussian").tag(CoverStyle.gaussian)
-                    Text("Pixelate").tag(CoverStyle.pixelate)
-                    Text("Solid").tag(CoverStyle.solid)
-                }
-                .pickerStyle(.segmented)
-                .accessibilityLabel("Cover style")
-                .accessibilityHint("Gaussian blurs, Pixelate blocks, Solid paints an opaque color")
+        Section {
+            CoverPreview(style: preferences.coverStyle, strength: preferences.blurStrength, padding: preferences.bodyPadding)
+                .frame(width: 320, height: 200)  // the 480×300 pt scene scaled down
+                .frame(maxWidth: .infinity)
+                .accessibilityLabel("Preview of a cover over a sample scene")
+            Picker("Style", selection: Binding(get: { preferences.coverStyle }, set: { preferences.coverStyle = $0 })) {
+                Text("Gaussian").tag(CoverStyle.gaussian)
+                Text("Pixelate").tag(CoverStyle.pixelate)
+                Text("Solid").tag(CoverStyle.solid)
+            }
+            .pickerStyle(.segmented)
+            .accessibilityLabel("Cover style")
+            .accessibilityHint("Gaussian blurs, Pixelate blocks, Solid paints an opaque color")
+            if preferences.coverStyle != .solid {
                 LabeledContent("Blur Strength") {
                     Slider(value: Binding(get: { preferences.blurStrength }, set: { preferences.blurStrength = $0 }), in: 0...1)
                         .accessibilityLabel("Blur Strength")
                         .accessibilityValue(percent(preferences.blurStrength))
                     Text(percent(preferences.blurStrength)).monospacedDigit().frame(width: 40, alignment: .trailing)
                 }
-                .disabled(preferences.coverStyle == .solid)
-                LabeledContent("Body Padding") {
-                    Slider(value: Binding(get: { preferences.bodyPadding }, set: { preferences.bodyPadding = $0 }), in: 0...0.5)
-                        .accessibilityLabel("Body Padding")
-                        .accessibilityValue(percent(preferences.bodyPadding))
-                    Text(percent(preferences.bodyPadding)).monospacedDigit().frame(width: 40, alignment: .trailing)
-                }
-                Button("Reset Appearance") { model.resetAppearance() }
-            } footer: {
-                Text("Changes apply to the covers on screen immediately. Defaults: Gaussian, 70%, 15%. Solid ignores Blur Strength.")
             }
-            Section {
-                CoverPreview(style: preferences.coverStyle, strength: preferences.blurStrength, padding: preferences.bodyPadding)
-                    .frame(width: 400, height: 250)  // the 480×300 pt scene scaled down; still 2 buffer px per screen px
-                    .frame(maxWidth: .infinity)
-                    .accessibilityLabel("Preview of a cover over a sample scene")
-            } header: {
-                Text("Preview")
-            } footer: {
-                Text("A drawn sample scene, covered by the same renderer the overlay uses.")
+            LabeledContent("Body Padding") {
+                Slider(value: Binding(get: { preferences.bodyPadding }, set: { preferences.bodyPadding = $0 }), in: 0...0.5)
+                    .accessibilityLabel("Body Padding")
+                    .accessibilityValue(percent(preferences.bodyPadding))
+                Text(percent(preferences.bodyPadding)).monospacedDigit().frame(width: 40, alignment: .trailing)
             }
+            Button("Reset Appearance") { model.resetAppearance() }
+        } header: {
+            Text("Covers")
+        } footer: {
+            Text("Changes apply to the covers on screen immediately.")
         }
-        .formStyle(.grouped)
     }
 
     /// Locale-aware ("70%" in English, Arabic-Indic digits and ٪ under `ar`), PRD FR12.

@@ -54,8 +54,7 @@ import SitrCore
     var readiness: Readiness = .preparing
     var rulesProblem: String?
     var rulesNeedRecovery = false
-    var settingsTab: SettingsView.Tab = .general
-    var showSetupSummary = false
+    var settingsTab: SettingsView.Tab = .protection
     var loginProblem: String?
     var relaunchProblem: String?
     @ObservationIgnored var onRetryProtection: (() -> Void)?
@@ -80,7 +79,8 @@ import SitrCore
                 onPolicyChanged?(policy)
             }
             // FR8: a lost grant brings the permission step back; `present` never opens a second window.
-            if Self.showsOnboarding, OnboardingFlow.reopens(from: oldValue.health, to: policy.health) {
+            // Only when an app is watched: without one the grant changes nothing (a music-only user never needs it).
+            if Self.showsOnboarding, policy.rules.hasMonitoredApps, OnboardingFlow.reopens(from: oldValue.health, to: policy.health) {
                 Task { @MainActor [weak self] in if let self { OnboardingWindow.present(model: self) } }
             }
         }
@@ -141,17 +141,16 @@ import SitrCore
     static let showsOnboarding = Bundle.main.bundleURL.pathExtension == "app" && !CommandLine.arguments.contains("--selftest")
         && ProcessInfo.processInfo.environment["SITR_DEV_BLUR"] != "1"
 
-    /// What finishing onboarding stores: the hidden set and Strict Mode (when asked), the rules (Default Rule Off, preset
-    /// overrides when chosen; `rules.json` is written), and the completed flag. Health is untouched: skipping the
-    /// permission leaves the app in Needs permission with the warning icon.
+    /// What finishing onboarding stores: the hidden set and Strict Mode (when hiding was chosen), the rules (Default Rule
+    /// Off, the recommended apps when hiding was chosen; `rules.json` is written), and the completed flag. Health is
+    /// untouched: skipping the permission leaves the app in Needs permission with the warning icon.
     func completeOnboarding(_ flow: OnboardingFlow) {
-        if let hiddenSet = flow.hiddenSet {
+        if flow.wantsHide, let hiddenSet = flow.hiddenSet {
             setHiddenSet(hiddenSet)
             setStrict(flow.effectiveStrict)
         }
         if let rules = flow.rulesOnFinish(policy.rules) { updateRules { $0 = rules } }
         preferences.onboardingCompleted = true
-        if !flow.permissionOnly { showSetupSummary = true }
     }
 
     // MARK: Status
@@ -170,7 +169,7 @@ import SitrCore
         case .modelUnavailable: String(localized: "Some detection features could not load. Category-specific protection may be less accurate; Unknown follows Strict Mode.")
         case .detectionFailed: String(localized: "Detection has repeatedly failed. Existing covers remain; new people may be missed.")
         case .degraded: String(localized: "Detection is slower than 250 ms per frame, so covers can lag until it speeds up again.")
-        case .noApps: String(localized: "Add an app or use the recommended settings to start protection.")
+        case .noApps: String(localized: "Add apps under Where to hide to start hiding people.")
         case .waitingForApps: String(localized: "Open an app covered by your protection rules.")
         default: nil
         }
@@ -190,10 +189,11 @@ import SitrCore
     var iconState: IconState { status.iconState }
     var revealAvailable: Bool { status.revealAvailable }
 
-    /// Pure FR7 mapping. Needs permission outranks everything (nothing is covered and only the user can fix it), then
-    /// the user's Disabled / Paused, then Degraded. An elapsed pause counts as active, like `Policy.isProtecting`.
+    /// Pure FR7 mapping. Needs permission outranks everything while an app is watched (nothing is covered and only the
+    /// user can fix it), then the user's Disabled / Paused, then Degraded. An elapsed pause counts as active, like
+    /// `Policy.isProtecting`. With no watched app the grant is irrelevant, so a music-only user sees No apps, not a warning.
     nonisolated static func status(for policy: Policy, now: Double, wallClock: Date, readiness: Readiness = .ready) -> Status {
-        if policy.health == .needsPermission { return .needsPermission }
+        if policy.health == .needsPermission, policy.rules.hasMonitoredApps { return .needsPermission }
         switch policy.protection {
         case .disabled: return .disabled
         case .paused(let until) where until > now: return .paused(until: wallClock.addingTimeInterval(until - now))

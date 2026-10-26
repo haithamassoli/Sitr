@@ -37,6 +37,17 @@
         }
       }
     },
+    "%lld more saved for apps that are not installed. They apply once installed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "و%lld محفوظة لتطبيقات غير مثبّتة، وتُطبَّق عند تثبيتها."
+          }
+        }
+      }
+    },
     "1 hour" : {
       "comment" : "Menu bar › Pause Protection submenu",
       "extractionState" : "manual",
@@ -61,30 +72,6 @@
         }
       }
     },
-    "8 frames per second instead of 15 while the Mac is in Low Power Mode" : {
-      "comment" : "Accessibility hint, General › Low Power toggle",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "٨ إطارات في الثانية بدلًا من ١٥ عندما يكون جهاز Mac في نمط الطاقة المنخفضة"
-          }
-        }
-      }
-    },
-    "A drawn sample scene, covered by the same renderer the overlay uses." : {
-      "comment" : "Appearance › Preview footer",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "مشهد نموذجي مرسوم، مغطّى بنفس المحرّك الذي تستخدمه طبقة التغطية."
-          }
-        }
-      }
-    },
     "About" : {
       "comment" : "Settings tab",
       "extractionState" : "manual",
@@ -97,37 +84,24 @@
         }
       }
     },
-    "Add" : {
-      "comment" : "Protection › overrides table, Add menu",
+    "Add App" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "إضافة"
+            "value" : "إضافة تطبيق"
           }
         }
       }
     },
-    "Add an app or use the recommended settings to start protection." : {
+    "Add apps under Where to hide to start hiding people." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "أضف تطبيقًا أو استخدم الإعدادات الموصى بها لبدء الحماية."
-          }
-        }
-      }
-    },
-    "Add app override" : {
-      "comment" : "Accessibility label of the Add menu, Protection",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إضافة استثناء لتطبيق"
+            "value" : "أضف تطبيقات ضمن «أين يُطبَّق الإخفاء» لبدء إخفاء الأشخاص."
           }
         }
       }
@@ -140,6 +114,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "أضف مفتاح تعديل واحدًا على الأقل (⌃ أو ⌥ أو ⇧ أو ⌘)."
+          }
+        }
+      }
+    },
+    "Add browsers and chat apps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة المتصفحات وتطبيقات المحادثة"
+          }
+        }
+      }
+    },
+    "Add the browser extension" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضف إضافة المتصفح"
           }
         }
       }
@@ -173,6 +169,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "كل التطبيقات باستثناء التطبيقات المستثناة"
+          }
+        }
+      }
+    },
+    "All other apps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "باقي التطبيقات"
           }
         }
       }
@@ -224,14 +231,13 @@
         }
       }
     },
-    "Also hides people whose category is unknown: facing away, face hidden or too small, or the classifier unsure. Everyone always includes them." : {
-      "comment" : "Onboarding step 3, under the Strict Mode switch",
+    "Also hides people Sitr cannot tell apart: facing away, face hidden or too small." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يخفي أيضًا الأشخاص الذين فئتهم غير معروفة: من يولّي ظهره، أو وجهه مخفي أو صغير جدًا، أو المصنّف غير متأكد منه. خيار «الجميع» يشملهم دائمًا."
+            "value" : "يخفي أيضًا من لا يستطيع Sitr تمييزهم: من يدير ظهره، أو وجهه مخفي أو صغير جدًا."
           }
         }
       }
@@ -244,42 +250,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "مفعّل دائمًا عند اختيار «الجميع»"
-          }
-        }
-      }
-    },
-    "App" : {
-      "comment" : "Protection › overrides table column",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التطبيق"
-          }
-        }
-      }
-    },
-    "App overrides" : {
-      "comment" : "Protection › section header and table label",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استثناءات التطبيقات"
-          }
-        }
-      }
-    },
-    "Appearance" : {
-      "comment" : "Settings tab",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "المظهر"
           }
         }
       }
@@ -413,18 +383,6 @@
         }
       }
     },
-    "Browsers" : {
-      "comment" : "Onboarding step 4, preset table group",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "المتصفحات"
-          }
-        }
-      }
-    },
     "Capture or detection needs attention. Open Sitr for status and recovery actions." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -448,26 +406,13 @@
         }
       }
     },
-    "Change the shortcut in Settings › Shortcuts. Sitr lives in the menu bar: pause, disable, or open Settings from there." : {
-      "comment" : "Onboarding step 5",
+    "Changes apply to the covers on screen immediately." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يمكنك تغيير الاختصار من الإعدادات › الاختصارات. يقيم Sitr في شريط القائمة: من هناك يمكنك إيقاف الحماية مؤقتًا أو تعطيلها أو فتح الإعدادات."
-          }
-        }
-      }
-    },
-    "Changes apply to the covers on screen immediately. Defaults: Gaussian, 70%, 15%. Solid ignores Blur Strength." : {
-      "comment" : "Appearance footer",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تُطبَّق التغييرات على الأغطية الظاهرة على الشاشة فورًا. الإعدادات الافتراضية: غاوسي، ٧٠٪، ١٥٪. النمط المصمت يتجاهل شدة التمويه."
+            "value" : "تُطبَّق التغييرات على الأغطية الظاهرة على الشاشة فورًا."
           }
         }
       }
@@ -519,6 +464,17 @@
         }
       }
     },
+    "Choose at least one" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر واحدًا على الأقل"
+          }
+        }
+      }
+    },
     "Choose who should be hidden first" : {
       "comment" : "Accessibility hint on the disabled Continue button, onboarding step 3",
       "extractionState" : "manual",
@@ -543,18 +499,6 @@
         }
       }
     },
-    "Communication" : {
-      "comment" : "Onboarding step 4, preset table group",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التواصل"
-          }
-        }
-      }
-    },
     "Configure Protected Apps" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -562,18 +506,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "إعداد التطبيقات المشمولة بالحماية"
-          }
-        }
-      }
-    },
-    "Configure myself" : {
-      "comment" : "Onboarding step 4 button: skip the preset and open Settings › Protection",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "سأضبطها بنفسي"
           }
         }
       }
@@ -694,14 +626,24 @@
         }
       }
     },
-    "Covers come back at once" : {
-      "comment" : "Accessibility hint, Resume Protection",
+    "Covers" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تعود الأغطية فورًا"
+            "value" : "الأغطية"
+          }
+        }
+      }
+    },
+    "Covers women, men, or everyone in your browsers and chat apps." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يغطّي النساء أو الرجال أو الجميع في متصفحاتك وتطبيقات المحادثة."
           }
         }
       }
@@ -718,61 +660,13 @@
         }
       }
     },
-    "Curtain covers changed regions the moment they appear and uncovers what is verified safe: the mode for apps where people show up without warning. Every other app stays Off (the Default Rule) until you change it in Settings › Protection." : {
-      "comment" : "Onboarding step 4",
+    "Curtain: covers new content instantly, then uncovers what is safe. Best for browsers and chats. Blur: covers people as soon as they are detected. Off: Sitr never looks at the app." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تغطي الستارة المناطق المتغيّرة لحظة ظهورها وتكشف ما يثبت أنه آمن: إنها الوضع المناسب للتطبيقات التي يظهر فيها الأشخاص دون سابق إنذار. تبقى بقية التطبيقات على وضع الإيقاف (القاعدة الافتراضية) حتى تغيّر ذلك من الإعدادات › الحماية."
-          }
-        }
-      }
-    },
-    "Customize" : {
-      "comment" : "Onboarding step 1 button: walk through the steps instead of the defaults",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تخصيص"
-          }
-        }
-      }
-    },
-    "Default Rule" : {
-      "comment" : "Protection picker: mode for apps without an override",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "القاعدة الافتراضية"
-          }
-        }
-      }
-    },
-    "Default settings: hide everyone in Safari, Chrome, Arc, Telegram, WhatsApp and Discord, and start at login. Other apps stay Off. Change these choices in Settings." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الإعدادات الافتراضية: إخفاء الجميع في Safari وChrome وArc وTelegram وWhatsApp وDiscord، والتشغيل عند تسجيل الدخول. تبقى التطبيقات الأخرى دون حماية. يمكنك تغيير هذه الخيارات في الإعدادات."
-          }
-        }
-      }
-    },
-    "Default settings: hide everyone, cover browsers and chat apps, start at login. Everything is changeable later in Settings." : {
-      "comment" : "Onboarding step 1, what Use Default Settings applies",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الإعدادات الافتراضية: إخفاء الجميع، وتغطية المتصفحات وتطبيقات المحادثة، والتشغيل عند تسجيل الدخول. يمكنك تغيير كل ذلك لاحقًا من الإعدادات."
+            "value" : "الستارة: تغطي المحتوى الجديد فورًا ثم تكشف ما ثبت أنه آمن، وهي الأنسب للمتصفحات والمحادثات. التمويه: يغطي الأشخاص فور اكتشافهم. إيقاف: لا ينظر Sitr إلى التطبيق أبدًا."
           }
         }
       }
@@ -800,18 +694,6 @@
         }
       }
     },
-    "Detection is running slowly; covers may lag." : {
-      "comment" : "Notification body",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الاكتشاف يعمل ببطء؛ قد تتأخر الأغطية."
-          }
-        }
-      }
-    },
     "Detection is slower than 250 ms per frame, so covers can lag until it speeds up again." : {
       "comment" : "Settings › General footer, shown only in the degraded state",
       "extractionState" : "manual",
@@ -835,18 +717,6 @@
         }
       }
     },
-    "Disable Protection" : {
-      "comment" : "Menu bar item",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تعطيل الحماية"
-          }
-        }
-      }
-    },
     "Disabled" : {
       "comment" : "Menu bar status line: protection disabled by the user",
       "extractionState" : "manual",
@@ -855,17 +725,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الحماية معطّلة"
-          }
-        }
-      }
-    },
-    "Dismiss setup summary" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إغلاق ملخص الإعداد"
           }
         }
       }
@@ -915,29 +774,6 @@
         }
       }
     },
-    "Enable Protection" : {
-      "comment" : "Menu bar item, replaces Disable Protection",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تفعيل الحماية"
-          }
-        }
-      }
-    },
-    "Enable music removal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تفعيل إزالة الموسيقى"
-          }
-        }
-      }
-    },
     "Everyone" : {
       "comment" : "Hidden set choice: all persons including Unknown",
       "extractionState" : "manual",
@@ -950,14 +786,13 @@
         }
       }
     },
-    "Everything happens on this Mac. Sitr has no network access, so nothing leaves your Mac: no pixels, no logs, no telemetry. Verify it any time:" : {
-      "comment" : "Onboarding step 1, above the codesign command",
+    "Everything runs on this Mac. Nothing on your screen leaves it." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "كل شيء يحدث على جهاز Mac هذا. لا يملك Sitr أي وصول إلى الشبكة، فلا يخرج شيء من جهازك: لا بكسلات ولا سجلات ولا بيانات قياس. يمكنك التحقق من ذلك في أي وقت:"
+            "value" : "كل شيء يعمل على هذا الماك، ولا يغادره شيء مما على شاشتك."
           }
         }
       }
@@ -981,18 +816,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "إتمام"
-          }
-        }
-      }
-    },
-    "For apps without an override. Off: never captured. Blur: detect, then cover. Curtain: cover changes at once, uncover what is verified safe." : {
-      "comment" : "Protection › Default Rule footer",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "للتطبيقات التي لا استثناء لها. إيقاف: لا يُلتقط أبدًا. التمويه: اكتشاف ثم تغطية. الستارة: تغطية التغييرات فورًا وكشف ما يثبت أنه آمن."
           }
         }
       }
@@ -1081,6 +904,17 @@
         }
       }
     },
+    "Hear speech without the music in Chrome, Edge, Brave and Arc." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استمع إلى الكلام دون موسيقى في Chrome وEdge وBrave وArc."
+          }
+        }
+      }
+    },
     "Help" : {
       "comment" : "Key name: the Help key on extended keyboards",
       "extractionState" : "manual",
@@ -1128,14 +962,35 @@
         }
       }
     },
-    "Hides everyone including unknown people, sets browsers and chat apps to Curtain, starts Sitr at login. Only Screen Recording is left to allow." : {
-      "comment" : "Accessibility hint for the Use Default Settings button",
+    "Hide People" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يخفي الجميع بمن فيهم الأشخاص غير المعروفين، ويضبط المتصفحات وتطبيقات المحادثة على وضع الستارة، ويشغّل Sitr عند تسجيل الدخول. يبقى السماح بتسجيل الشاشة فقط."
+            "value" : "إخفاء الأشخاص"
+          }
+        }
+      }
+    },
+    "Hide people" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إخفاء الأشخاص"
+          }
+        }
+      }
+    },
+    "Hide people on screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إخفاء الأشخاص على الشاشة"
           }
         }
       }
@@ -1152,14 +1007,24 @@
         }
       }
     },
-    "Hold %@ to reveal what is under the covers; release to cover again. As a safety, covers come back after 30 seconds of holding." : {
-      "comment" : "Onboarding step 5; %@ is the shortcut such as ⌃⌥Space",
+    "Hiding people in your browsers and chat apps." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "اضغط باستمرار على %@ لكشف ما تحت الأغطية، وأفلته لتعود التغطية. للأمان، تعود الأغطية بعد ٣٠ ثانية من الضغط المستمر."
+            "value" : "يُخفى الأشخاص في متصفحاتك وتطبيقات المحادثة."
+          }
+        }
+      }
+    },
+    "Hold %@ to reveal what is under the covers; release to cover again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اضغط باستمرار على %@ لرؤية ما تحت الأغطية، وأفلت لإعادة التغطية."
           }
         }
       }
@@ -1176,6 +1041,28 @@
         }
       }
     },
+    "In System Settings, turn on Sitr under Screen & System Audio Recording. This page continues on its own." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في إعدادات النظام، فعّل Sitr ضمن «تسجيل الشاشة وصوت النظام». ستنتقل هذه الصفحة تلقائيًا."
+          }
+        }
+      }
+    },
+    "Includes people Sitr cannot classify." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يشمل الأشخاص الذين لا يستطيع Sitr تصنيفهم."
+          }
+        }
+      }
+    },
     "Input source switching" : {
       "comment" : "Who else uses ⌃Space",
       "extractionState" : "manual",
@@ -1184,6 +1071,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تبديل مصدر الإدخال"
+          }
+        }
+      }
+    },
+    "Install the browser extension…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تثبيت إضافة المتصفح…"
           }
         }
       }
@@ -1223,18 +1121,6 @@
         }
       }
     },
-    "Known conflicts" : {
-      "comment" : "Shortcuts › section header",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تعارضات معروفة"
-          }
-        }
-      }
-    },
     "Language" : {
       "comment" : "General picker",
       "extractionState" : "manual",
@@ -1266,18 +1152,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تعذّر تفعيل التشغيل عند تسجيل الدخول. أعد المحاولة من الإعدادات العامة."
-          }
-        }
-      }
-    },
-    "Leaves every app Off and opens Settings, Protection, when setup finishes" : {
-      "comment" : "Accessibility hint, Configure myself",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يترك كل التطبيقات على وضع الإيقاف ويفتح الإعدادات › الحماية عند انتهاء الإعداد"
           }
         }
       }
@@ -1378,14 +1252,13 @@
         }
       }
     },
-    "Mode for every app without an override. Off means never captured." : {
-      "comment" : "Accessibility hint, Default Rule picker",
+    "Mode for every app not in the list. Off means never captured." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "الوضع لكل تطبيق ليس له استثناء. الإيقاف يعني عدم الالتقاط أبدًا."
+            "value" : "الوضع لكل تطبيق غير موجود في القائمة. «إيقاف» يعني أنه لا يُلتقط أبدًا."
           }
         }
       }
@@ -1402,39 +1275,6 @@
         }
       }
     },
-    "Music" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الموسيقى"
-          }
-        }
-      }
-    },
-    "Music in browser…" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الموسيقى في المتصفح…"
-          }
-        }
-      }
-    },
-    "Music removal in browser" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إزالة الموسيقى في المتصفح"
-          }
-        }
-      }
-    },
     "Music removal needs Google Chrome or another Chromium browser." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1442,6 +1282,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تحتاج إزالة الموسيقى إلى Google Chrome أو متصفح آخر مبني على Chromium."
+          }
+        }
+      }
+    },
+    "Music removal works through a small extension in your browser. It takes about a minute." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعمل إزالة الموسيقى عبر إضافة صغيرة في متصفحك. يستغرق تثبيتها دقيقة تقريبًا."
           }
         }
       }
@@ -1458,17 +1309,6 @@
         }
       }
     },
-    "No app overrides. Add an app or apply the recommended settings below." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا توجد قواعد خاصة بالتطبيقات. أضف تطبيقًا أو طبّق الإعدادات الموصى بها أدناه."
-          }
-        }
-      }
-    },
     "No apps configured" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1476,30 +1316,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "لم تُحدَّد تطبيقات للحماية"
-          }
-        }
-      }
-    },
-    "Not allowed yet. Until it is, Sitr covers nothing and shows a warning icon in the menu bar." : {
-      "comment" : "Onboarding step 2 status",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "غير مسموح به بعد. إلى أن يُسمح به، لا يغطي Sitr أي شيء ويعرض أيقونة تحذير في شريط القائمة."
-          }
-        }
-      }
-    },
-    "Not installed" : {
-      "comment" : "Protection › overrides table, under an app that is not on this Mac",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "غير مثبَّت"
           }
         }
       }
@@ -1558,17 +1374,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "فتح عناصر تسجيل الدخول في إعدادات النظام"
-          }
-        }
-      }
-    },
-    "Open Screen Recording Settings" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "فتح إعدادات تسجيل الشاشة"
           }
         }
       }
@@ -1702,14 +1507,13 @@
         }
       }
     },
-    "Pause Protection" : {
-      "comment" : "Menu bar submenu",
+    "Pause" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "إيقاف الحماية مؤقتًا"
+            "value" : "إيقاف مؤقت"
           }
         }
       }
@@ -1786,6 +1590,17 @@
         }
       }
     },
+    "Plays web videos with the music removed and the speech kept." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يشغّل فيديوهات الويب بعد إزالة الموسيقى مع الإبقاء على الكلام."
+          }
+        }
+      }
+    },
     "Preparing protection" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1821,18 +1636,6 @@
         }
       }
     },
-    "Preview" : {
-      "comment" : "Appearance › section header",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "معاينة"
-          }
-        }
-      }
-    },
     "Preview of a cover over a sample scene" : {
       "comment" : "Accessibility label, Appearance preview",
       "extractionState" : "manual",
@@ -1857,18 +1660,6 @@
         }
       }
     },
-    "Protection" : {
-      "comment" : "Settings tab",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الحماية"
-          }
-        }
-      }
-    },
     "Protection is limited" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1876,29 +1667,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الحماية محدودة"
-          }
-        }
-      }
-    },
-    "Protection scope" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "نطاق الحماية"
-          }
-        }
-      }
-    },
-    "Protection status" : {
-      "comment" : "Settings › General: label of the FR7 status line",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "حالة الحماية"
           }
         }
       }
@@ -1950,18 +1718,6 @@
         }
       }
     },
-    "Recommended Protection" : {
-      "comment" : "Onboarding step 4 title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الحماية الموصى بها"
-          }
-        }
-      }
-    },
     "Recommended on" : {
       "comment" : "Accessibility hint for the Strict Mode toggle in onboarding",
       "extractionState" : "manual",
@@ -1970,53 +1726,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "يوصى بتفعيله"
-          }
-        }
-      }
-    },
-    "Recommended rules" : {
-      "comment" : "Accessibility label of the preset table, onboarding step 4",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "القواعد الموصى بها"
-          }
-        }
-      }
-    },
-    "Recommended settings applied" : {
-      "comment" : "Protection, next to the disabled preset button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تم تطبيق الإعدادات الموصى بها"
-          }
-        }
-      }
-    },
-    "Recommended: Safari, Chrome, Arc, Telegram, WhatsApp and Discord as Curtain; the Default Rule stays. Removing an override restores the Default Rule, which may still protect that app." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الموصى به: وضع الستارة لتطبيقات Safari وChrome وArc وTelegram وWhatsApp وDiscord، مع إبقاء القاعدة الافتراضية. حذف قاعدة تطبيق يعيد تطبيق القاعدة الافتراضية عليه، وقد تبقى حمايته مفعّلة."
-          }
-        }
-      }
-    },
-    "Recommended: Safari, Chrome, Arc, Telegram, WhatsApp and Discord as Curtain; the Default Rule stays. Select rows and press ⌫ to remove them." : {
-      "comment" : "Protection › App overrides footer",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الموصى به: Safari وChrome وArc وTelegram وWhatsApp وDiscord بوضع الستارة، مع بقاء القاعدة الافتراضية كما هي. حدد الصفوف واضغط ⌫ لإزالتها."
           }
         }
       }
@@ -2080,38 +1789,35 @@
         }
       }
     },
-    "Removes all covers and resumes on its own" : {
-      "comment" : "Accessibility hint, Pause Protection",
+    "Remove Music" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يزيل كل الأغطية ثم يستأنف الحماية تلقائيًا"
+            "value" : "إزالة الموسيقى"
           }
         }
       }
     },
-    "Removes all covers until you enable protection again" : {
-      "comment" : "Accessibility hint, Disable Protection",
+    "Remove music" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يزيل كل الأغطية حتى تفعّل الحماية مجددًا"
+            "value" : "إزالة الموسيقى"
           }
         }
       }
     },
-    "Required. Everyone includes people Sitr cannot classify." : {
-      "comment" : "Accessibility hint of the hidden set picker, onboarding step 3",
+    "Remove music from videos" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "مطلوب. «الجميع» يشمل الأشخاص الذين لا يستطيع Sitr تصنيفهم."
+            "value" : "إزالة الموسيقى من الفيديوهات"
           }
         }
       }
@@ -2276,30 +1982,6 @@
         }
       }
     },
-    "Reveal available: hold %@" : {
-      "comment" : "Accessibility label of the menu bar reveal line; %@ is the shortcut",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الكشف المؤقت متاح: اضغط باستمرار على %@"
-          }
-        }
-      }
-    },
-    "Reveal unavailable" : {
-      "comment" : "Menu bar line while paused, disabled, or without permission",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الكشف المؤقت غير متاح"
-          }
-        }
-      }
-    },
     "Reveal: hold %@" : {
       "comment" : "Menu bar line; %@ is the shortcut such as ⌃⌥Space",
       "extractionState" : "manual",
@@ -2312,17 +1994,6 @@
         }
       }
     },
-    "Review the apps below. Saved rules for apps that are not installed will apply when you install them." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "راجع التطبيقات أدناه. تسري القواعد المحفوظة للتطبيقات غير المثبّتة عند تثبيتها."
-          }
-        }
-      }
-    },
     "Rules could not be reset. Your existing files have been kept." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2330,40 +2001,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تعذّرت إعادة تعيين القواعد. احتُفظ بملفاتك الحالية."
-          }
-        }
-      }
-    },
-    "Running" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يعمل"
-          }
-        }
-      }
-    },
-    "Safari, Chrome, Arc" : {
-      "comment" : "Onboarding step 4, preset table",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Safari وChrome وArc"
-          }
-        }
-      }
-    },
-    "Sample cover only. This preview does not test screen detection." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "مثال للحجب فقط. هذه المعاينة لا تختبر اكتشاف الأشخاص على الشاشة."
           }
         }
       }
@@ -2391,29 +2028,6 @@
         }
       }
     },
-    "Screen Recording is not allowed. Detection is unavailable; existing Curtain rules keep those app windows covered." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لم يُسمح بتسجيل الشاشة. الاكتشاف غير متاح، وتبقى نوافذ التطبيقات التي تشملها قواعد الستارة الحالية محجوبة."
-          }
-        }
-      }
-    },
-    "Screen Recording permission is missing or screen capture stopped. Nothing is covered until it resumes." : {
-      "comment" : "Notification body",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إذن تسجيل الشاشة مفقود أو توقف التقاط الشاشة. لا يُغطَّى أي شيء حتى يُستأنف."
-          }
-        }
-      }
-    },
     "Screen Recording permission is missing. Curtain apps stay covered; Blur apps are uncovered until capture resumes." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2421,18 +2035,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "إذن تسجيل الشاشة غير متاح. تبقى تطبيقات وضع الستارة محجوبة، أما تطبيقات التمويه فتبقى مكشوفة حتى استئناف الالتقاط."
-          }
-        }
-      }
-    },
-    "Screen capture is running again and people on screen are covered." : {
-      "comment" : "Notification body",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "عاد التقاط الشاشة إلى العمل، والأشخاص على الشاشة مغطّون."
           }
         }
       }
@@ -2506,18 +2108,6 @@
         }
       }
     },
-    "Sets Safari, Chrome, Arc, Telegram, WhatsApp and Discord to Curtain; the Default Rule stays Off" : {
-      "comment" : "Accessibility hint, Use recommended settings (onboarding)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يضبط Safari وChrome وArc وTelegram وWhatsApp وDiscord على وضع الستارة، وتبقى القاعدة الافتراضية على الإيقاف"
-          }
-        }
-      }
-    },
     "Settings" : {
       "comment" : "Accessibility label of the Settings… item and the ⌘, system shortcut name",
       "extractionState" : "manual",
@@ -2538,17 +2128,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الإعدادات…"
-          }
-        }
-      }
-    },
-    "Setup complete" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اكتمل الإعداد"
           }
         }
       }
@@ -2585,18 +2164,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "الاختصار"
-          }
-        }
-      }
-    },
-    "Shortcuts" : {
-      "comment" : "Settings tab",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الاختصارات"
           }
         }
       }
@@ -2695,14 +2262,13 @@
         }
       }
     },
-    "Sitr hides people on your screen as they appear — women, men, or everyone — in the apps you choose: browsers, chats, photos, video, calls." : {
-      "comment" : "Onboarding step 1",
+    "Sitr lives in the menu bar at the top of your screen. Turn each feature on or off from there." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يخفي Sitr الأشخاص على شاشتك لحظة ظهورهم — النساء أو الرجال أو الجميع — في التطبيقات التي تختارها: المتصفحات والمحادثات والصور والفيديو والمكالمات."
+            "value" : "يوجد Sitr في شريط القوائم أعلى الشاشة. شغّل كل ميزة أو أوقفها من هناك."
           }
         }
       }
@@ -2777,14 +2343,24 @@
         }
       }
     },
-    "Sitr starts protecting as soon as you log in." : {
-      "comment" : "Onboarding step 5, under Launch at login",
+    "Sitr starts as soon as you log in." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يبدأ Sitr الحماية فور تسجيل دخولك."
+            "value" : "يبدأ Sitr فور تسجيل دخولك."
+          }
+        }
+      }
+    },
+    "Sitr starts with your browsers and chat apps (Safari, Chrome, Arc, Telegram, WhatsApp, Discord). Add or remove apps any time in Settings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يبدأ Sitr بمتصفحاتك وتطبيقات المحادثة (Safari وChrome وArc وTelegram وWhatsApp وDiscord). أضف التطبيقات أو أزلها في أي وقت من الإعدادات."
           }
         }
       }
@@ -2916,18 +2492,6 @@
         }
       }
     },
-    "Status: %@" : {
-      "comment" : "Accessibility label of the menu bar status line",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الحالة: %@"
-          }
-        }
-      }
-    },
     "Step %lld of %lld" : {
       "comment" : "Onboarding caption",
       "extractionState" : "manual",
@@ -2975,18 +2539,6 @@
         }
       }
     },
-    "System follows the language order in System Settings › General › Language & Region." : {
-      "comment" : "General › Language footer",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يتبع خيار «النظام» ترتيب اللغات في إعدادات النظام › عام › اللغة والمنطقة."
-          }
-        }
-      }
-    },
     "Technical details" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2994,18 +2546,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تفاصيل تقنية"
-          }
-        }
-      }
-    },
-    "Telegram, WhatsApp, Discord" : {
-      "comment" : "Onboarding step 4, preset table",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Telegram وWhatsApp وDiscord"
           }
         }
       }
@@ -3077,18 +2617,6 @@
         }
       }
     },
-    "Typing special characters; regressed in macOS 15.0" : {
-      "comment" : "Shortcuts › Known conflicts, the ⌥ + key row",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "كتابة الرموز الخاصة؛ تراجع سلوكه في macOS 15.0"
-          }
-        }
-      }
-    },
     "Unknown: facing away, face hidden or too small, or the classifier is unsure." : {
       "comment" : "Protection footer under the Strict Mode toggle",
       "extractionState" : "manual",
@@ -3097,30 +2625,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "غير معروف: من يولّي ظهره، أو وجهه مخفي أو صغير جدًا، أو المصنّف غير متأكد."
-          }
-        }
-      }
-    },
-    "Use Default Settings" : {
-      "comment" : "Onboarding step 1 default button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استخدام الإعدادات الافتراضية"
-          }
-        }
-      }
-    },
-    "Use recommended settings" : {
-      "comment" : "Button, Protection and onboarding step 4",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استخدام الإعدادات الموصى بها"
           }
         }
       }
@@ -3172,18 +2676,6 @@
         }
       }
     },
-    "Walks through the setup step by step" : {
-      "comment" : "Accessibility hint for the Customize button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يمر بخطوات الإعداد خطوة خطوة"
-          }
-        }
-      }
-    },
     "Welcome to Sitr" : {
       "comment" : "Onboarding step 1 title; the only place the Arabic name appears",
       "extractionState" : "manual",
@@ -3203,6 +2695,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ما الذي تتوقعه"
+          }
+        }
+      }
+    },
+    "What would you like Sitr to do? Choose one or both." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ماذا تريد أن يفعل Sitr؟ اختر واحدًا أو الاثنين معًا."
+          }
+        }
+      }
+    },
+    "Where to hide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أين يُطبَّق الإخفاء"
           }
         }
       }
@@ -3231,6 +2745,17 @@
         }
       }
     },
+    "Who to hide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "من تريد إخفاءه"
+          }
+        }
+      }
+    },
     "Women" : {
       "comment" : "Hidden set choice",
       "extractionState" : "manual",
@@ -3254,6 +2779,17 @@
         }
       }
     },
+    "You can also do this later in Settings › Remove Music." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمكنك فعل ذلك لاحقًا من الإعدادات › إزالة الموسيقى."
+          }
+        }
+      }
+    },
     "You're all set" : {
       "comment" : "Onboarding step 5 title",
       "extractionState" : "manual",
@@ -3262,18 +2798,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "كل شيء جاهز"
-          }
-        }
-      }
-    },
-    "macOS 15.1 and later asks you to re-approve this permission about once a month. When the grant lapses, Sitr shows the warning icon and brings this step back." : {
-      "comment" : "Onboarding step 2 note",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يطلب macOS 15.1 والأحدث إعادة الموافقة على هذا الإذن مرة كل شهر تقريبًا. عند انقضاء الإذن، يعرض Sitr أيقونة التحذير ويعيد هذه الخطوة."
           }
         }
       }
@@ -3309,18 +2833,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "مبدّل التطبيقات"
-          }
-        }
-      }
-    },
-    "⌥ + key" : {
-      "comment" : "Shortcuts › Known conflicts row label",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⌥ + مفتاح"
           }
         }
       }

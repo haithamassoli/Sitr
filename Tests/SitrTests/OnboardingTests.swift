@@ -1,5 +1,5 @@
-// M4-T01 unit tests: the pure onboarding flow (step rules, Strict forced for Everyone, finish outcome for preset vs
-// configure-myself, the permission-only reopen), the rules seed for a missing rules.json with and without SITR_DEV_BLUR, the
+// M4-T01 unit tests: the pure onboarding flow (steps per chosen feature, Strict forced for Everyone, finish outcome for
+// hiding vs music only, the permission-only reopen), the rules seed for a missing rules.json with and without SITR_DEV_BLUR, the
 // reopen-on-needs-permission trigger, and what `AppModel.completeOnboarding` stores.
 import Foundation
 import SitrCore
@@ -8,82 +8,65 @@ import Testing
 @testable import Sitr
 
 @Suite struct OnboardingFlowTests {
-    @Test func fiveStepsInFR8Order() {
-        #expect(OnboardingFlow.Step.allCases == [.welcome, .permission, .hiddenSet, .recommended, .done])
+    @Test func stepsFollowTheChosenFeatures() {
         var flow = OnboardingFlow()
-        #expect(flow.step == .welcome && flow.stepCount == 5 && !flow.finished && !flow.permissionOnly)
-        flow.advance()
-        #expect(flow.step == .permission)
-        flow.back()
-        #expect(flow.step == .welcome)
+        #expect(flow.step == .welcome && !flow.canContinue && !flow.finished && !flow.permissionOnly)  // nothing preselected
+        flow.wantsHide = true
+        #expect(flow.steps == [.welcome, .hiddenSet, .permission, .done])
+        flow.wantsMusic = true
+        #expect(flow.steps == [.welcome, .hiddenSet, .permission, .music, .done] && flow.stepCount == 5)
+        flow.wantsHide = false
+        #expect(flow.steps == [.welcome, .music, .done])  // music only: no Screen Recording request
         flow.back()  // no step before welcome
         #expect(flow.step == .welcome)
     }
 
     @Test func continueRulesPerStep() {
         var flow = OnboardingFlow()
-        #expect(flow.canContinue)  // welcome
-        flow.advance()
-        #expect(flow.step == .permission && !flow.canContinue)
-        flow.advance()  // Return without the grant: nothing happens
-        #expect(flow.step == .permission)
-        flow.permissionGranted = true
-        #expect(flow.canContinue)
+        flow.advance()  // welcome needs a feature
+        #expect(flow.step == .welcome)
+        flow.wantsHide = true
         flow.advance()
         #expect(flow.step == .hiddenSet && !flow.canContinue && flow.hiddenSet == nil)  // no preselection
         flow.advance()
         #expect(flow.step == .hiddenSet)
         flow.hiddenSet = .men
         flow.advance()
-        #expect(flow.step == .recommended && !flow.canContinue)  // one of the two buttons is required
+        #expect(flow.step == .permission && !flow.canContinue && flow.stepNumber == 3)
+        flow.advance()  // Return without the grant: nothing happens
+        #expect(flow.step == .permission)
+        flow.permissionGranted = true
         flow.advance()
-        #expect(flow.step == .recommended)
-        flow.choosePreset(true)
         #expect(flow.step == .done && flow.canContinue && flow.isLast && !flow.finished)
+        flow.back()
+        #expect(flow.step == .permission)
+        flow.advance()
         flow.advance()
         #expect(flow.finished && flow.step == .done)
     }
 
-    @Test func useDefaultsLeavesOnlyThePermissionStep() {
+    @Test func musicOnlySkipsThePermissionAndWatchesNothing() {
         var flow = OnboardingFlow()
-        flow.useDefaults()
-        #expect(flow.step == .permission && flow.stepCount == 2 && flow.isLast && flow.usedDefaults)
-        #expect(flow.hiddenSet == .everyone && flow.effectiveStrict && flow.launchAtLogin && flow.usePreset == true)
-        #expect(!flow.canContinue && !flow.finished)  // the grant is still the user's to give
-        flow.permissionGranted = true
+        flow.wantsMusic = true
+        flow.advance()
+        #expect(flow.step == .music && flow.canContinue)
+        flow.advance()
+        #expect(flow.step == .done)
         flow.advance()
         #expect(flow.finished)
         let rules = flow.rulesOnFinish(Rules(defaultMode: .blur))
-        #expect(rules?.defaultMode == .off && rules.map(RecommendedPreset.isApplied) == true)
-        #expect(!flow.opensSettingsOnFinish && flow.registersLaunchAtLogin)
-    }
-
-    @Test func useDefaultsIsWelcomeOnlyAndSkippingItStillFinishes() {
-        var flow = OnboardingFlow()
-        flow.advance()
-        flow.useDefaults()  // not on the welcome step: nothing happens
-        #expect(!flow.usedDefaults && flow.step == .permission)
-        flow.back()
-        flow.useDefaults()
-        flow.skipPermission()  // no grant, but everything else is answered
-        #expect(flow.finished && flow.hiddenSet == .everyone)
-    }
-
-    @Test func backOutOfTheDefaultsPathRestartsTheFullFlow() {
-        var flow = OnboardingFlow()
-        flow.useDefaults()
-        flow.back()
-        #expect(flow.step == .welcome && !flow.usedDefaults && flow.stepCount == 5 && !flow.isLast)
-        #expect(flow.hiddenSet == nil && flow.usePreset == nil)  // no preselection carried over
+        #expect(rules == Rules(defaultMode: .off) && rules?.hasMonitoredApps == false)
     }
 
     @Test func skipForNowMovesOnWithoutTheGrant() {
         var flow = OnboardingFlow()
-        flow.skipPermission()  // only on step 2
+        flow.skipPermission()  // only on the permission step
         #expect(flow.step == .welcome)
-        flow.advance()
+        flow.wantsHide = true
+        flow.wantsMusic = true
+        flow.step = .permission
         flow.skipPermission()
-        #expect(flow.step == .hiddenSet && !flow.permissionGranted)
+        #expect(flow.step == .music && !flow.permissionGranted)
     }
 
     @Test func strictIsOnByDefaultAndForcedForEveryone() {
@@ -98,38 +81,26 @@ import Testing
         #expect(!flow.effectiveStrict)  // the user's own choice comes back
     }
 
-    @Test func finishWithThePresetKeepsTheDefaultRuleOff() {
+    @Test func finishWithHidingAppliesThePresetAndKeepsTheDefaultRuleOff() {
         var flow = OnboardingFlow(permissionGranted: true)
+        flow.wantsHide = true
         flow.hiddenSet = .women
-        flow.step = .recommended
-        flow.choosePreset(true)
         let rules = flow.rulesOnFinish(Rules(defaultMode: .blur, overrides: [AppRule(bundleID: "com.example.Other", mode: .off)]))
         #expect(rules?.defaultMode == .off)
         #expect(rules.map(RecommendedPreset.isApplied) == true)
         #expect(rules?.mode(for: "com.example.Other") == .off)  // existing overrides survive
-        #expect(!flow.opensSettingsOnFinish)
         #expect(flow.registersLaunchAtLogin)  // default on
-    }
-
-    @Test func finishConfiguringMyselfOpensSettingsAndLeavesOverridesAlone() {
-        var flow = OnboardingFlow(permissionGranted: true)
-        flow.hiddenSet = .men
-        flow.step = .recommended
-        flow.choosePreset(false)
         flow.launchAtLogin = false
-        let rules = flow.rulesOnFinish(Rules(defaultMode: .blur))
-        #expect(rules == Rules(defaultMode: .off))
-        #expect(flow.opensSettingsOnFinish)
         #expect(!flow.registersLaunchAtLogin)
     }
 
-    @Test func permissionOnlyReopenIsTheSecondStepAlone() {
+    @Test func permissionOnlyReopenIsThePermissionStepAlone() {
         var flow = OnboardingFlow(permissionOnly: true)
         #expect(flow.step == .permission && flow.stepCount == 1 && flow.isLast && !flow.canContinue)
         flow.back()
         #expect(flow.step == .permission)
         #expect(flow.rulesOnFinish(Rules(defaultMode: .blur)) == nil)  // rules untouched
-        #expect(!flow.opensSettingsOnFinish && !flow.registersLaunchAtLogin)
+        #expect(!flow.registersLaunchAtLogin)
         var skipped = flow
         skipped.skipPermission()
         #expect(skipped.finished)
@@ -158,12 +129,12 @@ import Testing
     }
 
     @Test func devStepParsing() {
-        #expect(OnboardingFlow.Step(devValue: "3") == .hiddenSet)
+        #expect(OnboardingFlow.Step(devValue: "2") == .hiddenSet)
         #expect(OnboardingFlow.Step(devValue: "5") == .done)
         #expect(OnboardingFlow.Step(devValue: "6") == nil)
         #expect(OnboardingFlow.Step(devValue: "x") == nil)
         #expect(OnboardingFlow.Step(devValue: nil) == nil)
-        #expect(OnboardingFlow(step: .recommended).step == .recommended)
+        #expect(OnboardingFlow(step: .music).step == .music && OnboardingFlow(step: .music).steps.contains(.music))
     }
 }
 
@@ -192,10 +163,12 @@ import Testing
     @Test func completingStoresChoicesRulesAndTheFlag() {
         let model = makeModel()
         var flow = OnboardingFlow(permissionGranted: true)
+        flow.wantsHide = true
+        flow.advance()
         flow.hiddenSet = .women
         flow.strict = false
-        flow.step = .recommended
-        flow.choosePreset(true)
+        flow.advance()
+        flow.advance()
         flow.advance()
         #expect(flow.finished)
         model.completeOnboarding(flow)
@@ -213,17 +186,29 @@ import Testing
         let model = makeModel()
         model.policy.health = .needsPermission  // what Runtime sets without the grant
         var flow = OnboardingFlow()
+        flow.wantsHide = true
         flow.advance()
-        flow.skipPermission()
         flow.hiddenSet = .everyone
         flow.advance()
-        flow.choosePreset(false)
+        flow.skipPermission()
         flow.advance()
         model.completeOnboarding(flow)
         #expect(model.status == .needsPermission && model.iconState == .warning && !model.revealAvailable)
-        #expect(model.policy.rules == Rules(defaultMode: .off))
-        #expect(!FileManager.default.fileExists(atPath: store.fileURL.path))  // nothing changed, nothing written
         #expect(model.policy.hiddenSet == .everyone && model.policy.effectiveStrict)
+        cleanUp()
+    }
+
+    @Test func musicOnlyNeverShowsThePermissionWarning() {
+        let model = makeModel()
+        model.policy.health = .needsPermission  // no grant, and none asked for
+        var flow = OnboardingFlow()
+        flow.wantsMusic = true
+        flow.advance()
+        flow.advance()
+        flow.advance()
+        model.completeOnboarding(flow)
+        #expect(flow.finished && model.status == .noApps && model.iconState == .dimmed)
+        #expect(!model.policy.rules.hasMonitoredApps)
         cleanUp()
     }
 

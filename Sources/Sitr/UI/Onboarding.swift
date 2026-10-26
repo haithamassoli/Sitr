@@ -1,4 +1,4 @@
-// M4-T01 onboarding (PRD FR8, five steps) and its M4-T11 accessibility. `OnboardingFlow` is the pure state (unit-tested),
+// M4-T01 onboarding (PRD FR8) and its M4-T11 accessibility. `OnboardingFlow` is the pure state (unit-tested),
 // `OnboardingWindow` the one NSWindow + NSHostingView, `OnboardingView` the SwiftUI pages. Every literal is a String Catalog
 // key (M4-T05); computed texts go through `String(localized:)`.
 import AppKit
@@ -8,9 +8,11 @@ import SwiftUI
 import os
 
 /// Which step, what the user chose, and what finishing applies. The view binds to it; tests drive it without a window.
+/// The first page asks what Sitr is for; the steps after it follow from that: hiding people needs who + the permission,
+/// music needs the browser extension, a music-only user never sees the Screen Recording request.
 nonisolated struct OnboardingFlow: Equatable, Sendable {
     nonisolated enum Step: Int, CaseIterable, Sendable {
-        case welcome = 1, permission, hiddenSet, recommended, done
+        case welcome = 1, hiddenSet, permission, music, done
 
         /// `SITR_ONBOARDING_STEP=<1…5>` (dev smoke runs, docs/m4/onboarding.md).
         init?(devValue: String?) {
@@ -24,92 +26,81 @@ nonisolated struct OnboardingFlow: Equatable, Sendable {
     /// step alone; nothing else is asked again and rules are not touched.
     let permissionOnly: Bool
     var permissionGranted: Bool
-    /// FR8 step 3: required, no preselection.
+    /// Welcome: the two features, nothing preselected; at least one is required.
+    var wantsHide = false
+    var wantsMusic = false
+    /// FR8: required when hiding, no preselection.
     var hiddenSet: HiddenSet?
     var strict = true
-    /// Step 4: true = "Use recommended settings", false = "Configure myself", nil = not chosen yet.
-    var usePreset: Bool?
     var launchAtLogin = true
-    /// Welcome "Use Default Settings": steps 3–5 are answered with the shipped defaults, so only the permission is left.
-    private(set) var usedDefaults = false
     private(set) var finished = false
 
     init(permissionOnly: Bool = false, permissionGranted: Bool = false, step: Step? = nil) {
         self.permissionOnly = permissionOnly
         self.permissionGranted = permissionGranted
         self.step = step ?? (permissionOnly ? .permission : .welcome)
+        if step != nil, !permissionOnly { wantsHide = true; wantsMusic = true }  // dev runs: every step is reachable
     }
 
-    var stepCount: Int { permissionOnly ? 1 : usedDefaults ? 2 : Step.allCases.count }
-    var isLast: Bool { permissionOnly || step == .done || usedDefaults }
+    /// The pages this user walks through, in order.
+    var steps: [Step] {
+        if permissionOnly { return [.permission] }
+        return [.welcome] + (wantsHide ? [.hiddenSet, .permission] : []) + (wantsMusic ? [.music] : []) + [.done]
+    }
+    var stepNumber: Int { (steps.firstIndex(of: step) ?? 0) + 1 }
+    var stepCount: Int { steps.count }
+    var isLast: Bool { step == steps.last }
     /// Strict Mode as applied: Everyone forces it on (PRD Definitions); the toggle then shows on and disabled.
     var effectiveStrict: Bool { hiddenSet == .everyone || strict }
     var strictLocked: Bool { hiddenSet == .everyone }
 
-    /// Continue / Finish enabled: permission needs the grant, the hidden set a choice, step 4 one of its two buttons.
+    /// Continue / Finish enabled: welcome needs a feature, the hidden set a choice, the permission the grant.
     var canContinue: Bool {
         switch step {
-        case .welcome, .done: true
-        case .permission: permissionGranted
+        case .welcome: wantsHide || wantsMusic
         case .hiddenSet: hiddenSet != nil
-        case .recommended: usePreset != nil
+        case .permission: permissionGranted
+        case .music, .done: true
         }
     }
 
     mutating func back() {
-        guard !permissionOnly, let previous = Step(rawValue: step.rawValue - 1) else { return }
-        // Back out of the defaults path = the full flow from the top again, nothing preselected.
-        if usedDefaults { self = OnboardingFlow(permissionGranted: permissionGranted) } else { step = previous }
-    }
-
-    /// Welcome, one click: Everyone + Strict, the recommended preset, launch at login. The permission step still has to be
-    /// answered (only the user can grant it), and it is then the last one.
-    mutating func useDefaults() {
-        guard step == .welcome else { return }
-        hiddenSet = .everyone
-        strict = true
-        usePreset = true
-        launchAtLogin = true
-        usedDefaults = true
-        step = .permission
+        guard !permissionOnly, let i = steps.firstIndex(of: step), i > 0 else { return }
+        step = steps[i - 1]
     }
 
     /// Return / Continue. Does nothing while `canContinue` is false (Return cannot skip the permission); finishes on the last step.
     mutating func advance() {
         guard canContinue else { return }
-        if isLast {
-            finished = true
-        } else if let next = Step(rawValue: step.rawValue + 1) {
-            step = next
-        }
+        moveOn()
     }
 
     /// "Skip for now": on without the grant (Needs permission, warning icon, nothing covered); in a reopen it just closes.
     mutating func skipPermission() {
         guard step == .permission else { return }
-        if isLast { finished = true } else { step = .hiddenSet }
+        moveOn()
     }
 
-    mutating func choosePreset(_ use: Bool) {
-        guard step == .recommended else { return }
-        usePreset = use
-        advance()
+    private mutating func moveOn() {
+        if isLast {
+            finished = true
+        } else if let i = steps.firstIndex(of: step) {
+            step = steps[i + 1]
+        }
     }
 
     // MARK: Finish outcome
 
-    /// Rules after finishing: the Default Rule becomes Off (the preset keeps it there), preset overrides when chosen. Nil for
-    /// a permission-only reopen.
+    /// Rules after finishing: the Default Rule becomes Off, and hiding adds the recommended browsers and chat apps (editable
+    /// in Settings › Hide People). Without hiding nothing is watched. Nil for a permission-only reopen.
     func rulesOnFinish(_ current: Rules) -> Rules? {
         guard !permissionOnly else { return nil }
         var rules = current
         rules.defaultMode = .off
-        if usePreset == true { RecommendedPreset.apply(to: &rules) }
+        if wantsHide { RecommendedPreset.apply(to: &rules) }
         return rules
     }
 
-    /// "Configure myself" opens Settings › Protection once the window is gone.
-    var opensSettingsOnFinish: Bool { !permissionOnly && usePreset == false }
     var registersLaunchAtLogin: Bool { !permissionOnly && launchAtLogin }
 
     // MARK: AppModel hooks (pure)
@@ -153,7 +144,7 @@ enum OnboardingWindow {
             step: devStep)
         let window = NSWindow(
             contentRect: NSRect(origin: .zero, size: OnboardingView.size), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-        window.minSize = CGSize(width: 560, height: 440)
+        window.minSize = CGSize(width: 520, height: 420)
         window.contentView = NSHostingView(rootView: OnboardingView(model: model, permission: permission, flow: flow))
         window.title = String(localized: "Sitr Setup", comment: "Onboarding window title (hidden, read by accessibility)")
         window.titleVisibility = .hidden
@@ -186,44 +177,50 @@ enum OnboardingWindow {
     }
 }
 
-/// The five pages, one bottom bar. Return = the default button; Esc is not bound (nothing skips the permission by accident).
+/// The pages, one bottom bar. Return = the default button; Esc is not bound (nothing skips the permission by accident).
 /// No animations (M4-T11).
 struct OnboardingView: View {
-    static let size = CGSize(width: 600, height: 520)
+    static let size = CGSize(width: 560, height: 480)
 
     let model: AppModel
     let permission: PermissionMonitor
     @State var flow: OnboardingFlow
-    @FocusState private var focus: Focus?
+    private let music = MusicService.shared
     @Environment(\.openSettings) private var openSettings
-
-    private enum Focus: Hashable { case hiddenSet, primary }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Group {
                 if flow.permissionOnly {
                     Text("Sitr needs your attention")
-                } else {
-                    let step = flow.step.rawValue, count = flow.stepCount
+                } else if flow.step != .welcome {
+                    let step = flow.stepNumber, count = flow.stepCount
                     Text("Step \(step) of \(count)")
                 }
             }
             .font(.caption)
             .foregroundStyle(.secondary)
-            .padding(.bottom, 12)
+            .frame(height: 16, alignment: .leading)
+            .padding(.bottom, 10)
             ScrollView { content.frame(maxWidth: .infinity, alignment: .leading) }
             Spacer(minLength: 12)
             buttons
         }
         .padding(.horizontal, 32)
-        .padding(.top, 6)
+        .padding(.top, 10)
         .padding(.bottom, 22)
-        .frame(minWidth: 560, idealWidth: Self.size.width, minHeight: 400, idealHeight: Self.size.height)
+        .frame(minWidth: 520, idealWidth: Self.size.width, minHeight: 420, idealHeight: Self.size.height)
         .transaction { $0.animation = nil }
-        .defaultFocus($focus, .primary)
-        .onChange(of: flow.step) { _, step in focus = step == .hiddenSet ? .hiddenSet : .primary }
         .onChange(of: permission.state, initial: true) { _, state in permissionChanged(state) }
+        .onChange(of: flow.step, initial: true) { _, step in
+            if step == .music, OnboardingWindow.devStep == nil { music.enabled = true }  // the helper must run for the extension to connect
+        }
+        .task {
+            while !Task.isCancelled {
+                music.refreshHelperStatus()
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
     }
 
     // MARK: Pages
@@ -231,18 +228,41 @@ struct OnboardingView: View {
     @ViewBuilder private var content: some View {
         switch flow.step {
         case .welcome:
-            page("eye.slash", Text("Welcome to Sitr")) {
-                Text("Sitr hides people on your screen as they appear — women, men, or everyone — in the apps you choose: browsers, chats, photos, video, calls.")
-                Text("Everything happens on this Mac. Sitr has no network access, so nothing leaves your Mac: no pixels, no logs, no telemetry. Verify it any time:")
-                Text(AboutTab.verifyCommand)
-                    .font(.system(.callout, design: .monospaced))
-                    .textSelection(.enabled)
-                    .padding(8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 6))
-                    .environment(\.layoutDirection, .leftToRight)  // a shell command stays LTR and left-aligned inside the RTL layout
-                    .accessibilityLabel("Verification command: \(AboutTab.verifyCommand)")
-                Text("Default settings: hide everyone in Safari, Chrome, Arc, Telegram, WhatsApp and Discord, and start at login. Other apps stay Off. Change these choices in Settings.")
+            page(nil, Text("Welcome to Sitr")) {
+                Text("What would you like Sitr to do? Choose one or both.")
+                    .foregroundStyle(.secondary)
+                ChoiceCard(symbol: "eye.slash", title: Text("Hide people on screen"),
+                           detail: Text("Covers women, men, or everyone in your browsers and chat apps."),
+                           selected: flow.wantsHide, multiple: true) { flow.wantsHide.toggle() }
+                ChoiceCard(symbol: "music.note", title: Text("Remove music from videos"),
+                           detail: Text("Hear speech without the music in Chrome, Edge, Brave and Arc."),
+                           selected: flow.wantsMusic, multiple: true) { flow.wantsMusic.toggle() }
+                Label("Everything runs on this Mac. Nothing on your screen leaves it.", systemImage: "lock.fill")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 4)
+            }
+        case .hiddenSet:
+            page("person.2", Text("Who should be hidden?")) {
+                ChoiceCard(symbol: "figure.stand.dress", title: Text("Women"), detail: nil,
+                           selected: flow.hiddenSet == .women, multiple: false) { flow.hiddenSet = .women }
+                ChoiceCard(symbol: "figure.stand", title: Text("Men"), detail: nil,
+                           selected: flow.hiddenSet == .men, multiple: false) { flow.hiddenSet = .men }
+                ChoiceCard(symbol: "person.3", title: Text("Everyone"), detail: Text("Includes people Sitr cannot classify."),
+                           selected: flow.hiddenSet == .everyone, multiple: false) { flow.hiddenSet = .everyone }
+                Toggle(isOn: Binding(get: { flow.effectiveStrict }, set: { flow.strict = $0 })) {
+                    Text("Blur Unknown (Strict Mode)")
+                    Text("Also hides people Sitr cannot tell apart: facing away, face hidden or too small.")
+                }
+                .toggleStyle(.switch)
+                .disabled(flow.strictLocked)
+                .accessibilityLabel("Blur Unknown, Strict Mode")
+                .accessibilityHint(
+                    flow.strictLocked
+                        ? String(localized: "Always on while Everyone is selected", comment: "Accessibility hint for the Strict Mode toggle")
+                        : String(localized: "Recommended on", comment: "Accessibility hint for the Strict Mode toggle in onboarding"))
+                .padding(.top, 6)
+                Text("Sitr starts with your browsers and chat apps (Safari, Chrome, Arc, Telegram, WhatsApp, Discord). Add or remove apps any time in Settings.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -253,119 +273,86 @@ struct OnboardingView: View {
                     Label("Screen Recording is allowed.", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                 } else {
-                    Label("Screen Recording is not allowed. Detection is unavailable; existing Curtain rules keep those app windows covered.", systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
                     HStack {
                         Button("Allow Screen Recording") { permission.request() }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
                             .accessibilityHint("Shows the macOS permission dialog")
                         Button("Open System Settings") { permission.openSystemSettings() }
+                            .controlSize(.large)
                             .accessibilityHint("Opens Privacy & Security, Screen & System Audio Recording")
                     }
+                    Text("In System Settings, turn on Sitr under Screen & System Audio Recording. This page continues on its own.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                 }
                 Text("macOS may ask you to allow Screen Recording again. If permission is lost, Sitr shows a warning and reopens this step.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
-        case .hiddenSet:
-            page("person.2", Text("Who should be hidden?")) {
-                Picker("Hide", selection: $flow.hiddenSet) {
-                    Text("Women").tag(HiddenSet?.some(.women))
-                    Text("Men").tag(HiddenSet?.some(.men))
-                    Text("Everyone").tag(HiddenSet?.some(.everyone))
+        case .music:
+            page("music.note", Text("Add the browser extension")) {
+                Text("Music removal works through a small extension in your browser. It takes about a minute.")
+                if music.extensionConnected {
+                    Label("Extension connected", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                } else {
+                    ExtensionInstallSteps()
                 }
-                .pickerStyle(.radioGroup)
-                .labelsHidden()
-                .focused($focus, equals: .hiddenSet)
-                .accessibilityLabel("Hidden set")
-                .accessibilityHint("Required. Everyone includes people Sitr cannot classify.")
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Blur Unknown (Strict Mode)")
-                        Text("Also hides people whose category is unknown: facing away, face hidden or too small, or the classifier unsure. Everyone always includes them.")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Toggle("Blur Unknown (Strict Mode)", isOn: Binding(get: { flow.effectiveStrict }, set: { flow.strict = $0 }))
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                        .disabled(flow.strictLocked)
-                        .accessibilityLabel("Blur Unknown, Strict Mode")
-                        .accessibilityHint(
-                            flow.strictLocked
-                                ? String(localized: "Always on while Everyone is selected", comment: "Accessibility hint for the Strict Mode toggle")
-                                : String(localized: "Recommended on", comment: "Accessibility hint for the Strict Mode toggle in onboarding"))
-                }
-                .padding(.top, 6)
-            }
-        case .recommended:
-            page("checkmark.shield", Text("Recommended Protection")) {
-                Text("Curtain covers changed regions the moment they appear and uncovers what is verified safe: the mode for apps where people show up without warning. Every other app stays Off (the Default Rule) until you change it in Settings › Protection.")
-                Grid(alignment: .leading, horizontalSpacing: 28, verticalSpacing: 8) {
-                    GridRow {
-                        Text("Browsers").bold()
-                        Text("Safari, Chrome, Arc")
-                        Text("Curtain").foregroundStyle(.secondary)
-                    }
-                    .accessibilityElement(children: .combine)
-                    GridRow {
-                        Text("Communication").bold()
-                        Text("Telegram, WhatsApp, Discord")
-                        Text("Curtain").foregroundStyle(.secondary)
-                    }
-                    .accessibilityElement(children: .combine)
-                }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 6))
-                .accessibilityLabel("Recommended rules")
+                Text("You can also do this later in Settings › Remove Music.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
         case .done:
             let hotkey = model.preferences.hotkey.displayString
-            page("keyboard", Text("You're all set")) {
-                Text("Hold \(hotkey) to reveal what is under the covers; release to cover again. As a safety, covers come back after 30 seconds of holding.")
-                CoverPreview(style: model.preferences.coverStyle, strength: model.preferences.blurStrength, padding: model.preferences.bodyPadding)
-                    .frame(width: 320, height: 200)
-                    .accessibilityLabel("Preview of a cover over a sample scene")
-                Text("Sample cover only. This preview does not test screen detection.").font(.caption).foregroundStyle(.secondary)
-                Text("Change the shortcut in Settings › Shortcuts. Sitr lives in the menu bar: pause, disable, or open Settings from there.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Launch at login")
-                        Text("Sitr starts protecting as soon as you log in.")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Toggle("Launch at login", isOn: $flow.launchAtLogin)
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                        .accessibilityLabel("Launch at login")
+            page("checkmark.circle", Text("You're all set")) {
+                if flow.wantsHide {
+                    summary("eye.slash", Text("Hiding people in your browsers and chat apps."))
+                    summary("keyboard", Text("Hold \(hotkey) to reveal what is under the covers; release to cover again."))
                 }
+                if flow.wantsMusic {
+                    summary("music.note", Text("On any video, press Remove music. Press it again to hear the original audio."))
+                }
+                summary("menubar.arrow.up.rectangle", Text("Sitr lives in the menu bar at the top of your screen. Turn each feature on or off from there."))
+                Toggle(isOn: $flow.launchAtLogin) {
+                    Text("Launch at login")
+                    Text("Sitr starts as soon as you log in.")
+                }
+                .toggleStyle(.switch)
+                .accessibilityLabel("Launch at login")
                 .padding(.top, 6)
             }
         }
     }
 
     /// `title` is a `Text` so the call sites carry the literal (the String Catalog gate reads `Text("…")`).
-    private func page(_ symbol: String, _ title: Text, @ViewBuilder body: () -> some View) -> some View {
+    private func page(_ symbol: String?, _ title: Text, @ViewBuilder body: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
-                Image(systemName: symbol)
-                    .font(.system(size: 30))
-                    .foregroundStyle(.tint)
-                    .accessibilityHidden(true)
+                if let symbol {
+                    Image(systemName: symbol)
+                        .font(.system(size: 28))
+                        .foregroundStyle(.tint)
+                        .accessibilityHidden(true)
+                } else {
+                    Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 48, height: 48)
+                        .accessibilityHidden(true)
+                }
                 title
                     .font(.title.bold())
                     .accessibilityAddTraits(.isHeader)
             }
-            .padding(.bottom, 4)
+            .padding(.bottom, 2)
             body()
         }
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func summary(_ symbol: String, _ text: Text) -> some View {
+        Label { text.fixedSize(horizontal: false, vertical: true) } icon: {
+            Image(systemName: symbol).foregroundStyle(.tint).frame(width: 22)
+        }
     }
 
     // MARK: Bottom bar
@@ -381,31 +368,13 @@ struct OnboardingView: View {
                 Button("Skip for now") { skipPermission() }
                     .accessibilityHint("Continues without Screen Recording. Person detection stays off; Curtain app windows remain covered.")
             }
-            if flow.step == .welcome {
-                Button("Customize") { flow.advance() }
-                    .accessibilityHint("Walks through the setup step by step")
-                Button("Use Default Settings") { useDefaults() }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction)
-                    .focused($focus, equals: .primary)
-                    .accessibilityHint("Hides everyone including unknown people, sets browsers and chat apps to Curtain, starts Sitr at login. Only Screen Recording is left to allow.")
-            } else if flow.step == .recommended {
-                Button("Configure myself") { flow.choosePreset(false) }
-                    .accessibilityHint("Leaves every app Off and opens Settings, Protection, when setup finishes")
-                Button("Use recommended settings") { flow.choosePreset(true) }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction)
-                    .focused($focus, equals: .primary)
-                    .accessibilityHint("Sets Safari, Chrome, Arc, Telegram, WhatsApp and Discord to Curtain; the Default Rule stays Off")
-            } else {
-                Button(primaryTitle) { advance() }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(!flow.canContinue)
-                    .focused($focus, equals: .primary)
-                    .accessibilityHint(flow.canContinue ? "" : continueHint)
-            }
+            Button(primaryTitle) { advance() }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+                .disabled(!flow.canContinue)
+                .accessibilityHint(flow.canContinue ? "" : continueHint)
         }
+        .controlSize(.large)
     }
 
     /// Continue on the way through, Finish on the last step, Done for the permission-only reopen.
@@ -418,6 +387,7 @@ struct OnboardingView: View {
 
     private var continueHint: String {
         switch flow.step {
+        case .welcome: String(localized: "Choose at least one", comment: "Accessibility hint on the disabled Continue button")
         case .permission: String(localized: "Allow Screen Recording first, or choose Skip for now", comment: "Accessibility hint on the disabled Continue button")
         case .hiddenSet: String(localized: "Choose who should be hidden first", comment: "Accessibility hint on the disabled Continue button")
         default: ""
@@ -431,19 +401,13 @@ struct OnboardingView: View {
         if flow.finished { finish() }
     }
 
-    /// One click on the welcome step: the defaults, then straight to the permission — or done, when it is already granted.
-    private func useDefaults() {
-        flow.useDefaults()
-        if flow.permissionGranted { advance() }
-    }
-
     private func skipPermission() {
         flow.skipPermission()
         if flow.finished { finish() }
     }
 
-    /// The monitor's state → the flow; a grant that arrives on step 2 advances (full flow only). Dev step runs show step 2
-    /// as not granted so the buttons can be reviewed.
+    /// The monitor's state → the flow; a grant that arrives on the permission step advances (full flow only). Dev step runs
+    /// show it as not granted so the buttons can be reviewed.
     private func permissionChanged(_ state: PermissionMonitor.State) {
         guard OnboardingWindow.devStep == nil else { return }
         flow.permissionGranted = state == .granted
@@ -452,12 +416,50 @@ struct OnboardingView: View {
 
     private func finish() {
         model.completeOnboarding(flow)
+        if !flow.permissionOnly, OnboardingWindow.devStep == nil { music.enabled = flow.wantsMusic }
         if flow.registersLaunchAtLogin { OnboardingWindow.registerLaunchAtLogin(model: model) }
         OnboardingWindow.close()
-        if !flow.permissionOnly {
-            model.settingsTab = model.loginProblem == nil ? .protection : .general
+        if model.loginProblem != nil {
+            model.settingsTab = .general
             openSettings()
             NSApp.activate()
         }
+    }
+}
+
+/// A large, clickable option: a checkbox (`multiple`) or a radio button, drawn as a card.
+private struct ChoiceCard: View {
+    let symbol: String
+    let title: Text
+    let detail: Text?
+    let selected: Bool
+    let multiple: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: symbol)
+                    .font(.system(size: 22))
+                    .foregroundStyle(.tint)
+                    .frame(width: 32)
+                VStack(alignment: .leading, spacing: 2) {
+                    title.font(.headline)
+                    if let detail { detail.font(.callout).foregroundStyle(.secondary) }
+                }
+                Spacer()
+                Image(systemName: selected ? (multiple ? "checkmark.square.fill" : "checkmark.circle.fill") : (multiple ? "square" : "circle"))
+                    .font(.title2)
+                    .foregroundStyle(selected ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .contentShape(RoundedRectangle(cornerRadius: 12))
+            .background(RoundedRectangle(cornerRadius: 12).fill(selected ? Color.accentColor.opacity(0.12) : Color.secondary.opacity(0.07)))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(selected ? Color.accentColor : Color.clear, lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
 }

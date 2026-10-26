@@ -2,59 +2,49 @@ import AppKit
 import Carbon.HIToolbox
 import SwiftUI
 
-/// Settings › Shortcuts (M4-T03, PRD FR5): the Reveal Hold recorder, its validation message, the static conflict list,
-/// Reset to Default. Rebinding goes through `AppModel.setHotkey`, so `HotkeyManager` re-registers without a relaunch.
-struct ShortcutsTab: View {
+/// Settings › General › Reveal shortcut (M4-T03, PRD FR5): the Reveal Hold recorder, its validation message, Reset to
+/// Default. Rebinding goes through `AppModel.setHotkey`, so `HotkeyManager` re-registers without a relaunch.
+struct ShortcutSection: View {
     let model: AppModel
     @State private var problem: String?
 
     private var combo: KeyCombo { model.preferences.hotkey }
 
     var body: some View {
-        Form {
-            Section("Reveal Hold") {
-                LabeledContent("Shortcut") {
-                    HStack {
-                        HotkeyRecorder(combo: combo) { recorded in
-                            model.setHotkey(recorded)
-                            problem = nil
-                        } onReject: { problem = $0 }
-                        Button("Reset to Default") {
-                            model.setHotkey(.default)
-                            problem = nil
-                        }
-                        .disabled(combo == .default)
-                        .accessibilityLabel("Reset shortcut to default, Control Option Space")
-                        .accessibilityHint("Applies at once, no relaunch")
+        Section {
+            LabeledContent("Shortcut") {
+                HStack {
+                    HotkeyRecorder(combo: combo) { recorded in
+                        model.setHotkey(recorded)
+                        problem = nil
+                    } onReject: { problem = $0 }
+                    Button("Reset to Default") {
+                        model.setHotkey(.default)
+                        problem = nil
                     }
+                    .disabled(combo == .default)
+                    .accessibilityLabel("Reset shortcut to default, Control Option Space")
+                    .accessibilityHint("Applies at once, no relaunch")
                 }
-                Text("Hold it to see what is under the covers; release to cover again. Click the field, then press the new keys. ⎋ cancels.")
+            }
+            if let problem {
+                Label(problem, systemImage: "xmark.octagon").foregroundStyle(.red).font(.callout)
+            }
+            if let note = combo.conflictNote {
+                Label(note, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.callout)
+            }
+            if model.hotkey.registrationStatus != noErr {
+                let shortcut = combo.displayString
+                let status = Int(model.hotkey.registrationStatus)
+                Label("macOS did not register \(shortcut) (error \(status)); choose another shortcut.", systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.red)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
-                if let problem {
-                    Label(problem, systemImage: "xmark.octagon").foregroundStyle(.red).font(.callout)
-                }
-                if let note = combo.conflictNote {
-                    Label(note, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.callout)
-                }
-                if model.hotkey.registrationStatus != noErr {
-                    let shortcut = combo.displayString
-                    let status = Int(model.hotkey.registrationStatus)
-                    Label("macOS did not register \(shortcut) (error \(status)); choose another shortcut.", systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
-                        .font(.callout)
-                }
             }
-            Section("Known conflicts") {
-                ForEach(KeyCombo.knownConflicts, id: \.combo) { conflict in
-                    LabeledContent(conflict.combo.displayString) { Text(conflict.owner) }
-                        .accessibilityElement(children: .combine)
-                }
-                LabeledContent("⌥ + key") { Text("Typing special characters; regressed in macOS 15.0") }
-                    .accessibilityElement(children: .combine)
-            }
+        } header: {
+            Text("Reveal Hold")
+        } footer: {
+            Text("Hold it to see what is under the covers; release to cover again. Click the field, then press the new keys. ⎋ cancels.")
         }
-        .formStyle(.grouped)
     }
 }
 

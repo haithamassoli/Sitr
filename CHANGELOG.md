@@ -7,6 +7,22 @@ per version and move `Unreleased` entries into it before tagging.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-26
+
+### Changed
+- **Simpler menu bar.** Clicking the icon opens a small panel with one card per feature, each with its own switch:
+  *Hide people* (status, Women / Men / Everyone, pause for 15 minutes or 1 hour) and *Remove music* (status, extension
+  setup). Turning *Hide people* on with no apps configured adds the recommended browsers and chat apps.
+- **Setup asks what you want first.** The first page offers *Hide people on screen*, *Remove music from videos*, or
+  both; only the steps for your choice follow. Choosing music only never asks for Screen Recording.
+- **Four Settings tabs instead of six:** Hide People (status, who, where), Remove Music, General (launch at login,
+  language, Low Power, cover style with preview, Reveal Hold shortcut), and About. The app list is a plain list with
+  *All other apps* (the Default Rule) as its last row; apps that are not installed are no longer listed one by one.
+
+### Fixed
+- With no app set to Blur or Curtain (music removal only), a missing Screen Recording grant no longer shows a warning
+  icon, posts a notification, or reopens the setup window.
+
 ## [0.2.1] - 2026-09-28
 
 ### Fixed

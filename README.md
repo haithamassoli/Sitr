@@ -37,19 +37,19 @@ brew install --cask haithamassoli/sitr/sitr
 
 ## First run
 
-Sitr has no Dock icon; look for the eye-slash icon in the menu bar. The first launch opens a setup window. The
-fastest way through it is **Use Default Settings** on the first screen: everyone hidden (Strict Mode on), the
-recommended app rules applied, launch at login on, leaving only the Screen Recording permission to allow. Everything
-is changeable later in Settings. **Customize** walks the five steps instead:
+Sitr has no Dock icon; look for the eye-slash icon in the menu bar. The first launch opens a short setup window that
+starts with one question: what should Sitr do? Pick **Hide people on screen**, **Remove music from videos**, or both.
+The steps after that depend on the answer:
 
-1. What Sitr does, and the verification command.
-2. **Screen Recording.** Click *Allow Screen Recording* and approve the macOS dialog, or open System Settings ›
-   Privacy & Security › Screen & System Audio Recording and turn Sitr on. Setup continues on its own once the
-   permission is granted. Without it Sitr covers nothing and shows a warning icon.
-3. **Who should be hidden:** Women, Men, or Everyone. *Blur Unknown (Strict Mode)* is on by default and also covers
-   people Sitr cannot classify; Everyone always includes them.
-4. **Recommended Protection:** apply the preset below, or configure the rules yourself.
-5. The Reveal Hold shortcut, and *Launch at login*.
+- **Hide people:** choose Women, Men, or Everyone (*Blur Unknown (Strict Mode)* is on by default and also covers people
+  Sitr cannot classify; Everyone always includes them), then allow **Screen Recording**: click *Allow Screen
+  Recording* and approve the macOS dialog, or open System Settings › Privacy & Security › Screen & System Audio
+  Recording and turn Sitr on. Setup continues on its own once the permission is granted. Your browsers and chat apps
+  (the recommended preset below) are protected; change the list any time in Settings › Hide People.
+- **Remove music:** install the browser extension (see [Music removal in the browser](#music-removal-in-the-browser)).
+  Sitr never asks for Screen Recording when you only want music removal.
+
+The last page sums up what is on and offers *Launch at login*.
 
 ### Monthly re-approval
 
@@ -69,11 +69,12 @@ Every app runs in one of three modes:
 | **Curtain** | Changed regions of the app's windows are covered the moment they change, then uncovered once detection has verified them safe. Exposure is bounded by capture-to-draw latency, not zero. Scrolling with a mouse or trackpad is not covered: people on the page are covered once detected. A region that keeps changing for half a second (a video) behaves like Blur until it is static again. |
 
 The **Default Rule** is the mode for every app without an override. Its initial value is Off, so a fresh install
-covers nothing until you add rules; setting it to Blur or Curtain protects the entire Mac. **Overrides** in Settings ›
-Protection assign a mode per app: pick a running app, or any `.app` file.
+covers nothing until you add rules; setting it to Blur or Curtain protects the entire Mac. In Settings › Hide People ›
+*Where to hide* it is the *All other apps* row; the rows above it assign a mode per app: *Add App* picks a running app,
+or any `.app` file.
 
-**Recommended preset**, offered during setup and available in Settings › Protection › *Use recommended settings*
-(the Default Rule stays Off):
+**Recommended preset**, applied when you choose to hide people during setup and available in Settings › Hide People ›
+*Add browsers and chat apps* (the Default Rule stays Off):
 
 | Group | Apps | Mode |
 |---|---|---|
@@ -85,28 +86,31 @@ too far, or classifier confidence below 80 %. The hidden set is Women, Men, or E
 adds Unknown to the hidden set; it is forced on for Everyone.
 
 **Covers.** The full body box, expanded by *Body Padding* (default 15 %), is covered with the style chosen in
-Settings › Appearance: Gaussian blur (default, strength 70 %), Pixelate, or Solid. A cover appears on the first
+Settings › General › Covers: Gaussian blur (default, strength 70 %), Pixelate, or Solid. A cover appears on the first
 detected frame and lingers briefly after the person leaves, so it does not flicker.
 
 **Reveal Hold.** Hold ⌃⌥Space to see what is under the covers on every display; release to cover again. As a safety
 net the covers come back after 30 seconds of holding, or when the modifier keys are released without a matching
 key-up event. Reveal is unavailable while protection is paused or disabled, or while the permission is missing.
-Change the shortcut in Settings › Shortcuts; ⌥Space is refused because Siri and the ChatGPT app use it.
+Change the shortcut in Settings › General › Reveal Hold; ⌥Space is refused because Siri and the ChatGPT app use it.
 
-**Menu bar.** The status line reads Protected, Paused until a time, Disabled, Needs Screen Recording permission, or
-Degraded. *Pause Protection* for 15 minutes or 1 hour removes all covers and resumes on its own; *Disable Protection*
-stays off until you enable it again. The icon is dimmed while paused or disabled and carries a warning badge when the
-permission is missing or detection is running slowly.
+**Menu bar.** Clicking the icon opens a small panel with one card per feature, each with its own switch. The *Hide
+people* card shows the status (Protected, Paused until a time, Needs Screen Recording permission, Degraded, …), a
+Women / Men / Everyone switcher, and *Pause* for 15 minutes or 1 hour, which removes all covers and resumes on its own.
+Turning the switch off stays off until you turn it on again; turning it on with no apps configured adds the recommended
+browsers and chat apps. The *Remove music* card turns the music helper on or off and links to the extension setup. The
+icon is dimmed while paused or off and carries a warning badge when the permission is missing or detection is running
+slowly. With no app set to Blur or Curtain (music removal only), a missing Screen Recording grant is not a warning.
 
 Settings and the menu also show preparation, configured-app scope, capture recovery, and limited detection. A stopped stream with a valid permission gets a retry action; a missing grant opens Screen Recording settings. Pausing or disabling stops capture and inference, then resumes from a fresh frame.
 
-If saving rules fails, Settings keeps a retry message visible. Unreadable rules remain untouched until you retry reading or explicitly reset them; reset keeps a recovery copy. Appearance has a separate reset that preserves protection rules.
+If saving rules fails, Settings keeps a retry message visible. Unreadable rules remain untouched until you retry reading or explicitly reset them; reset keeps a recovery copy. Settings › General › Covers has a separate reset that preserves protection rules.
 
 ## Music removal in the browser
 
 Sitr can play web videos with the music removed and the speech kept, in Google Chrome, Microsoft Edge, Brave, or Arc.
 
-1. Open Settings › **Music** and turn on **Enable music removal**. The first time, Sitr downloads a voice model
+1. Turn on **Remove music** in the menu bar panel (or Settings › **Remove Music**). The first time, Sitr downloads a voice model
    (about 80 MB, once).
 2. Install the browser extension by following the four steps on that page: open the extensions page, turn on
    Developer mode, and drag in the extension folder that Sitr shows you. A checkmark appears once the extension
@@ -143,7 +147,7 @@ Expected output (append `| plutil -convert xml1 -o - -` to the command for this 
 
 `com.apple.security.app-sandbox` is `true`, and there is no `com.apple.security.network.client` or
 `com.apple.security.network.server` key: the sandbox refuses every socket the process could try to open. The second
-entitlement only lets Sitr read the bundle identifier of an `.app` you pick in the Add dialog of Settings › Protection.
+entitlement only lets Sitr read the bundle identifier of an `.app` you pick in the Add App dialog of Settings › Hide People.
 CI runs the same check on every build (`scripts/check-entitlements.sh`).
 
 ## Screen sharing and screenshots

@@ -35,6 +35,7 @@ struct SitrApp: App {
         } label: {
             MenuBarLabel(model: runtime.model)
         }
+        .menuBarExtraStyle(.window)
         Settings {
             SettingsView(model: runtime.model)
         }
@@ -119,7 +120,11 @@ struct SitrApp: App {
             self.windowsChanged()
         }
         model.onRetryProtection = { [weak self] in self?.retryProtection() }
-        model.onOpenPermissionSettings = { [weak self] in self?.permission.openSystemSettings() }
+        // request() first so Sitr is listed in System Settings even when the user never saw the macOS prompt (music-only setup).
+        model.onOpenPermissionSettings = { [weak self] in
+            self?.permission.request()
+            self?.permission.openSystemSettings()
+        }
         model.onRevealChanged = { [weak self] revealed in self?.displayManager.setRevealed(revealed) }
         // Wired in `init`, observed in `start()`: the unit tests drive `systemEvents.simulate(_:)` on a runtime that
         // never starts real capture.
@@ -510,7 +515,8 @@ struct SitrApp: App {
     private func setHealth(_ health: Health) {
         guard model.policy.health != health else { return }
         model.policy.health = health
-        notifier.healthChanged(to: health)
+        // No watched apps (a music-only user): a missing grant changes nothing, so it is not worth a notification.
+        if model.policy.rules.hasMonitoredApps { notifier.healthChanged(to: health) }
         refreshFailClosed()
     }
 }

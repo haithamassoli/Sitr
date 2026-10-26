@@ -17,11 +17,11 @@ extension RuleMode {
     }
 }
 
-/// Settings › Protection (M2-T14 hidden set + Strict, M3-T08 rules): Default Rule, overrides table, Add, Recommended preset.
-/// Every change goes through `AppModel.updateRules`, which reaches the pipelines live and saves `rules.json`.
+/// Settings › Hide People (M2-T14 hidden set + Strict, M3-T08 rules): status, who, then the app list with "All other
+/// apps" (the Default Rule) as its last row. Every change goes through `AppModel.updateRules`, which reaches the pipelines
+/// live and saves `rules.json`.
 struct ProtectionTab: View {
     let model: AppModel
-    @State private var selection: Set<String> = []
     @State private var addProblem: String?
     @State private var confirmReset = false
     @State private var appInfoRevision = 0
@@ -31,13 +31,22 @@ struct ProtectionTab: View {
 
     var body: some View {
         Form {
-            if model.showSetupSummary {
-                Section("Setup complete") {
-                    Text(model.statusText)
-                    Text(model.scopeText)
-                    Text("Review the apps below. Saved rules for apps that are not installed will apply when you install them.")
-                    Button("Dismiss setup summary") { model.showSetupSummary = false }
+            Section {
+                HStack(spacing: 10) {
+                    Image(systemName: model.iconState == .warning ? "exclamationmark.triangle.fill" : model.iconState == .normal ? "checkmark.shield.fill" : "shield")
+                        .font(.title2)
+                        .foregroundStyle(model.status.tone)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(model.statusText).font(.headline)
+                        Text(model.scopeText).font(.callout).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    ProtectionRecovery(model: model)
                 }
+                .accessibilityElement(children: .contain)
+            } footer: {
+                if let text = model.recoveryText { Text(text) }
             }
             if let problem = model.rulesProblem {
                 Section {
@@ -56,57 +65,51 @@ struct ProtectionTab: View {
                     Text("Men").tag(HiddenSet.men)
                     Text("Everyone").tag(HiddenSet.everyone)
                 }
+                .pickerStyle(.segmented)
+                .labelsHidden()
                 .accessibilityLabel("Hidden set")
                 .accessibilityHint("Who gets covered. Everyone includes people Sitr cannot classify.")
                 // PRD: Everyone forces Strict Mode on and disables the toggle.
-                Toggle("Blur Unknown (Strict Mode)", isOn: Binding(get: { model.policy.effectiveStrict }, set: { model.setStrict($0) }))
-                    .disabled(model.policy.hiddenSet == .everyone)
-                    .accessibilityLabel("Blur Unknown, Strict Mode")
-                    .accessibilityHint(
-                        model.policy.hiddenSet == .everyone
-                            ? String(localized: "Always on while Everyone is selected", comment: "Accessibility hint for the Strict Mode toggle")
-                            : String(localized: "Also covers people whose category is unknown", comment: "Accessibility hint for the Strict Mode toggle"))
-            } footer: {
-                Text("Unknown: facing away, face hidden or too small, or the classifier is unsure.")
+                Toggle(isOn: Binding(get: { model.policy.effectiveStrict }, set: { model.setStrict($0) })) {
+                    Text("Blur Unknown (Strict Mode)")
+                    Text("Unknown: facing away, face hidden or too small, or the classifier is unsure.")
+                }
+                .disabled(model.policy.hiddenSet == .everyone)
+                .accessibilityLabel("Blur Unknown, Strict Mode")
+                .accessibilityHint(
+                    model.policy.hiddenSet == .everyone
+                        ? String(localized: "Always on while Everyone is selected", comment: "Accessibility hint for the Strict Mode toggle")
+                        : String(localized: "Also covers people whose category is unknown", comment: "Accessibility hint for the Strict Mode toggle"))
+            } header: {
+                Text("Who to hide")
             }
             Section {
-                Picker("Default Rule", selection: Binding(get: { rules.defaultMode }, set: { mode in model.updateRules { $0.defaultMode = mode } })) {
-                    ForEach(RuleMode.allCases, id: \.self) { Text($0.title).tag($0) }
-                }
-                .disabled(model.rulesNeedRecovery)
-                .accessibilityLabel("Default Rule")
-                .accessibilityHint("Mode for every app without an override. Off means never captured.")
-            } footer: {
-                Text("For apps without an override. Off: never captured. Blur: detect, then cover. Curtain: cover changes at once, uncover what is verified safe.")
-            }
-            Section {
-                if rules.overrides.isEmpty {
-                    Text("No app overrides. Add an app or apply the recommended settings below.")
-                        .foregroundStyle(.secondary)
-                }
-                Table(rules.overrides, selection: $selection) {
-                    TableColumn("App") { rule in AppCell(bundleID: rule.bundleID, revision: appInfoRevision) }
-                    TableColumn("Mode") { rule in
-                        let name = AppInfo.lookup(rule.bundleID).name
-                        Picker("Mode", selection: Binding(get: { rule.mode }, set: { mode in model.updateRules { $0.upsert(AppRule(bundleID: rule.bundleID, mode: mode)) } })) {
-                            ForEach(RuleMode.allCases, id: \.self) { Text($0.title).tag($0) }
-                        }
-                        .labelsHidden()
-                        .accessibilityLabel("Mode for \(name)")
-                    }
-                    .width(110)
-                    TableColumn("") { rule in
-                        let name = AppInfo.lookup(rule.bundleID).name
-                        Button { remove([rule.bundleID]) } label: { Image(systemName: "minus.circle") }
+                // ponytail: rules for apps that are not installed (the preset lists every Telegram build) stay saved but
+                // unlisted; they apply once the app is installed.
+                let _ = appInfoRevision
+                let installed = rules.overrides.filter { AppInfo.lookup($0.bundleID).installed }
+                ForEach(installed) { rule in
+                    let name = AppInfo.lookup(rule.bundleID).name
+                    HStack {
+                        AppCell(bundleID: rule.bundleID, revision: appInfoRevision)
+                        Spacer()
+                        modePicker(Binding(get: { rule.mode }, set: { mode in model.updateRules { $0.upsert(AppRule(bundleID: rule.bundleID, mode: mode)) } }))
+                            .accessibilityLabel("Mode for \(name)")
+                        Button { remove(rule.bundleID) } label: { Image(systemName: "minus.circle") }
                             .buttonStyle(.borderless)
+                            .help(Text("Remove \(name)"))
                             .accessibilityLabel("Remove \(name)")
                     }
-                    .width(24)
                 }
-                .disabled(model.rulesNeedRecovery)
-                .frame(height: 190)  // fixed: the table scrolls, the buttons below stay in view
-                .onDeleteCommand { remove(selection) }
-                .accessibilityLabel("App overrides")
+                HStack {
+                    Image(systemName: "square.grid.2x2").frame(width: 22).foregroundStyle(.secondary).accessibilityHidden(true)
+                    Text("All other apps")
+                    Spacer()
+                    modePicker(Binding(get: { rules.defaultMode }, set: { mode in model.updateRules { $0.defaultMode = mode } }))
+                        .accessibilityLabel("All other apps")
+                        .accessibilityHint("Mode for every app not in the list. Off means never captured.")
+                    Image(systemName: "minus.circle").hidden()  // keeps the picker aligned with the rows above
+                }
                 HStack {
                     Menu {
                         ForEach(Self.runningApps, id: \.id) { app in
@@ -115,31 +118,31 @@ struct ProtectionTab: View {
                         Divider()
                         Button("Other…") { addFromOpenPanel() }
                     } label: {
-                        Label("Add", systemImage: "plus")
+                        Label("Add App", systemImage: "plus")
                     }
-                    .disabled(model.rulesNeedRecovery)
                     .fixedSize()
-                    .accessibilityLabel("Add app override")
                     .accessibilityHint("Pick a running app, or Other to choose an app file")
-                    Button("Use recommended settings") { model.updateRules { RecommendedPreset.apply(to: &$0) } }
-                        .disabled(presetApplied || model.rulesNeedRecovery)
-                        .accessibilityLabel("Use recommended settings")
-                        .accessibilityHint("Sets Safari, Chrome, Arc, Telegram, WhatsApp and Discord to Curtain")
+                    if !presetApplied {
+                        Button("Add browsers and chat apps") { model.updateRules { RecommendedPreset.apply(to: &$0) } }
+                            .accessibilityHint("Sets Safari, Chrome, Arc, Telegram, WhatsApp and Discord to Curtain")
+                    }
                     Spacer()
                 }
-                if presetApplied {
-                    Label("Recommended settings applied", systemImage: "checkmark.circle.fill")
+                let notInstalled = rules.overrides.count - installed.count
+                if notInstalled > 0 {
+                    Text("\(notInstalled) more saved for apps that are not installed. They apply once installed.")
+                        .font(.caption)
                         .foregroundStyle(.secondary)
-                        .font(.callout)
                 }
                 if let addProblem {
                     Text(addProblem).font(.callout).foregroundStyle(.red)
                 }
             } header: {
-                Text("App overrides")
+                Text("Where to hide")
             } footer: {
-                Text("Recommended: Safari, Chrome, Arc, Telegram, WhatsApp and Discord as Curtain; the Default Rule stays. Removing an override restores the Default Rule, which may still protect that app.")
+                Text("Curtain: covers new content instantly, then uncovers what is safe. Best for browsers and chats. Blur: covers people as soon as they are detected. Off: Sitr never looks at the app.")
             }
+            .disabled(model.rulesNeedRecovery)
         }
         .formStyle(.grouped)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -152,6 +155,14 @@ struct ProtectionTab: View {
         } message: {
             Text("Sitr will keep a recovery copy of the existing file and set all apps to Off.")
         }
+    }
+
+    private func modePicker(_ selection: Binding<RuleMode>) -> some View {
+        Picker("Mode", selection: selection) {
+            ForEach(RuleMode.allCases, id: \.self) { Text($0.title).tag($0) }
+        }
+        .labelsHidden()
+        .fixedSize()
     }
 
     /// Running apps with a Dock presence (`.regular`), sorted by name, ourselves excluded.
@@ -168,12 +179,10 @@ struct ProtectionTab: View {
         if !rules.overrides.contains(where: { $0.bundleID == bundleID }) {
             model.updateRules { $0.upsert(AppRule(bundleID: bundleID, mode: .blur)) }
         }
-        selection = [bundleID]
     }
 
-    private func remove(_ bundleIDs: Set<String>) {
-        model.updateRules { rules in bundleIDs.forEach { rules.remove(bundleID: $0) } }
-        selection.subtract(bundleIDs)
+    private func remove(_ bundleID: String) {
+        model.updateRules { $0.remove(bundleID: bundleID) }
     }
 
     /// "Other…": any `.app` (installed anywhere; the sandbox's user-selected read-only entitlement covers the lookup).
@@ -228,16 +237,9 @@ private struct AppCell: View {
     var body: some View {
         let info = AppInfo.lookup(bundleID)
         HStack(spacing: 6) {
-            Image(nsImage: info.icon).resizable().frame(width: 18, height: 18)
+            Image(nsImage: info.icon).resizable().frame(width: 22, height: 22)
                 .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 0) {
-                Text(info.name)
-                if info.installed {
-                    Text(bundleID).font(.caption2).foregroundStyle(.secondary)
-                } else {
-                    Text("Not installed").font(.caption2).foregroundStyle(.secondary)
-                }
-            }
+            Text(info.name)
         }
         .accessibilityElement(children: .combine)
     }
