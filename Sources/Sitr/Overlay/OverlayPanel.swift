@@ -4,6 +4,51 @@
 import AppKit
 import CoreVideo
 
+/// Scroll displacement of one display over time: running sum of wheel deltas (display points, the direction content moves on
+/// screen) with the time of each step. Keeps `window` seconds of steps (older ones fold into `base`), so it cannot grow.
+nonisolated struct Odometer: Sendable {
+    static let window = 3.0
+    private var base = CGVector.zero
+    private var steps: [(t: Double, total: CGVector)] = []
+
+    mutating func add(dx: Double, dy: Double, at t: Double) {
+        let last = steps.last?.total ?? base
+        steps.append((t, CGVector(dx: last.dx + dx, dy: last.dy + dy)))
+        if let cut = steps.firstIndex(where: { t - $0.t <= Self.window }), cut > 0 {
+            base = steps[cut - 1].total
+            steps.removeFirst(cut)
+        }
+    }
+
+    func offset(at t: Double) -> CGVector { steps.last(where: { $0.t <= t })?.total ?? base }
+
+    /// Every displacement reached after `t`, relative to the reading at `t`, as a box (dx from minX to maxX, dy likewise;
+    /// always contains 0). A scroll that went down and came back keeps the whole way it went: the page may not have painted
+    /// the way back yet.
+    func reach(since t: Double) -> CGRect {
+        let o = offset(at: t)
+        var lo = CGPoint.zero, hi = CGPoint.zero
+        for step in steps where step.t > t {
+            lo = CGPoint(x: min(lo.x, step.total.dx - o.dx), y: min(lo.y, step.total.dy - o.dy))
+            hi = CGPoint(x: max(hi.x, step.total.dx - o.dx), y: max(hi.y, step.total.dy - o.dy))
+        }
+        return CGRect(x: lo.x, y: lo.y, width: hi.x - lo.x, height: hi.y - lo.y)
+    }
+}
+
+/// `rect` stretched over every scroll displacement in `reach` (`Odometer.reach`): the union of where its content was and
+/// everywhere the scroll has carried it since, so a person in a scrolled page stays under their cover between detections and
+/// one that does not scroll (a fixed header, a video in another window) stays covered too. `cap` bounds the stretch per side.
+/// Pure; unit-tested.
+// ponytail: stretch, never move — a moved cover would bare everything that does not scroll with the wheel. The cost is a cover
+// up to `cap` longer than the person for the duration of one detection while scrolling.
+nonisolated func scrollStretched(_ rect: CGRect, reach: CGRect, cap: Double = 600) -> CGRect {
+    guard reach.width > 0 || reach.height > 0 else { return rect }
+    let left = min(cap, max(0, -reach.minX)), right = min(cap, max(0, reach.maxX))
+    let up = min(cap, max(0, -reach.minY)), down = min(cap, max(0, reach.maxY))
+    return CGRect(x: rect.minX - left, y: rect.minY - up, width: rect.width + left + right, height: rect.height + up + down)
+}
+
 /// What the panel draws for one cover: `frame` in display-local points (origin top-left, y down), plus either blurred pixels as
 /// an IOSurface-backed buffer at capture resolution or a solid color. Produced by `CoverRenderer`.
 // ponytail: CVPixelBuffer is not Sendable; the renderer writes the buffer once and only readers touch it afterwards. Upgrade = actor-owned handle.
@@ -33,6 +78,12 @@ final class OverlayPanel: NSPanel {
     static var openCount: Int { open.count }
 
     private var covers: [Int: (layer: CALayer, buffer: CVPixelBuffer?)] = [:]
+    /// Person covers as the pipeline placed them (display points), before the scroll stretch.
+    private var placed: [Int: CGRect] = [:]
+    /// This display's scroll history (`scrolled(dx:dy:at:)`), and per person cover the time its person was last seen in a
+    /// captured frame: the cover is stretched over everything scrolled since.
+    private var odometer = Odometer()
+    private var seenAt: [Int: Double] = [:]
     private(set) var isRevealed = false
     var layerCount: Int { covers.count }
     /// Current cover frames by id in display-local points (the flip is its own inverse). Selftests read this; M3-T06 checks
@@ -78,8 +129,13 @@ final class OverlayPanel: NSPanel {
     // so an unconditional commit per frame made SCK deliver a `.complete` frame per commit and the pipeline ran on its own
     // output. `Pipeline.applyAll` skips the call entirely in that case; this is the second line of defence and covers the
     // partial case (one cover of five moved).
-    func apply(_ specs: [CoverLayerSpec]) {
+    /// `seen`: for the person covers whose person was detected in the frame behind this apply, that frame's capture time
+    /// (`CACurrentMediaTime()` clock). Their scroll stretch restarts there; every other cover keeps the stretch it has, so an
+    /// apply that only changes pre-covers, or a person missed for a frame, never pulls a stretched cover back.
+    func apply(_ specs: [CoverLayerSpec], seen: [Int: Double] = [:]) {
         let displayHeight = frame.height
+        let now = CACurrentMediaTime()
+        for (id, t) in seen { seenAt[id] = t - Self.paintLag }
         guard let root = contentView?.layer else { return }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -97,7 +153,13 @@ final class OverlayPanel: NSPanel {
                 root.addSublayer(layer)
                 changed = true
             }
-            let target = appKitRect(spec.frame, displayHeight: displayHeight)
+            var rect = spec.frame
+            if CoverID.isTrack(spec.id) {
+                placed[spec.id] = spec.frame
+                if seenAt[spec.id] == nil { seenAt[spec.id] = now }
+                rect = scrollStretched(rect, reach: odometer.reach(since: seenAt[spec.id] ?? now))
+            }
+            let target = appKitRect(rect, displayHeight: displayHeight)
             if layer.frame != target {
                 layer.frame = target
                 changed = true
@@ -118,11 +180,47 @@ final class OverlayPanel: NSPanel {
         for (id, cover) in covers where !seen.contains(id) {
             cover.layer.removeFromSuperlayer()
             covers[id] = nil
+            placed[id] = nil
+            seenAt[id] = nil
             changed = true
         }
         CATransaction.commit()
         if changed { CATransaction.flush() }  // hand the frame to the render server now rather than at the end of the run-loop turn
     }
+
+    /// The page under the pointer on this display scrolled by (dx, dy) points (main thread, per wheel and momentum step):
+    /// stretch every person cover over the distance scrolled since its person was last seen, so covers keep up with the page
+    /// between detections instead of trailing it by a frame of motion (the flicker of covers chasing a scrolled page).
+    func scrolled(dx: Double, dy: Double, at t: Double = CACurrentMediaTime()) {
+        odometer.add(dx: dx, dy: dy, at: t)
+        restretch()
+    }
+
+    /// The pipeline saw these covers' people again in a newer frame, with nothing else to change: restart their stretch there.
+    func rebase(seen: [Int: Double]) {
+        for (id, t) in seen where placed[id] != nil { seenAt[id] = t - Self.paintLag }
+        restretch()
+    }
+
+    private func restretch() {
+        guard !placed.isEmpty else { return }
+        let now = CACurrentMediaTime()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for (id, rect) in placed {
+            guard let layer = covers[id]?.layer else { continue }
+            let target = appKitRect(scrollStretched(rect, reach: odometer.reach(since: seenAt[id] ?? now)), displayHeight: frame.height)
+            if layer.frame != target { layer.frame = target }
+        }
+        CATransaction.commit()
+        CATransaction.flush()
+    }
+
+    /// A frame's capture time is read this much earlier: the browser paints a wheel step a frame or two after the event and
+    /// the frame callback lands after the capture, so the frame shows less scroll than the odometer had at callback time.
+    /// Reading early only ever counts more scroll, which stretches more.
+    // ponytail: fixed 50 ms; the upgrade is calibrating it against the measured motion of tracked boxes while scrolling.
+    static let paintLag = 0.05
 
     /// Reveal Hold: hides every cover layer (new ones are added hidden) until `setRevealed(false)`.
     func setRevealed(_ revealed: Bool) {

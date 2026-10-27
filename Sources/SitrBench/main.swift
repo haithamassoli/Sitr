@@ -2,9 +2,10 @@
 //   sitr-bench <labels.json> [--images <dir>] [--models Models/dist] [--threshold 0.80] [--limit N] [--json out.json] [--verbose]
 //   sitr-bench --selfcheck
 // Per image, exactly what Sources/Sitr/Pipeline/Pipeline.swift does per frame: the image becomes a BGRA frame with the long side
-// 1280 (FR1), CoreMLPersonDetector (YOLOX-s, threshold 0.30, NMS 0.5) and Vision FaceDetector run on it, faces go to the
+// 1280 (FR1), CoreMLPersonDetector (YOLOX-M 1024x640, threshold 0.25, NMS 0.5) and Vision FaceDetector run on it, faces go to the
 // person they overlap most, GenderClassifier crops with the shipped rule, and the category rule decides. Metrics in Metrics.swift.
 // No screen pixels are involved (public benchmark photos); output is numbers only.
+import AVFoundation
 import CoreImage
 import CryptoKit
 import CoreImage.CIFilterBuiltins
@@ -17,13 +18,13 @@ import SitrDetect
 
 let usage = """
 usage: sitr-bench <labels.json> [--images <dir>] [--models <dir>] [--threshold 0.80] [--limit N] [--lanczos-below X]
-                  [--person-threshold 0.30] [--split all|tuning|validation] [--json out.json] [--verbose]
+                  [--person-threshold 0.25] [--split all|tuning|validation] [--json out.json] [--verbose]
        sitr-bench --selfcheck
   labels     Bench/labels/recall-coco.json or Bench/labels/faces-commons.json (python3 Bench/convert_labels.py)
   --images   image folder; default: the labels file's images_dir (python3 Bench/download.py --labels <labels.json>)
   --models   folder with PersonDetector and GenderClassifier .mlpackage or .mlmodelc; default Models/dist
   --limit    first N images only; --json writes every number as JSON; --verbose prints one line per image (counts only)
-  --lanczos-below  M4-T09: resample into the network canvas with Lanczos only below this scale factor (default 0.9;
+  --lanczos-below  M4-T09: resample into the network canvas with Lanczos only below this scale factor (default 0.75;
                    0 = never, 2 = always, which is what every number before M4-T09 was measured with)
 """
 
@@ -126,7 +127,7 @@ func run(_ args: [String], labelsPath: String) async throws {
             .appendingPathComponent("Models/dist")
     }
     guard let threshold = Double(option("--threshold", in: args) ?? "0.80"), threshold > 0.5, threshold <= 1 else { throw BenchError("--threshold must be in (0.5, 1]") }
-    guard let personThreshold = Float(option("--person-threshold", in: args) ?? "0.30"),
+    guard let personThreshold = Float(option("--person-threshold", in: args) ?? "0.25"),
           personThreshold > 0, personThreshold <= 1 else { throw BenchError("--person-threshold must be in (0, 1]") }
     let split = option("--split", in: args) ?? "all"
     guard ["all", "tuning", "validation"].contains(split) else { throw BenchError("--split must be all, tuning, or validation") }
@@ -229,9 +230,58 @@ func run(_ args: [String], labelsPath: String) async throws {
     guard processed > 0 else { throw BenchError("no images processed (\(missing) missing, \(unreadable) unreadable in \(imagesDir.path))") }
 }
 
+// MARK: - observer: people still visible in a screen recording of the app at work
+
+/// `sitr-bench --observe <recording.mov> [--min-height 60] [--threshold 0.5]`: the detector over every frame of a screen recording
+/// taken with Solid covers on, so a covered person is a flat rectangle and anything still found is a person the user saw. One
+/// line per frame (`t n h1,h2…`) then a summary: share of frames with an exposed person, and exposure episodes.
+// ponytail: the observer is the app's own detector, so it cannot see the people the detector misses — it measures the pipeline
+// (lag, dropouts, flicker), not recall. Recall is the labeled bench above.
+func observe(_ path: String, args: [String]) async throws {
+    let asset = AVURLAsset(url: URL(fileURLWithPath: path))
+    guard let track = try await asset.loadTracks(withMediaType: .video).first else { throw BenchError("no video track in \(path)") }
+    let reader = try AVAssetReader(asset: asset)
+    let output = AVAssetReaderTrackOutput(track: track, outputSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                                                                         kCVPixelBufferIOSurfacePropertiesKey as String: [:]])
+    reader.add(output)
+    reader.startReading()
+    let minHeight = Double(option("--min-height", in: args) ?? "60") ?? 60
+    let threshold = Float(option("--threshold", in: args) ?? "0.5") ?? 0.5
+    var modelsDir = URL(fileURLWithPath: option("--models", in: args) ?? "Models/dist")
+    if !FileManager.default.fileExists(atPath: modelsDir.path) {
+        modelsDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Models/dist")
+    }
+    let detector = try await CoreMLPersonDetector(contentsOf: try await compiledModel(modelsDir, "PersonDetector"), computeUnits: .cpuAndNeuralEngine, threshold: threshold)
+    var frames = 0, exposed = 0, episodes = 0, last = false
+    var runStart = 0.0, runs: [Double] = []
+    while let sample = output.copyNextSampleBuffer() {
+        guard let pb = CMSampleBufferGetImageBuffer(sample) else { continue }
+        let t = CMSampleBufferGetPresentationTimeStamp(sample).seconds
+        let found = try await detector.detect(in: pb).filter { $0.box.height >= minHeight }
+        let hs = found.map { Int($0.box.height) }
+        frames += 1
+        let now = !hs.isEmpty
+        if now { exposed += 1 }
+        if now && !last { episodes += 1; runStart = t }
+        if !now && last { runs.append(t - runStart) }
+        last = now
+        print("frame t=\(String(format: "%.3f", t)) n=\(hs.count) h=\(hs.map(String.init).joined(separator: ",")) boxes=\(found.map { "\(Int($0.box.x)),\(Int($0.box.y)),\(Int($0.box.width))x\(Int($0.box.height))@\(String(format: "%.2f", $0.confidence))" }.joined(separator: " "))")
+    }
+    if last { runs.append((try await asset.load(.duration)).seconds - runStart) }  // an exposure still open at the end counts too
+    guard reader.status == .completed else { throw BenchError("reading \(path) stopped: \(reader.error.map { "\($0)" } ?? "status \(reader.status.rawValue)")") }
+    runs.sort()
+    let p = { (q: Double) in runs.isEmpty ? 0 : runs[min(runs.count - 1, Int(Double(runs.count) * q))] * 1000 }
+    print("observe file=\((path as NSString).lastPathComponent) frames=\(frames) exposed_frames=\(exposed) exposed_share=\(String(format: "%.3f", Double(exposed) / Double(max(frames, 1)))) "
+        + "episodes=\(episodes) episode_ms_p50=\(Int(p(0.5))) episode_ms_p90=\(Int(p(0.9))) min_height=\(Int(minHeight)) threshold=\(threshold)")
+}
+
 // MARK: - entry
 
 let args = Array(CommandLine.arguments.dropFirst())
+if let i = args.firstIndex(of: "--observe"), i + 1 < args.count {
+    do { try await observe(args[i + 1], args: args) } catch { print("sitr-bench: \(error)"); exit(1) }
+    exit(0)
+}
 if args.contains("--selfcheck") {
     selfcheck()
     exit(0)

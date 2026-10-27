@@ -10,13 +10,13 @@ Both packages live in `Models/dist/` and are compiled into `Sitr.app/Contents/Re
 `scripts/build-app.sh`. `Tests/SitrDetectTests/ModelChecksumTests.swift` (run by CI) fails if any file in either
 package differs from its checksum list.
 
-### PersonDetector.mlpackage (YOLOX-S)
+### PersonDetector.mlpackage (YOLOX-M)
 | | |
 |---|---|
-| Component | YOLOX-S object detector, Megvii Inc. (Ge, Z., Liu, S., Wang, F., Li, Z., Sun, J., "YOLOX: Exceeding YOLO Series in 2021") |
-| Source | https://github.com/Megvii-BaseDetection/YOLOX, tag `0.3.0`; weights `yolox_s.pth` from release `0.1.1rc0` |
+| Component | YOLOX-M object detector, Megvii Inc. (Ge, Z., Liu, S., Wang, F., Li, Z., Sun, J., "YOLOX: Exceeding YOLO Series in 2021") |
+| Source | https://github.com/Megvii-BaseDetection/YOLOX, tag `0.3.0`; weights `yolox_m.pth` from release `0.1.1rc0` |
 | License | Apache License 2.0, Copyright (c) 2021-2022 Megvii Inc. Full text: `Models/dist/LICENSE-YOLOX.txt` |
-| Modifications | Converted to a Core ML ML Program (fp16, 1280x768 input) with the SPP pooling and box-decoding rewrites described in `Models/dist/SOURCE-PersonDetector.md`; no retraining |
+| Modifications | Converted to a Core ML ML Program (fp16, 1024x640 input) with the SPP pooling and box-decoding rewrites described in `Models/dist/SOURCE-PersonDetector.md`; no retraining |
 | Training data | COCO train2017 (COCO Consortium). Annotations CC BY 4.0, https://cocodataset.org; images are Flickr photos under their individual licenses. Not redistributed by Sitr |
 | Checksums | `Models/dist/CHECKSUMS-PersonDetector.txt` |
 | Provenance | `Models/dist/SOURCE-PersonDetector.md`, `Models/detector/README.md` |

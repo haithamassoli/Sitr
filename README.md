@@ -194,7 +194,7 @@ packages, and the `ModelChecksumTests` test fails when anything differs. By hand
 
 | Model | Origin | License |
 |---|---|---|
-| Person detector, `PersonDetector.mlpackage` | YOLOX-S by Megvii Inc., converted to Core ML without retraining | Apache-2.0 |
+| Person detector, `PersonDetector.mlpackage` | YOLOX-M by Megvii Inc., converted to Core ML without retraining | Apache-2.0 |
 | Gender classifier, `GenderClassifier.mlpackage` | `dima806/fairface_gender_image_detection` (ViT-B/16), converted to Core ML without retraining; trained on FairFace | Apache-2.0; FairFace is CC BY 4.0 |
 
 Provenance, conversion commands, and the full license texts: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md),

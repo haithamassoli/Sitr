@@ -25,7 +25,7 @@ nonisolated protocol GenderClassifying: Sendable {
     func pWoman(faces: [Rect], in frame: Frame) async -> [Double?]
 }
 
-/// M2-T06: the YOLOX-s 1280x768 CoreML detector (85 % recall on the benchmark set against Vision's 38 %; docs/spike/detect.md).
+/// M2-T06: the YOLOX CoreML detector (YOLOX-M 1024x640 since October 2026, docs/models-2026.md; Vision found 38 %, docs/spike/detect.md).
 nonisolated extension CoreMLPersonDetector: PersonDetecting {
     func detect(in frame: Frame) async throws -> [Detection] { try await detect(in: frame.pixelBuffer) }
 }
@@ -118,6 +118,9 @@ nonisolated func classificationOrder(classifiable: [Bool], sticky: [Category?], 
 // reads it and `scripts/measure-system.sh` passes it through. Upgrade path: delete it once the numbers are re-taken on M1 8 GB.
 nonisolated let perfLegacy = ProcessInfo.processInfo.environment["SITR_PERF_LEGACY"] == "1"
 
+/// Dev switch: `SITR_TRACE=1` prints one line per processed frame (detections, tracks, covers). Numbers only.
+nonisolated let traceFrames = ProcessInfo.processInfo.environment["SITR_TRACE"] == "1"
+
 /// Whether this frame's changed regions rule out any change to the people on screen: every changed region is shorter than a
 /// detectable body (`Category.minBodyHeight`, 40 capture px — a body cannot appear inside a region too small to hold one) and
 /// none of them touches a box already being tracked (so nobody tracked moved, shrank or left). A frame like that is dropped
@@ -167,6 +170,15 @@ nonisolated func coverCanReuse(cached: CGRect, cover: CGRect, dirty: [CGRect]?, 
     else { return false }
     let probe = cached.insetBy(dx: -tolerance, dy: -tolerance)
     return !dirty.contains { $0.intersects(probe) }
+}
+
+/// Where a cover goes this frame: where it already is, as long as the person's padded box still fits inside it and it is not
+/// much bigger than needed; otherwise the padded box plus `margin` of slack on each side, so the next frames' jitter fits.
+/// A cover that only moves when the person leaves it does not shimmer at the edges with every detection of a talking head
+/// or a person walking in place, and keeps its frame for `coverCanReuse`. Pure; unit-tested.
+nonisolated func stickyFrame(previous: CGRect?, target: CGRect, display: CGSize, margin: Double = 0.04, maxGrowth: Double = 1.6) -> CGRect {
+    if let p = previous, p.contains(target), p.width * p.height <= maxGrowth * target.width * target.height { return p }
+    return target.insetBy(dx: -target.width * margin, dy: -target.height * margin).intersection(CGRect(origin: .zero, size: display))
 }
 
 /// When the user last scrolled, anywhere (`CACurrentMediaTime()`). `Runtime` feeds it from a global scroll-wheel monitor
@@ -471,17 +483,23 @@ actor Pipeline {
     // M4-T09: a set identical to what is already on screen is not applied at all. The overlay panel is on the display the
     // stream captures, so every commit damages it and SCK answers with a `.complete` frame — an unconditional commit per frame
     // made the pipeline run on its own output at ~3× the rate the screen actually changed (docs/perf.md).
-    private func applyAll(ifCurrent: @Sendable () -> Bool = { true }) async {
+    /// `seen`: capture time of this frame for every person cover whose track was detected in it — the covers whose scroll
+    /// stretch may restart from this frame (`OverlayPanel.apply`). Empty for applies that carry no detection.
+    private func applyAll(seen: [Int: Double] = [:], ifCurrent: @escaping @Sendable () -> Bool = { true }) async {
         let specs = personSpecs + preSpecs + failClosed.withLock { $0 }
         guard !specs.isEmpty || appliedLayers > 0 else { return }
         if !perfLegacy, specs.count == appliedSpecs.count, zip(specs, appliedSpecs).allSatisfy({ $0.matches($1) }) {
             metrics.applySkips += 1
             ownDamage = false
+            // Same covers, but the people under them were seen again in a newer frame: their stretch restarts there.
+            if !seen.isEmpty, ScrollActivity.isScrolling(at: CACurrentMediaTime()) {
+                await MainActor.run { if ifCurrent() { panel.rebase(seen: seen) } }
+            }
             return
         }
         let applied = await MainActor.run {
             guard ifCurrent() else { return false }
-            panel.apply(specs)
+            panel.apply(specs, seen: seen)
             return true
         }
         guard applied else { return }
@@ -712,6 +730,11 @@ actor Pipeline {
             let now = CACurrentMediaTime()
             let tracks = tracker.update(observations, at: now, sequence: frame.sequence)
             let covers = current.policy.covers(for: tracks, now: now)
+            if traceFrames {
+                let d = persons.enumerated().map { i, p in "\(Int(p.box.minX)),\(Int(p.box.minY)),\(Int(p.box.width))x\(Int(p.box.height))@\(String(format: "%.2f", p.confidence))\(order.contains(i) ? "c" : "")\(String(describing: observations[i].category).prefix(1))" }
+                let t = tracks.map { "\($0.id):\(String(describing: $0.category).prefix(1))\($0.contrary.map { "!" + String(describing: $0).prefix(1) } ?? "")h\($0.hits)a\(Int((now - $0.lastSeen) * 1000))" }
+                print("trace T=\(String(format: "%.3f", frame.timestamp)) seq=\(frame.sequence) gap=\(gap) det=[\(d.joined(separator: " "))] tracks=[\(t.joined(separator: " "))] covers=\(covers.map(\.trackID))")
+            }
             let t3 = CACurrentMediaTime()
             metrics.track.append(t3 - t2)
             classifiedAt = classifiedAt.filter { id, _ in tracks.contains { $0.id == id } }
@@ -735,14 +758,16 @@ actor Pipeline {
             let dirty = gap > 0 || perfLegacy ? nil : (trustDirty ? frame.dirtyRectsInDisplayPoints : [])
             var prepared: [CoverRenderer.Prepared?] = []
             for cover in covers {
-                let padded = CoverGeometry.padded(CGRect(cover.rect), padding: a.padding, display: frame.displaySize)
+                let padded = stickyFrame(previous: coverCache[cover.trackID]?.frame,
+                                         target: CoverGeometry.padded(CGRect(cover.rect), padding: a.padding, display: frame.displaySize),
+                                         display: frame.displaySize)
                 if let cached = coverCache[cover.trackID], coverCanReuse(cached: cached.frame, cover: padded, dirty: dirty) {
                     prepared.append(nil)
                     metrics.reuses += 1
                     continue
                 }
                 let p = renderer.prepare(id: cover.trackID, style: a.style, strength: a.strength, padding: a.padding,
-                                         rect: CGRect(cover.rect), frame: frame)
+                                         rect: CGRect(cover.rect), frame: frame, place: padded)
                 prepared.append(perfLegacy ? CoverRenderer.Prepared(spec: renderer.finish([p])[0], solid: p.solid, task: nil) : p)
                 metrics.renders += 1
                 if let cached = coverCache[cover.trackID] {
@@ -768,7 +793,10 @@ actor Pipeline {
             personSpecs = specs
             verifiedFrame = frame
             verifiedState = (snapshot, a, current.revision)
-            await applyAll(ifCurrent: isCurrent)
+            // Tracks matched in this frame (`lastSeen` is the tracker's `now`); a track coasting through a missed detection
+            // keeps the stretch it has, since its person may have scrolled on without it.
+            let seen = Dictionary(tracks.filter { $0.lastSeen == now }.map { ($0.id, frame.timestamp) }, uniquingKeysWith: { a, _ in a })
+            await applyAll(seen: seen, ifCurrent: isCurrent)
             guard isCurrent(), !Task.isCancelled else { continue }
             let t5 = CACurrentMediaTime()
             metrics.commit.append(t5 - t4)

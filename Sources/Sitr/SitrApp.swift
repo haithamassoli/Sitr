@@ -55,6 +55,9 @@ struct SitrApp: App {
 @MainActor final class Runtime {
     /// Capture rate for displays showing a Curtain window (docs/spike/latency.md: 15 fps alone is 72 ms p95). `SITR_CURTAIN_FPS`
     /// overrides it for the 30-vs-60 measurement.
+    /// Person score threshold for the YOLOX-M 1024x640 detector: 0.25 gives 91.1 % recall on bodies >= 80 px with the
+    /// false positives YOLOX-S had at 0.30 (docs/models-2026.md, equal-false-positive comparison).
+    nonisolated static let personThreshold: Float = 0.25
     nonisolated static let curtainFPS = Int(ProcessInfo.processInfo.environment["SITR_CURTAIN_FPS"] ?? "") ?? 30
     /// No complete frame for this long after a Curtain window changed = the stream stalled (PRD FR10).
     nonisolated static let stallAfter = 1.0
@@ -147,7 +150,10 @@ struct SitrApp: App {
         systemEvents.start()
         // Mouse-class events need no Input Monitoring grant; the handler runs on the main thread for every wheel
         // and momentum step.
-        scrollMonitor = NSEvent.addGlobalMonitorForEvents(matching: .scrollWheel) { _ in ScrollActivity.note() }
+        scrollMonitor = NSEvent.addGlobalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+            ScrollActivity.note()
+            self?.scrolled(event)
+        }
         windowTracker.start()
         filters.start()
         healthTask = Task { [weak self] in
@@ -196,7 +202,8 @@ struct SitrApp: App {
     private func loadModels() async {
         let t0 = CACurrentMediaTime()
         async let d = Self.load("person detector (CoreML)") {
-            try await CoreMLPersonDetector(contentsOf: Self.modelURL("PersonDetector"), computeUnits: .cpuAndNeuralEngine)
+            try await CoreMLPersonDetector(contentsOf: Self.modelURL("PersonDetector"), computeUnits: .cpuAndNeuralEngine,
+                                           threshold: Self.personThreshold)
         }
         async let c = Self.load("gender classifier") { try await GenderClassifier(contentsOf: Self.modelURL("GenderClassifier")) }
         let loadedDetector = await d, loadedClassifier = await c
@@ -364,6 +371,23 @@ struct SitrApp: App {
                 self.observeWindows()
             }
         }
+    }
+
+    /// The display a scroll gesture started on; its momentum steps stay there even if the pointer moves on.
+    private weak var scrollPanel: OverlayPanel?
+
+    /// One wheel or momentum step: the display being scrolled stretches its person covers along (`OverlayPanel.scrolled`).
+    private func scrolled(_ event: NSEvent) {
+        if event.momentumPhase.isEmpty || scrollPanel == nil {
+            let at = NSEvent.mouseLocation
+            scrollPanel = displayManager.displays.first { $0.frame.contains(at) }?.panel
+        }
+        // Precise (trackpad, Magic Mouse) deltas are points; a notched wheel reports lines, which browsers scroll by about
+        // 40 pt each with their own easing.
+        // ponytail: 40 pt per line is a typical browser step, not a bound; a page that scrolls further per notch is caught
+        // up by the next detection as before.
+        let k = event.hasPreciseScrollingDeltas ? 1.0 : 40.0
+        scrollPanel?.scrolled(dx: event.scrollingDeltaX * k, dy: event.scrollingDeltaY * k)
     }
 
     /// Windows or rules changed: snapshot to the pipelines (attribution, Curtain tiles, clipping), capture rate per display

@@ -213,7 +213,7 @@ scripts/check-strings.sh                       # every UI string is in the Strin
 
 | النموذج | المصدر | الترخيص |
 |---|---|---|
-| كاشف الأشخاص، `PersonDetector.mlpackage` | YOLOX-S من Megvii Inc.، محوَّل إلى Core ML دون إعادة تدريب | Apache-2.0 |
+| كاشف الأشخاص، `PersonDetector.mlpackage` | YOLOX-M من Megvii Inc.، محوَّل إلى Core ML دون إعادة تدريب | Apache-2.0 |
 | مصنّف الجنس، `GenderClassifier.mlpackage` | `dima806/fairface_gender_image_detection` ‏(ViT-B/16)، محوَّل إلى Core ML دون إعادة تدريب؛ مدرَّب على FairFace | Apache-2.0؛ بيانات FairFace بترخيص CC BY 4.0 |
 
 المصدر وأوامر التحويل ونصوص التراخيص الكاملة: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)

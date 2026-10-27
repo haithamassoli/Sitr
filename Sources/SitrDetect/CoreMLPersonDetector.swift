@@ -15,19 +15,20 @@ public struct CoreMLPersonDetector: @unchecked Sendable {
     let model: MLModel
     let context = CIContext(options: [.workingColorSpace: NSNull(), .outputColorSpace: NSNull(), .cacheIntermediates: false])
     let pool: CVPixelBufferPool
-    /// Network input in pixels (from the model description), e.g. 1280x768.
+    /// Network input in pixels (from the model description), e.g. 1024x640.
     public let inputSize: Size
     /// Minimum objectness x person score; PRD default 0.30.
     public var threshold: Float
     /// Greedy NMS: a box is dropped when its IoU with a kept, higher-scoring box exceeds this.
     public var nmsIoU: Double
     /// Resample the frame into the network canvas with Lanczos only below this scale factor; at or above it the affine
-    /// transform's bilinear tap is used. Default 0.9: a real reduction (a COCO photo, a 2560 px screenshot) keeps Lanczos,
-    /// while the app's own frames — captured at the model's long side, so scaled by ~0.92 — take the cheap path.
+    /// transform's bilinear tap is used. Default 0.75: a real reduction (a COCO photo, a 2560 px screenshot) keeps Lanczos,
+    /// while the app's own 1280 px frames going into the 1024x640 model (scaled by ~0.77–0.8) take the cheap path, with the
+    /// same recall on the bench (docs/models-2026.md).
     // M4-T09: the Lanczos pass was almost the whole of the detector's per-frame cost. In a 30 s `video` profile
     // `-[CIContext render:toCVPixelBuffer:]` was 4967 of the detector's 4947 samples — the CoreML prediction itself was 835.
     // `sitr-bench --lanczos-below 0` (never Lanczos, far past what the app does) measures the recall cost; see docs/perf.md.
-    public var lanczosBelow: Double = 0.9
+    public var lanczosBelow: Double = 0.75
 
     /// `url` is a compiled `.mlmodelc` or an `.mlpackage` (compiled into a temp dir first, ~1 s; the app bundle ships it
     /// compiled). `computeUnits` `.all` lets CoreML pick; `.cpuAndNeuralEngine` keeps the GPU free for rendering.

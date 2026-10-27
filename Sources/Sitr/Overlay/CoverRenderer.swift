@@ -88,8 +88,9 @@ nonisolated final class CoverRenderer: @unchecked Sendable {
     }
 
     /// Builds the filter graph and submits it; the surface is not complete until `finish` waits for the task.
-    func prepare(id: Int, style: CoverStyle, strength: Double, padding: Double = 0.15, rect: CGRect, frame: Frame) -> Prepared {
-        let cover = CoverGeometry.padded(rect, padding: padding, display: frame.displaySize)
+    /// `place`: the cover's frame when the caller has already decided it (`stickyFrame`); nil = `rect` padded by `padding`.
+    func prepare(id: Int, style: CoverStyle, strength: Double, padding: Double = 0.15, rect: CGRect, frame: Frame, place: CGRect? = nil) -> Prepared {
+        let cover = place ?? CoverGeometry.padded(rect, padding: padding, display: frame.displaySize)
         let solid = CoverLayerSpec(id: id, frame: cover, contents: nil, color: solidColor)
         guard style != .solid else { return Prepared(spec: solid, solid: solid, task: nil) }
         let bufferRect = CGRect(x: 0, y: 0, width: frame.width, height: frame.height)

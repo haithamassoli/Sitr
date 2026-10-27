@@ -60,7 +60,7 @@ struct AboutTab: View {
                     .font(.callout)
             }
             Section("Models") {
-                Text("Person detector: YOLOX-S by Megvii, Inc. — Apache-2.0.")
+                Text("Person detector: YOLOX-M by Megvii, Inc. — Apache-2.0.")
                 Text("Gender classifier: dima806/fairface_gender_image_detection (ViT-B/16) — Apache-2.0; trained on FairFace, CC BY 4.0.")
                 Link("Full notices: THIRD_PARTY_NOTICES.md", destination: Self.noticesURL)
                     .accessibilityLabel("Open THIRD_PARTY_NOTICES.md on GitHub")

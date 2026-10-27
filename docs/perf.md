@@ -300,3 +300,59 @@ What is different from M3-T05's successful run: that one was on a **quiet, singl
 displays and the host's own load average sat at 15–19 throughout. The trial deliberately waits out `Curtain.staticReset`
 so trusted motion (FR4.3) has lapsed before it flips the photo — a machine that never goes quiet is exactly the
 condition where that assumption stops holding. Re-run on a quiet machine before drawing any conclusion.
+
+## Scroll and video flicker (2026-10)
+
+The owner's complaint was flicker while scrolling a YouTube watch page and swiping Shorts. Two changes, both measured on
+an M3 with the same scenario before and after, back to back:
+
+- **Scroll stretch** (`OverlayPanel.scrolled`, `Odometer`, `scrollStretched`). Covers used to move only when a frame was
+  processed (every 67 ms at 15 fps) while the page moved continuously, so cover edges chased the content. The global
+  scroll-wheel monitor that already fed Curtain now also feeds a per-display odometer; each person cover is stretched over
+  every displacement reached since its person was last seen in a captured frame (read 50 ms early). Stretch, never move:
+  content that does not scroll stays covered. A cover whose track coasts through a missed detection keeps its stretch;
+  pre-cover and fail-closed applies never reset it.
+- **Sticky covers** (`stickyFrame`). A cover keeps its frame while the padded person box still fits inside it (≤ 1.6× its
+  area); otherwise it takes the padded box plus 4 % slack per side.
+
+Method: the owner's video and Shorts replayed locally in an automated Chrome (YouTube refuses automated playback),
+real `CGEvent` wheel scrolling at ~1250 pt/s, `--selftest system --rule blur --hide everyone --style solid`, the screen
+(overlay included) recorded with `screencapture -v`. Two numbers per phase:
+- *Blinks*: the page logs its scroll offset every animation frame and flashes a sync marker; each 8 pt cell of page content
+  that goes covered → uncovered → covered within 0.5 s is one blink, per 100 covered cell-seconds. This is the flicker a
+  user sees, anchored to the content so a correctly moving cover does not count.
+- *Exposure*: `sitr-bench --observe <recording>` runs the detector over every recorded frame; a person found with
+  confidence ≥ 0.7 and ≥ 80 pt tall is visible. Same detector as the app, so this measures the pipeline, not recall.
+
+| | HEAD | after |
+|---|---|---|
+| Watch page, scrolling: blinks | 47.8 | 16.0 – 21.2 |
+| Watch page, scrolling: frames with a visible person | 7.4 % | 0.4 – 0.7 % |
+| Watch page, video playing: blinks | 5.6 | 2.5 |
+| Shorts, swiping: blinks | 34.2 | 24.8 |
+| Shorts, swiping: frames with a visible person | 7.5 % | 2.8 % |
+| Shorts, video playing: blinks | 36.3 | 18.2 |
+| Window area covered while scrolling (page full of people) | 71 % | 84 % |
+
+What did not pay, measured the same way and reverted: constant-velocity prediction and motion-stretched covers in the
+`Tracker` (blinks 47 → 92: every cover changed size every frame), ByteTrack-style two thresholds, and a 30 fps capture
+boost while scrolling (no change in exposure, more CPU). Not solved here: a person the detector misses entirely (a small
+back view) stays uncovered in both builds; that is recall.
+
+**Then the detector changed** (docs/models-2026.md): YOLOX-M 1024x640 at threshold 0.25 replaced YOLOX-S 1280x768 at 0.30.
+On macOS 27 the old model ran its 17-op decode tail on the CPU; every op of the new one runs on the ANE. Same scenario,
+same machine:
+
+| | HEAD | scroll stretch + sticky | + YOLOX-M 1024x640 |
+|---|---|---|---|
+| Watch page: Sitr CPU (mean over the run) | 28 % | 22–28 % | **10 %** |
+| Watch page, scrolling: blinks / visible-person frames | 47.8 / 7.4 % | 16–21 / 0.4–0.7 % | 16.2 / 1.3 % |
+| Watch page, video playing: blinks | 5.6 | 2.5 | **1.0** |
+| Shorts: Sitr CPU | 25–33 % | 25–33 % | **8.9 %** |
+| Shorts, swiping: blinks / visible-person frames | 34.2 / 7.5 % | 24.8 / 2.8 % | **18.7 / 2.7 %** |
+| Shorts, video playing: blinks | 36.3 | 18.2 | **15.9** |
+
+A back-view thumbnail that every earlier build left uncovered is covered by YOLOX-M.
+
+Shortcuts: `Odometer` is fed by the wheel, so keyboard scrolling still relies on detection; line-based wheels are scaled
+40 pt per line; the stretch is capped at 600 pt per side.

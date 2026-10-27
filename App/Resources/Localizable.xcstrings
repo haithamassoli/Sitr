@@ -1554,14 +1554,14 @@
         }
       }
     },
-    "Person detector: YOLOX-S by Megvii, Inc. — Apache-2.0." : {
+    "Person detector: YOLOX-M by Megvii, Inc. — Apache-2.0." : {
       "comment" : "About › Models",
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "كاشف الأشخاص: YOLOX-S من Megvii, Inc. — Apache-2.0."
+            "value" : "كاشف الأشخاص: YOLOX-M من Megvii, Inc. — Apache-2.0."
           }
         }
       }

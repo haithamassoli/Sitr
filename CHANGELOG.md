@@ -7,6 +7,18 @@ per version and move `Unreleased` entries into it before tagging.
 
 ## [Unreleased]
 
+### Changed
+- **Covers keep up with scrolling.** While you scroll with a trackpad or mouse wheel, every cover on that display stretches
+  along with the page at once instead of waiting for the next detection, so people in a scrolled page no longer slip out
+  from under their covers. On a YouTube watch page this cut cover flicker while scrolling by about half and visible people
+  from 7.4 % of frames to under 1 %. Covers are a little larger while the page moves and return to size when it stops.
+- **Better, lighter person detector.** YOLOX-M at 1024x640 replaces YOLOX-S at 1280x768: it finds more people (91 % of
+  bodies 80 px and taller instead of 89 %, more back views and partly hidden people) with the same false alarms, runs
+  entirely on the Neural Engine, and cut Sitr's CPU use on a playing YouTube video from about 25 % to about 10 %. The app is
+  about 30 MB larger.
+- **Covers no longer shimmer on moving video.** A cover stays where it is while the person still fits inside it, and moves
+  only when they leave it. Flicker on a playing YouTube Short roughly halved.
+
 ## [0.3.0] - 2026-10-26
 
 ### Changed
